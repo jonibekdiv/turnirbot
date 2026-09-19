@@ -1,0 +1,57 @@
+{
+  "6580878834": {
+    "id": 6580878834,
+    "username": "rangerbek",
+    "firstName": "Жонибек",
+    "lastName": "",
+    "languageCode": "uz",
+    "teamId": "team_mu8q4593j6v9dv",
+    "status": "active",
+    "createdAt": "2026-09-19T18:07:20.279Z",
+    "updatedAt": "2026-09-19T21:28:11.280Z"
+  },
+  "8811053020": {
+    "id": 8811053020,
+    "username": null,
+    "firstName": "🍃",
+    "lastName": "",
+    "languageCode": "uz",
+    "teamId": null,
+    "status": "active",
+    "createdAt": "2026-09-19T18:42:49.464Z",
+    "updatedAt": "2026-09-19T21:10:32.811Z"
+  },
+  "6441840191": {
+    "id": 6441840191,
+    "username": null,
+    "firstName": ".",
+    "lastName": "",
+    "languageCode": "uz",
+    "teamId": null,
+    "status": "active",
+    "createdAt": "2026-09-19T20:35:13.520Z",
+    "updatedAt": "2026-09-19T20:35:13.523Z"
+  },
+  "7743817651": {
+    "id": 7743817651,
+    "username": "diyorbek_1306",
+    "firstName": "Diyorbek",
+    "lastName": "",
+    "languageCode": "uz",
+    "teamId": null,
+    "status": "active",
+    "createdAt": "2026-09-19T20:44:09.172Z",
+    "updatedAt": "2026-09-19T20:44:09.173Z"
+  },
+  "8619608677": {
+    "id": 8619608677,
+    "username": "rangerbekk",
+    "firstName": "Жонибек",
+    "lastName": "",
+    "languageCode": "uz",
+    "teamId": "team_mu8q4593j6v9dv",
+    "status": "active",
+    "createdAt": "2026-09-19T20:48:26.226Z",
+    "updatedAt": "2026-09-19T21:27:35.400Z"
+  }
+}
