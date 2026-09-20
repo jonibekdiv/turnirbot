@@ -1,4 +1,6 @@
-// Admin qo'shimcha funksiyalari
+// ============================================================
+// ADMIN EXT SERVICE — Ban, log, sozlamalar
+// ============================================================
 const fs = require('fs');
 const path = require('path');
 const store = require('../storage/jsonStore');
@@ -11,7 +13,7 @@ const ACTIONS_FILE = 'actions.json';
 const SETTINGS_FILE = 'settings.json';
 
 // ============================================================
-// 39. BAN TIZIMI
+// BAN TIZIMI
 // ============================================================
 async function banUser(userId, reason, byAdmin) {
   return store.update(BAN_FILE, (data) => {
@@ -42,7 +44,7 @@ async function listBanned() {
 }
 
 // ============================================================
-// 44. ADMIN AMALLAR TARIXI
+// ADMIN AMALLAR TARIXI
 // ============================================================
 async function logAction(adminId, action, details = {}) {
   return store.update(ACTIONS_FILE, (data) => {
@@ -70,10 +72,10 @@ async function getActions(limit = 20, offset = 0) {
 }
 
 function formatActions(actions) {
-  if (!actions.length) return '📭 Amallar yo\'q.';
+  if (!actions.length) return "📭 Amallar yo'q.";
 
   const lines = [];
-  lines.push(`📜 <b>Oxirgi amallar</b>`);
+  lines.push('📜 <b>Oxirgi amallar</b>');
   lines.push('');
   lines.push('━━━━━━━━━━━━━━━━━━━━');
   lines.push('');
@@ -92,11 +94,10 @@ function formatActions(actions) {
 }
 
 // ============================================================
-// 46. BOT SOZLAMALARI (kengaytirilgan)
+// SOZLAMALAR
 // ============================================================
 async function getSettings() {
-  const data = await store.read(SETTINGS_FILE);
-  return data;
+  return store.read(SETTINGS_FILE);
 }
 
 async function updateSetting(key, value) {
@@ -107,7 +108,7 @@ async function updateSetting(key, value) {
 }
 
 // ============================================================
-// ERROR LOGS KO'RISH
+// XATO LOGLARINI KO'RISH
 // ============================================================
 async function getRecentLogs(limit = 20) {
   try {
@@ -122,7 +123,7 @@ async function getRecentLogs(limit = 20) {
 }
 
 function formatLogs(lines) {
-  if (!lines.length) return '📭 Xatolar yo\'q. ✅';
+  if (!lines.length) return "📭 Xatolar yo'q. ✅";
 
   const output = [];
   output.push(`🐛 <b>Oxirgi xatolar (${lines.length})</b>`);
@@ -141,6 +142,9 @@ function formatLogs(lines) {
   return output.join('\n');
 }
 
+// ============================================================
+// EKSPORT
+// ============================================================
 module.exports = {
   banUser,
   unbanUser,

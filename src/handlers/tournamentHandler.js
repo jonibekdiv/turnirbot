@@ -1,7 +1,6 @@
 // ============================================================
 // TURNIR HANDLERLARI — To'liq
 // ============================================================
-
 const { Markup } = require('telegraf');
 const tournamentService = require('../services/tournamentService');
 const teamService = require('../services/teamService');
@@ -62,9 +61,9 @@ module.exports = (bot) => {
   bot.action(CALLBACK.MENU_TOURNAMENTS, async (ctx) => {
     await safeAnswer(ctx);
     try {
-      await safeEdit(ctx, '🏆 <b>Turnirlar</b>\n\nBo\'limni tanlang:', tournamentsMenu());
+      await safeEdit(ctx, "🏆 <b>Turnirlar</b>\n\nBo'limni tanlang:", tournamentsMenu());
     } catch (e) {
-      await ctx.reply('🏆 <b>Turnirlar</b>\n\nBo\'limni tanlang:', {
+      await ctx.reply("🏆 <b>Turnirlar</b>\n\nBo'limni tanlang:", {
         parse_mode: 'HTML',
         ...tournamentsMenu(),
       });
@@ -72,7 +71,7 @@ module.exports = (bot) => {
   });
 
   // ============================================================
-  // 2. BO'LIM TANLANGANDA (Bugungi / Kelgusi / Tugagan)
+  // 2. BO'LIM TANLANGANDA
   // ============================================================
   bot.action([CALLBACK.TOUR_TODAY, CALLBACK.TOUR_UPCOMING, CALLBACK.TOUR_FINISHED], async (ctx) => {
     await safeAnswer(ctx);
@@ -88,14 +87,16 @@ module.exports = (bot) => {
     const section = ctx.match[1];
     const page = parseInt(ctx.match[2], 10);
     const key =
-      section === 'today' ? CALLBACK.TOUR_TODAY :
-      section === 'upcoming' ? CALLBACK.TOUR_UPCOMING :
-      CALLBACK.TOUR_FINISHED;
+      section === 'today'
+        ? CALLBACK.TOUR_TODAY
+        : section === 'upcoming'
+        ? CALLBACK.TOUR_UPCOMING
+        : CALLBACK.TOUR_FINISHED;
     await showTournamentList(ctx, key, page);
   });
 
   // ============================================================
-  // 4. TURNIRNI OCHISH (🔑 Room info tugmasi bilan)
+  // 4. TURNIRNI OCHISH
   // ============================================================
   bot.action(/^tour:open:(.+)$/, async (ctx) => {
     await safeAnswer(ctx);
@@ -107,7 +108,6 @@ module.exports = (bot) => {
       });
     }
 
-    // Foydalanuvchi ro'yxatdan o'tganmi?
     const user = await userService.getUser(ctx.from.id);
     const team = user?.teamId ? await teamService.getTeam(user.teamId) : null;
     const isRegistered = team && t.registeredTeams.includes(team.id);
@@ -118,19 +118,24 @@ module.exports = (bot) => {
       [Markup.button.callback("📝 Ro'yxatdan o'tish", CALLBACK.TOUR_REGISTER + t.id)],
     ];
 
-    // 🔑 Room ma'lumotlari tugmasi — faqat ro'yxatdan o'tganlar va room tayyor bo'lsa
     if (isRegistered) {
       if (t.roomId && t.roomPassword) {
         buttons.push([
-          Markup.button.callback('🔑 Room ma\'lumotlari', 'tour:room_info:' + t.id),
+          Markup.button.callback("🔑 Room ma'lumotlari", CALLBACK.TOUR_ROOM_INFO + t.id),
         ]);
       } else if (t.roomId || t.roomPassword) {
         buttons.push([
-          Markup.button.callback('⏳ Room ma\'lumotlari (kuting)', 'tour:room_info:' + t.id),
+          Markup.button.callback(
+            "⏳ Room ma'lumotlari (kuting)",
+            CALLBACK.TOUR_ROOM_INFO + t.id
+          ),
         ]);
       } else {
         buttons.push([
-          Markup.button.callback('⏳ Room ma\'lumotlari (host yubormadi)', 'tour:room_info:' + t.id),
+          Markup.button.callback(
+            "⏳ Room ma'lumotlari (host yubormadi)",
+            CALLBACK.TOUR_ROOM_INFO + t.id
+          ),
         ]);
       }
     }
@@ -139,7 +144,6 @@ module.exports = (bot) => {
       Markup.button.callback('💬 Hostga yozish', CALLBACK.TOUR_CONTACT_HOST + t.id),
     ]);
 
-    // Admin uchun qo'shimcha tugmalar
     if (hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) {
       buttons.push([Markup.button.callback('✏️ Tahrirlash', CALLBACK.TOUR_EDIT + t.id)]);
       buttons.push([Markup.button.callback('📋 Nusxalash', CALLBACK.TOUR_CLONE + t.id)]);
@@ -158,7 +162,9 @@ module.exports = (bot) => {
           parse_mode: 'HTML',
           reply_markup: { inline_keyboard: buttons },
         });
-      } catch (e) { /* rasm yo'q */ }
+      } catch (e) {
+        /* rasm yo'q */
+      }
     }
 
     try {
@@ -175,7 +181,7 @@ module.exports = (bot) => {
   });
 
   // ============================================================
-  // 4.1 ROOM MA'LUMOTLARINI KO'RSATISH (Copy tugmalari bilan)
+  // 4.1 ROOM MA'LUMOTLARINI KO'RSATISH
   // ============================================================
   bot.action(/^tour:room_info:(.+)$/, async (ctx) => {
     await safeAnswer(ctx);
@@ -187,7 +193,6 @@ module.exports = (bot) => {
       });
     }
 
-    // Foydalanuvchi komandada va ro'yxatdan o'tganmi?
     const user = await userService.getUser(ctx.from.id);
     if (!user?.teamId) {
       return ctx.reply("❗ Siz komandada emassiz.", {
@@ -201,13 +206,11 @@ module.exports = (bot) => {
       });
     }
     if (!t.registeredTeams.includes(team.id)) {
-      return ctx.reply(
-        "❗ Siz bu turnirda ro'yxatdan o'tmagansiz.",
-        { reply_markup: backToTournament(t.id).reply_markup }
-      );
+      return ctx.reply("❗ Siz bu turnirda ro'yxatdan o'tmagansiz.", {
+        reply_markup: backToTournament(t.id).reply_markup,
+      });
     }
 
-    // ---------- Host hali yubormagan ----------
     if (!t.roomId && !t.roomPassword) {
       return ctx.reply(
         `╔══════════════════════╗\n` +
@@ -224,7 +227,6 @@ module.exports = (bot) => {
       );
     }
 
-    // ---------- Faqat bittasi bor ----------
     if (!t.roomId || !t.roomPassword) {
       return ctx.reply(
         `╔══════════════════════╗\n` +
@@ -242,7 +244,6 @@ module.exports = (bot) => {
       );
     }
 
-    // ---------- Ikkalasi ham tayyor — copy tugmalari bilan ----------
     const text =
       `╔══════════════════════╗\n` +
       `   🔑 <b>ROOM MA'LUMOTLARI</b>\n` +
@@ -312,7 +313,7 @@ module.exports = (bot) => {
   });
 
   // ============================================================
-  // 5. NATIJALAR (real-time standings)
+  // 5. NATIJALAR — O'yinchilar uchun PNG rasm
   // ============================================================
   bot.action(/^tour:st:(.+)$/, async (ctx) => {
     await safeAnswer(ctx);
@@ -332,25 +333,77 @@ module.exports = (bot) => {
     }
 
     const standings = pointsService.calculateStandings(t, matchData, teamsMap);
+
+    // Yuklanmoqda xabari
+    const loading = await ctx.reply('⏳ Rasm tayyorlanmoqda...');
+
+    try {
+      const imagePath = await pointsService.generateStandingsPNG(t, standings);
+
+      const kb = Markup.inlineKeyboard([
+        [Markup.button.callback('🔄 Yangilash', CALLBACK.TOUR_STANDINGS + t.id)],
+        [Markup.button.callback("📋 Matn ko'rinishida", 'tour:st_text:' + t.id)],
+        [Markup.button.callback('⬅️ Turnirga qaytish', CALLBACK.TOUR_OPEN + t.id)],
+        [Markup.button.callback('🏠 Asosiy menyu', CALLBACK.MENU_MAIN)],
+      ]);
+
+      try {
+        await ctx.telegram.deleteMessage(ctx.chat.id, loading.message_id);
+      } catch (e) {}
+
+      await ctx.replyWithPhoto(
+        { source: imagePath },
+        {
+          caption:
+            `📊 <b>${escapeHtml(t.title)}</b>\n` +
+            `🎮 Kartalar: <b>${matchData.matches.length}</b> | 👥 Komandalar: <b>${t.registeredTeams.length}</b>`,
+          parse_mode: 'HTML',
+          reply_markup: kb.reply_markup,
+        }
+      );
+    } catch (e) {
+      console.error('PNG error:', e);
+
+      const text = pointsService.formatStandings(standings, t);
+      const kb = Markup.inlineKeyboard([
+        [Markup.button.callback('🔄 Yangilash', CALLBACK.TOUR_STANDINGS + t.id)],
+        [Markup.button.callback('⬅️ Turnirga qaytish', CALLBACK.TOUR_OPEN + t.id)],
+      ]);
+
+      try {
+        await ctx.telegram.deleteMessage(ctx.chat.id, loading.message_id);
+      } catch (err) {}
+
+      await ctx.reply(text, { parse_mode: 'HTML', reply_markup: kb.reply_markup });
+    }
+  });
+
+  // ============================================================
+  // 5.1 MATN KO'RINISHIDA
+  // ============================================================
+  bot.action(/^tour:st_text:(.+)$/, async (ctx) => {
+    await safeAnswer(ctx);
+    const tId = ctx.match[1];
+    const t = await tournamentService.getTournament(tId);
+    if (!t) return ctx.reply('❗ Turnir topilmadi.');
+
+    const matchData = await matchService.getTournamentMatches(t.id);
+    const teamsMap = {};
+    for (const tid of t.registeredTeams) {
+      const team = await teamService.getTeam(tid);
+      if (team) teamsMap[tid] = team;
+    }
+
+    const standings = pointsService.calculateStandings(t, matchData, teamsMap);
     const text = pointsService.formatStandings(standings, t);
 
     const kb = Markup.inlineKeyboard([
-      [Markup.button.callback('🔄 Yangilash', CALLBACK.TOUR_STANDINGS + t.id)],
+      [Markup.button.callback("🖼 Rasm ko'rinishida", CALLBACK.TOUR_STANDINGS + t.id)],
       [Markup.button.callback('⬅️ Turnirga qaytish', CALLBACK.TOUR_OPEN + t.id)],
       [Markup.button.callback('🏠 Asosiy menyu', CALLBACK.MENU_MAIN)],
     ]);
 
-    try {
-      await ctx.editMessageText(text, {
-        parse_mode: 'HTML',
-        reply_markup: kb.reply_markup,
-      });
-    } catch (e) {
-      await ctx.reply(text, {
-        parse_mode: 'HTML',
-        reply_markup: kb.reply_markup,
-      });
-    }
+    await ctx.reply(text, { parse_mode: 'HTML', reply_markup: kb.reply_markup });
   });
 
   // ============================================================
@@ -381,7 +434,9 @@ module.exports = (bot) => {
           parse_mode: 'HTML',
           reply_markup: { inline_keyboard: buttons },
         });
-      } catch (e) { /* rasm yo'q */ }
+      } catch (e) {
+        /* rasm yo'q */
+      }
     }
 
     try {
@@ -474,7 +529,9 @@ module.exports = (bot) => {
           `ℹ️ <b>${escapeHtml(t.title)}</b> turniriga yangi komanda:\n<b>${escapeHtml(team.name)} [${escapeHtml(team.tag)}]</b>`,
           { parse_mode: 'HTML' }
         );
-      } catch (e) { /* host bloklagan */ }
+      } catch (e) {
+        /* host bloklagan */
+      }
     }
   });
 
@@ -484,9 +541,7 @@ module.exports = (bot) => {
   bot.action(CALLBACK.TOUR_CREATE, async (ctx) => {
     await safeAnswer(ctx);
     if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) {
-      return ctx.reply("⛔ Ruxsat yo'q.", {
-        reply_markup: backToMain().reply_markup,
-      });
+      return ctx.reply("⛔ Ruxsat yo'q.", backToMain());
     }
 
     ctx.session = { state: STATES.TOUR_CREATE_TITLE, data: {} };
@@ -522,9 +577,7 @@ module.exports = (bot) => {
     const hostId = ctx.match[1].replace('host_', '');
     const d = ctx.session?.data || {};
     if (!d.title) {
-      return ctx.reply("❗ Ma'lumot yo'q. Qaytadan boshlang.", {
-        reply_markup: backToMain().reply_markup,
-      });
+      return ctx.reply("❗ Ma'lumot yo'q. Qaytadan boshlang.", backToMain());
     }
 
     d.hostId = Number(hostId) || hostId;
@@ -537,9 +590,7 @@ module.exports = (bot) => {
     await safeAnswer(ctx);
     const d = ctx.session?.data || {};
     if (!d.title) {
-      return ctx.reply("❗ Ma'lumot yo'q.", {
-        reply_markup: backToMain().reply_markup,
-      });
+      return ctx.reply("❗ Ma'lumot yo'q.", backToMain());
     }
     d.hostId = null;
     ctx.session.state = STATES.TOUR_CREATE_CONFIRM;
@@ -554,9 +605,7 @@ module.exports = (bot) => {
     await safeAnswer(ctx);
     const d = ctx.session?.data || {};
     if (!d.title) {
-      return ctx.reply("❗ Ma'lumot yo'q.", {
-        reply_markup: backToMain().reply_markup,
-      });
+      return ctx.reply("❗ Ma'lumot yo'q.", backToMain());
     }
 
     try {
@@ -577,15 +626,16 @@ module.exports = (bot) => {
               `Room ID va parolni yuborish uchun Host panelga o'ting.`,
             { parse_mode: 'HTML' }
           );
-        } catch (e) { /* host bloklagan */ }
+        } catch (e) {
+          /* host bloklagan */
+        }
       }
 
-      // Shablon saqlash
       if (d.saveAsTemplate) {
         try {
           const tournamentExtService = require('../services/tournamentExtService');
           await tournamentExtService.saveTemplate(t.title, d, ctx.from.id);
-        } catch (e) { /* e'tiborsiz */ }
+        } catch (e) {}
       }
 
       ctx.session = { state: null, data: {} };
@@ -612,9 +662,7 @@ module.exports = (bot) => {
       );
     } catch (e) {
       ctx.session = { state: null, data: {} };
-      await ctx.reply('❌ Turnir yaratilmadi: ' + (e.message || 'xato'), {
-        reply_markup: backToMain().reply_markup,
-      });
+      await ctx.reply('❌ Turnir yaratilmadi: ' + (e.message || 'xato'), backToMain());
     }
   });
 
@@ -649,9 +697,7 @@ module.exports = (bot) => {
     if (s === STATES.TOUR_CREATE_TITLE) {
       const title = cleanText(ctx.message.text, LIMITS.MAX_NAME_LEN);
       if (title.length < 3) {
-        return ctx.reply('❗ Nom juda qisqa. Qayta kiriting:', {
-          reply_markup: backToMain().reply_markup,
-        });
+        return ctx.reply('❗ Nom juda qisqa. Qayta kiriting:', backToMain());
       }
       ctx.session.data.title = title;
       ctx.session.state = STATES.TOUR_CREATE_IMAGE;
@@ -672,18 +718,14 @@ module.exports = (bot) => {
           reply_markup: backToMain().reply_markup,
         });
       }
-      return ctx.reply('❗ Rasm yuboring yoki /skip:', {
-        reply_markup: backToMain().reply_markup,
-      });
+      return ctx.reply('❗ Rasm yuboring yoki /skip:', backToMain());
     }
 
     // ---------- 3. SANA ----------
     if (s === STATES.TOUR_CREATE_DATE) {
       const v = cleanText(ctx.message.text, 10);
       if (!isValidDate(v)) {
-        return ctx.reply('❗ Format: YYYY-MM-DD. Qayta kiriting:', {
-          reply_markup: backToMain().reply_markup,
-        });
+        return ctx.reply('❗ Format: YYYY-MM-DD. Qayta kiriting:', backToMain());
       }
       ctx.session.data.date = v;
       ctx.session.state = STATES.TOUR_CREATE_TIME;
@@ -697,9 +739,7 @@ module.exports = (bot) => {
     if (s === STATES.TOUR_CREATE_TIME) {
       const v = cleanText(ctx.message.text, 5);
       if (!isValidTime(v)) {
-        return ctx.reply('❗ Format: HH:mm. Qayta kiriting:', {
-          reply_markup: backToMain().reply_markup,
-        });
+        return ctx.reply('❗ Format: HH:mm. Qayta kiriting:', backToMain());
       }
       ctx.session.data.startTime = v;
       ctx.session.state = STATES.TOUR_CREATE_MODE;
@@ -713,9 +753,7 @@ module.exports = (bot) => {
     if (s === STATES.TOUR_CREATE_MODE) {
       const mode = cleanText(ctx.message.text, 20);
       if (!['solo', 'duo', 'squad'].includes(mode.toLowerCase())) {
-        return ctx.reply('❗ Faqat Solo, Duo yoki Squad:', {
-          reply_markup: backToMain().reply_markup,
-        });
+        return ctx.reply('❗ Faqat Solo, Duo yoki Squad:', backToMain());
       }
       ctx.session.data.mode = mode.charAt(0).toUpperCase() + mode.slice(1).toLowerCase();
       ctx.session.state = STATES.TOUR_CREATE_PRIZE;
@@ -728,9 +766,7 @@ module.exports = (bot) => {
     // ---------- 6. PRIZ ----------
     if (s === STATES.TOUR_CREATE_PRIZE) {
       const v = cleanText(ctx.message.text, LIMITS.MAX_PRIZE_LEN);
-      if (!v) return ctx.reply('❗ PRIZ kiriting:', {
-        reply_markup: backToMain().reply_markup,
-      });
+      if (!v) return ctx.reply('❗ PRIZ kiriting:', backToMain());
       ctx.session.data.prize = v;
       ctx.session.state = STATES.TOUR_CREATE_MAP_TAG;
       return ctx.reply('📍 Qadam <b>7/12</b>\n\n♾️ <b>MAP</b>:\n\n<i>Masalan: E/M/R/E</i>', {
@@ -742,9 +778,7 @@ module.exports = (bot) => {
     // ---------- 7. MAP ----------
     if (s === STATES.TOUR_CREATE_MAP_TAG) {
       const v = cleanText(ctx.message.text, LIMITS.MAX_MAP_TAG_LEN);
-      if (!v) return ctx.reply('❗ MAP kiriting:', {
-        reply_markup: backToMain().reply_markup,
-      });
+      if (!v) return ctx.reply('❗ MAP kiriting:', backToMain());
       ctx.session.data.mapTag = v;
       ctx.session.state = STATES.TOUR_CREATE_ETAPA;
       return ctx.reply('📍 Qadam <b>8/12</b>\n\n⭐️ <b>Etap</b>:\n\n<i>Masalan: 1/2</i>', {
@@ -756,9 +790,7 @@ module.exports = (bot) => {
     // ---------- 8. ETAP ----------
     if (s === STATES.TOUR_CREATE_ETAPA) {
       const v = cleanText(ctx.message.text, LIMITS.MAX_ETAPA_LEN);
-      if (!v) return ctx.reply('❗ Etap kiriting:', {
-        reply_markup: backToMain().reply_markup,
-      });
+      if (!v) return ctx.reply('❗ Etap kiriting:', backToMain());
       ctx.session.data.etapa = v;
       ctx.session.state = STATES.TOUR_CREATE_MAXTEAMS;
       return ctx.reply(
@@ -770,9 +802,7 @@ module.exports = (bot) => {
     // ---------- 9. MAKS. KOMANDALAR ----------
     if (s === STATES.TOUR_CREATE_MAXTEAMS) {
       const v = cleanText(ctx.message.text, 3);
-      if (!isPositiveInt(v)) return ctx.reply('❗ Musbat son kiriting:', {
-        reply_markup: backToMain().reply_markup,
-      });
+      if (!isPositiveInt(v)) return ctx.reply('❗ Musbat son kiriting:', backToMain());
       ctx.session.data.maxTeams = Math.min(Number(v), LIMITS.MAX_TEAMS_PER_TOURNAMENT);
       ctx.session.state = STATES.TOUR_CREATE_DESC;
       return ctx.reply("📍 Qadam <b>10/12</b>\n\n📄 Qo'shimcha izoh (yoki /skip):", {
@@ -786,7 +816,7 @@ module.exports = (bot) => {
       const v = cleanText(ctx.message.text, LIMITS.MAX_DESC_LEN);
       ctx.session.data.description = v.toLowerCase() === '/skip' ? '' : v;
       ctx.session.state = STATES.TOUR_CREATE_DEADLINE;
-      return ctx.reply("📍 Qadam <b>11/12</b>\n\n⏳ Muddat (YYYY-MM-DD HH:mm yoki /skip):", {
+      return ctx.reply('📍 Qadam <b>11/12</b>\n\n⏳ Muddat (YYYY-MM-DD HH:mm yoki /skip):', {
         parse_mode: 'HTML',
         reply_markup: backToMain().reply_markup,
       });
@@ -800,9 +830,7 @@ module.exports = (bot) => {
         if (isValidDate(d) && isValidTime(tm)) {
           ctx.session.data.registrationDeadline = parseDateTime(d, tm).toISOString();
         } else {
-          return ctx.reply('❗ Format: YYYY-MM-DD HH:mm yoki /skip:', {
-            reply_markup: backToMain().reply_markup,
-          });
+          return ctx.reply('❗ Format: YYYY-MM-DD HH:mm yoki /skip:', backToMain());
         }
       }
       ctx.session.state = STATES.TOUR_CREATE_HOST;
@@ -829,7 +857,7 @@ module.exports = (bot) => {
   });
 
   // ============================================================
-  // 11. TURNIR ID MATN SIFATIDA YUBORILGANDA
+  // 11. TURNIR ID MATN SIFATIDA
   // ============================================================
   bot.on('text', async (ctx, next) => {
     if (ctx.session?.state) return next();
@@ -843,14 +871,10 @@ module.exports = (bot) => {
       return ctx.reply(
         `❗ <b>Bunday ID bilan turnir topilmadi.</b>\n\n` +
           `Yuborilgan ID: <code>${escapeHtml(text)}</code>`,
-        {
-          parse_mode: 'HTML',
-          reply_markup: backToMain().reply_markup,
-        }
+        { parse_mode: 'HTML', reply_markup: backToMain().reply_markup }
       );
     }
 
-    // Ro'yxatdan o'tganmi?
     const user = await userService.getUser(ctx.from.id);
     const team = user?.teamId ? await teamService.getTeam(user.teamId) : null;
     const isRegistered = team && t.registeredTeams.includes(team.id);
@@ -862,20 +886,24 @@ module.exports = (bot) => {
       [Markup.button.callback("📝 Ro'yxatdan o'tish", CALLBACK.TOUR_REGISTER + t.id)],
     ];
 
-    // Room info tugmasi
     if (isRegistered) {
       if (t.roomId && t.roomPassword) {
         buttons.push([
-          Markup.button.callback('🔑 Room ma\'lumotlari', 'tour:room_info:' + t.id),
+          Markup.button.callback("🔑 Room ma'lumotlari", CALLBACK.TOUR_ROOM_INFO + t.id),
         ]);
       } else {
         buttons.push([
-          Markup.button.callback('⏳ Room ma\'lumotlari (kuting)', 'tour:room_info:' + t.id),
+          Markup.button.callback(
+            "⏳ Room ma'lumotlari (kuting)",
+            CALLBACK.TOUR_ROOM_INFO + t.id
+          ),
         ]);
       }
     }
 
-    buttons.push([Markup.button.callback('💬 Hostga yozish', CALLBACK.TOUR_CONTACT_HOST + t.id)]);
+    buttons.push([
+      Markup.button.callback('💬 Hostga yozish', CALLBACK.TOUR_CONTACT_HOST + t.id),
+    ]);
     buttons.push([Markup.button.callback('🏠 Asosiy menyu', CALLBACK.MENU_MAIN)]);
 
     if (t.imageFileId) {
@@ -885,7 +913,9 @@ module.exports = (bot) => {
           parse_mode: 'HTML',
           reply_markup: { inline_keyboard: buttons },
         });
-      } catch (e) { /* rasm yo'q */ }
+      } catch (e) {
+        /* rasm yo'q */
+      }
     }
 
     await ctx.reply(summary, {
@@ -952,9 +982,7 @@ module.exports = (bot) => {
 
     ctx.session = { state: 'tour_edit_field', data: { tid: tId, field } };
 
-    await ctx.reply(prompt, {
-      reply_markup: backToTournament(tId).reply_markup,
-    });
+    await ctx.reply(prompt, backToTournament(tId));
   });
 
   // ============================================================
@@ -999,18 +1027,14 @@ module.exports = (bot) => {
     ctx.session = { state: null, data: {} };
 
     await ctx.reply(
-      `✅ <b>Muvaffaqiyatli o'zgartirildi!</b>\n\n` +
-        `🏆 <b>${escapeHtml(t.title)}</b>`,
-      {
-        parse_mode: 'HTML',
-        reply_markup: backToTournament(tid).reply_markup,
-      }
+      `✅ <b>Muvaffaqiyatli o'zgartirildi!</b>\n\n` + `🏆 <b>${escapeHtml(t.title)}</b>`,
+      { parse_mode: 'HTML', reply_markup: backToTournament(tid).reply_markup }
     );
   });
 };
 
 // ============================================================
-// YORDAMCHI: TURNIRLAR RO'YXATI (pagination)
+// YORDAMCHI: TURNIRLAR RO'YXATI
 // ============================================================
 async function showTournamentList(ctx, key, page) {
   const all = await tournamentService.getAllTournaments();
@@ -1097,9 +1121,7 @@ async function showTournamentList(ctx, key, page) {
   pageItems.forEach((t, i) => {
     const num = start + i + 1;
     const title = t.title.length > 30 ? t.title.slice(0, 27) + '...' : t.title;
-    buttons.push([
-      Markup.button.callback(`🔍 ${num}. ${title}`, CALLBACK.TOUR_OPEN + t.id),
-    ]);
+    buttons.push([Markup.button.callback(`🔍 ${num}. ${title}`, CALLBACK.TOUR_OPEN + t.id)]);
   });
 
   const paginationRow = [];
@@ -1159,10 +1181,7 @@ async function sendHostPicker(ctx) {
     `📍 Qadam <b>12/12</b>\n\n` +
       `🎙 <b>Turnirga host biriktirish</b>\n\n` +
       `Quyidagi hostlardan birini tanlang yoki hostsiz davom eting:`,
-    {
-      parse_mode: 'HTML',
-      reply_markup: { inline_keyboard: rows },
-    }
+    { parse_mode: 'HTML', reply_markup: { inline_keyboard: rows } }
   );
 }
 

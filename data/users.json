@@ -8,18 +8,19 @@
     "teamId": "team_mu8q4593j6v9dv",
     "status": "active",
     "createdAt": "2026-09-19T18:07:20.279Z",
-    "updatedAt": "2026-09-19T21:28:11.280Z"
+    "updatedAt": "2026-09-20T16:45:55.167Z",
+    "lang": "uz"
   },
   "8811053020": {
     "id": 8811053020,
     "username": null,
     "firstName": "🍃",
     "lastName": "",
-    "languageCode": "uz",
-    "teamId": null,
+    "languageCode": "ru",
+    "teamId": "team_mu9nebmmgwo9pz",
     "status": "active",
     "createdAt": "2026-09-19T18:42:49.464Z",
-    "updatedAt": "2026-09-19T21:10:32.811Z"
+    "updatedAt": "2026-09-20T15:50:02.036Z"
   },
   "6441840191": {
     "id": 6441840191,
@@ -30,7 +31,7 @@
     "teamId": null,
     "status": "active",
     "createdAt": "2026-09-19T20:35:13.520Z",
-    "updatedAt": "2026-09-19T20:35:13.523Z"
+    "updatedAt": "2026-09-20T09:39:34.562Z"
   },
   "7743817651": {
     "id": 7743817651,
@@ -41,7 +42,8 @@
     "teamId": null,
     "status": "active",
     "createdAt": "2026-09-19T20:44:09.172Z",
-    "updatedAt": "2026-09-19T20:44:09.173Z"
+    "updatedAt": "2026-09-20T10:21:01.778Z",
+    "pubgId": "51345852655"
   },
   "8619608677": {
     "id": 8619608677,
@@ -52,6 +54,39 @@
     "teamId": "team_mu8q4593j6v9dv",
     "status": "active",
     "createdAt": "2026-09-19T20:48:26.226Z",
-    "updatedAt": "2026-09-19T21:27:35.400Z"
+    "updatedAt": "2026-09-20T16:01:27.941Z"
+  },
+  "7924137337": {
+    "id": 7924137337,
+    "username": "takhrva2703",
+    "firstName": "такхирива.",
+    "lastName": "",
+    "languageCode": "uz",
+    "teamId": null,
+    "status": "active",
+    "createdAt": "2026-09-20T09:39:34.553Z",
+    "updatedAt": "2026-09-20T09:39:34.553Z"
+  },
+  "7658290275": {
+    "id": 7658290275,
+    "username": "spenzy27",
+    "firstName": "ㅤ7",
+    "lastName": "",
+    "languageCode": "uz",
+    "teamId": null,
+    "status": "active",
+    "createdAt": "2026-09-20T09:48:15.687Z",
+    "updatedAt": "2026-09-20T09:52:05.418Z"
+  },
+  "7175469538": {
+    "id": 7175469538,
+    "username": "vhm_19",
+    "firstName": "ㅤㅤㅤㅤㅤㅤㅤㅤㅤABB",
+    "lastName": "",
+    "languageCode": "ru",
+    "teamId": null,
+    "status": "active",
+    "createdAt": "2026-09-20T16:39:57.101Z",
+    "updatedAt": "2026-09-20T16:39:57.125Z"
   }
 }

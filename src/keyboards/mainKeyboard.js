@@ -1,27 +1,38 @@
+// ============================================================
+// MAIN KEYBOARD — Ko'p tilli
+// ============================================================
 const { Markup } = require('telegraf');
 const { CALLBACK, ROLES } = require('../constants');
+const langService = require('../services/langService');
 
-function mainKeyboard(role) {
+function mainKeyboard(role, lang = 'uz') {
+  const t = (key) => langService.t(lang, key);
+
   const rows = [
-    [Markup.button.callback('🏆 Bugungi va keyingi turnirlar', CALLBACK.MENU_TOURNAMENTS)],
-    [Markup.button.callback('👥 Komandam', CALLBACK.MENU_TEAM)],
-    [Markup.button.callback('👤 Mening profilim', CALLBACK.MENU_PROFILE)],
-    [Markup.button.callback('ℹ️ Yordam', CALLBACK.MENU_HELP)],
+    [Markup.button.callback(t('menu_tournaments'), CALLBACK.MENU_TOURNAMENTS)],
+    [Markup.button.callback(t('menu_team'), CALLBACK.MENU_TEAM)],
+    [Markup.button.callback(t('menu_profile'), CALLBACK.MENU_PROFILE)],
+    [Markup.button.callback(t('menu_search'), CALLBACK.SEARCH_START)],
   ];
 
   const isStaff = [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.ORGANIZER].includes(role);
   if (isStaff) {
-    rows.push([Markup.button.callback('🛠 Admin panel', CALLBACK.ADMIN_PANEL)]);
+    rows.push([Markup.button.callback(t('menu_admin'), CALLBACK.ADMIN_PANEL)]);
   }
   if (role === ROLES.HOST) {
-    rows.push([Markup.button.callback('🎙 Host panel', CALLBACK.HOST_TOURS)]);
+    rows.push([Markup.button.callback(t('menu_host'), CALLBACK.HOST_TOURS)]);
   }
+
+  rows.push([Markup.button.callback(t('menu_language'), CALLBACK.MENU_LANGUAGE)]);
+  rows.push([Markup.button.callback(t('menu_help'), CALLBACK.MENU_HELP)]);
+
   return Markup.inlineKeyboard(rows);
 }
 
-function backMainKeyboard(role) {
+function backMainKeyboard(role, lang = 'uz') {
+  const t = (key) => langService.t(lang, key);
   return Markup.inlineKeyboard([
-    [Markup.button.callback('⬅️ Asosiy menyu', CALLBACK.MENU_MAIN)],
+    [Markup.button.callback(t('menu_main'), CALLBACK.MENU_MAIN)],
   ]);
 }
 

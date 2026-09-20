@@ -12,5 +12,18 @@
     ],
     "joinCode": "LNAMZ8AXRX",
     "createdAt": "2026-09-19T18:31:13.048Z"
+  },
+  "team_mu9nebmmgwo9pz": {
+    "id": "team_mu9nebmmgwo9pz",
+    "name": "Diyor chmo",
+    "tag": "CHMO",
+    "avatarFileId": "AgACAgEAAxkBAAIBu2qvrymgCgi93-7Abv3B4ezstpRmAAJxDGsbRQR5RS4TBnrRil4jAQADAgADeQADPQQ",
+    "managerUsername": "diyorbek_1306",
+    "captainId": 8811053020,
+    "members": [
+      8811053020
+    ],
+    "joinCode": "XCBU7Z6P68",
+    "createdAt": "2026-09-20T10:02:55.201Z"
   }
 }

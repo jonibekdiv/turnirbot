@@ -1,5 +1,10 @@
-// Umumiy konstantalar
+// ============================================================
+// KONSTANTALAR — To'liq (ko'p tilli)
+// ============================================================
 module.exports = {
+  // ============================================================
+  // ROLLAR
+  // ============================================================
   ROLES: {
     SUPER_ADMIN: 'super_admin',
     ADMIN: 'admin',
@@ -8,8 +13,11 @@ module.exports = {
     PLAYER: 'player',
   },
 
+  // ============================================================
+  // FSM HOLATLARI
+  // ============================================================
   STATES: {
-    // Komanda
+    // ---------- Komanda ----------
     TEAM_CREATE_NAME: 'team_create_name',
     TEAM_CREATE_TAG: 'team_create_tag',
     TEAM_CREATE_AVATAR: 'team_create_avatar',
@@ -22,7 +30,7 @@ module.exports = {
     TEAM_EDIT_BIO: 'team_edit_bio',
     TEAM_EDIT_MANAGER: 'team_edit_manager',
 
-    // Turnir
+    // ---------- Turnir yaratish (12 qadam) ----------
     TOUR_CREATE_TITLE: 'tour_create_title',
     TOUR_CREATE_IMAGE: 'tour_create_image',
     TOUR_CREATE_DATE: 'tour_create_date',
@@ -36,12 +44,14 @@ module.exports = {
     TOUR_CREATE_DEADLINE: 'tour_create_deadline',
     TOUR_CREATE_HOST: 'tour_create_host',
     TOUR_CREATE_CONFIRM: 'tour_create_confirm',
+
+    // ---------- Turnir tahrirlash ----------
     TOUR_EDIT_FIELD: 'tour_edit_field',
     TOUR_EDIT_VALUE: 'tour_edit_value',
     TOUR_CLONE_DATE: 'tour_clone_date',
     TOUR_CLONE_TIME: 'tour_clone_time',
 
-    // Host
+    // ---------- Host ----------
     HOST_SEND_ROOM_ID: 'host_send_room_id',
     HOST_SEND_ROOM_PASS: 'host_send_room_pass',
     HOST_SEND_ROOM_BOTH: 'host_send_room_both',
@@ -50,11 +60,11 @@ module.exports = {
     HOST_EDIT_MATCH: 'host_edit_match',
     HOST_PRIZE_INPUT: 'host_prize_input',
 
-    // O'yinchi
+    // ---------- O'yinchi ----------
     PLAYER_SEND_TO_HOST: 'player_send_to_host',
     PLAYER_PUBG_ID: 'player_pubg_id',
 
-    // Admin
+    // ---------- Admin ----------
     ADMIN_ADD_USER_ID: 'admin_add_user_id',
     ADMIN_ADD_ROLE: 'admin_add_role',
     ADMIN_BAN_INPUT: 'admin_ban_input',
@@ -64,11 +74,21 @@ module.exports = {
     ADMIN_CHANNEL_INPUT: 'admin_channel_input',
     ADMIN_SETTING_EDIT: 'admin_setting_edit',
 
-    // Qidiruv
+    // ---------- Qidiruv ----------
     SEARCH_QUERY: 'search_query',
+
+    // ---------- Kanal ----------
+    CHANNEL_CUSTOM_TEXT: 'channel_custom_text',
+    CHANNEL_CUSTOM_TEXT_BUTTON: 'channel_custom_text_button',
+    CHANNEL_CUSTOM_PHOTO: 'channel_custom_photo',
+    CHANNEL_CUSTOM_PHOTO_BUTTON: 'channel_custom_photo_button',
   },
 
+  // ============================================================
+  // CALLBACK DATA
+  // ============================================================
   CALLBACK: {
+    // ---------- Asosiy menyu ----------
     MENU_TOURNAMENTS: 'menu:tournaments',
     MENU_TEAM: 'menu:team',
     MENU_PROFILE: 'menu:profile',
@@ -76,8 +96,9 @@ module.exports = {
     MENU_ADMIN: 'menu:admin',
     MENU_BACK: 'menu:back',
     MENU_MAIN: 'menu:main',
+    MENU_LANGUAGE: 'menu:language',                       // ← YANGI
 
-    // Komanda
+    // ---------- Komanda ----------
     TEAM_CREATE: 'team:create',
     TEAM_JOIN: 'team:join',
     TEAM_MY: 'team:my',
@@ -95,7 +116,7 @@ module.exports = {
     TEAM_KICK: 'team:kick:',
     TEAM_KICK_CONFIRM: 'team:kickc:',
 
-    // Turnir
+    // ---------- Turnir ----------
     TOUR_LIST: 'tour:list',
     TOUR_TODAY: 'tour:today',
     TOUR_UPCOMING: 'tour:upcoming',
@@ -103,19 +124,20 @@ module.exports = {
     TOUR_OPEN: 'tour:open:',
     TOUR_REGISTER: 'tour:reg:',
     TOUR_CONTACT_HOST: 'tour:contact_host:',
+    TOUR_ROOM_INFO: 'tour:room_info:',
     TOUR_CREATE: 'tour:create',
     TOUR_CONFIRM: 'tour:confirm',
     TOUR_CANCEL: 'tour:cancel',
     TOUR_ASSIGN_HOST: 'tour:ah:',
     TOUR_BROADCAST: 'tour:bc:',
     TOUR_EDIT: 'tour:edit:',
-    TOUR_EDIT_FIELD: 'tour:editf:',
     TOUR_TEAMLIST: 'tour:tl:',
     TOUR_PICK_HOST: 'tour:ph:',
     TOUR_DELETE: 'tour:del:',
     TOUR_DELETE_CONFIRM: 'tour:delc:',
     TOUR_PAGE: 'tour:page:',
     TOUR_STANDINGS: 'tour:st:',
+    TOUR_STANDINGS_TEXT: 'tour:st_text:',
     TOUR_CLONE: 'tour:clone:',
     TOUR_CLONE_START: 'tour:clones:',
     TOUR_HISTORY: 'tour:hist',
@@ -133,12 +155,13 @@ module.exports = {
     TOUR_REPORT: 'tour:rep:',
     TOUR_WINNERS: 'tour:win:',
 
-    // Host
+    // ---------- Host ----------
     HOST_TOURS: 'host:tours',
     HOST_OPEN: 'host:open:',
     HOST_ROOM_ID: 'host:rid:',
     HOST_ROOM_PASS: 'host:rpass:',
     HOST_ROOM_BOTH: 'host:rboth:',
+    HOST_ROOM_RESEND: 'host:room_resend:',
     HOST_MSG: 'host:msg:',
     HOST_RESULTS: 'host:res:',
     HOST_MATCH_NEW: 'host:mn:',
@@ -149,20 +172,21 @@ module.exports = {
     HOST_MATCH_DEL_CONFIRM: 'host:mdc:',
     HOST_MATCH_EDIT: 'host:me:',
     HOST_STANDINGS: 'host:st:',
+    HOST_STANDINGS_TEXT: 'host:st_text:',
     HOST_PRIZE: 'host:pr:',
     HOST_VOICE: 'host:vc:',
     HOST_VIDEO: 'host:vd:',
     HOST_POLL: 'host:pl:',
     HOST_ANNOUNCE_WINNERS: 'host:aw:',
 
-    // O'yinchi
+    // ---------- O'yinchi ----------
     USER_PUBG_ID: 'user:pid',
     USER_STATS: 'user:stats',
     USER_ACHIEVEMENTS: 'user:ach',
     USER_LEADERBOARD: 'user:lb',
     USER_LB_MODE: 'user:lbm:',
 
-    // Admin panel
+    // ---------- Admin panel ----------
     ADMIN_PANEL: 'admin:panel',
     ADMIN_USERS: 'admin:users',
     ADMIN_TEAMS: 'admin:teams',
@@ -185,7 +209,20 @@ module.exports = {
     ADMIN_CHANNEL: 'admin:ch',
     ADMIN_SET_EDIT: 'admin:se:',
 
-    // Umumiy
+    // ---------- Kanal ----------
+    CHANNEL_SET: 'channel:set',
+    CHANNEL_CHANGE: 'channel:change',
+    CHANNEL_DELETE: 'channel:delete',
+    CHANNEL_TEST: 'channel:test',
+    CHANNEL_CUSTOM_TEXT: 'channel:custom_text',
+    CHANNEL_CUSTOM_PHOTO: 'channel:custom_photo',
+    CHANNEL_SEND_NO_BUTTON: 'channel:send_no_button',
+
+    // ---------- Til ----------
+    LANG_SET: 'lang:set:',                                 // ← YANGI
+    LANG_BACK: 'lang:back',                                // ← YANGI
+
+    // ---------- Umumiy ----------
     CANCEL: 'common:cancel',
     SEARCH_START: 'search:start',
     SEARCH_TOUR: 'search:tour',
@@ -193,6 +230,9 @@ module.exports = {
     FILTER_TOUR: 'filter:tour',
   },
 
+  // ============================================================
+  // LIMITLAR
+  // ============================================================
   LIMITS: {
     MAX_TEAMS_PER_TOURNAMENT: 18,
     MIN_TEAMS_PER_TOURNAMENT: 2,
@@ -214,17 +254,37 @@ module.exports = {
     ACTIONS_PAGE_SIZE: 15,
   },
 
+  // ============================================================
+  // STANDART QIYMATLAR
+  // ============================================================
   DEFAULT_MAP: 'Erangel',
   DEFAULT_MODE: 'Squad',
   DEFAULT_MAX_TEAMS: 18,
   DEFAULT_MAX_PLAYERS: 8,
 
+  // ============================================================
+  // TILLAR
+  // ============================================================
+  LANGS: {
+    UZ: 'uz',
+    RU: 'ru',
+    EN: 'en',
+  },
+  DEFAULT_LANG: 'uz',
+  SUPPORTED_LANGS: ['uz', 'en', 'ru'],
+
+  // ============================================================
+  // TEAM LIST SOZLAMALARI
+  // ============================================================
   TEAM_LIST: {
     EMPTY_SLOTS: 2,
     START_INDEX: 3,
     RU_TIMEZONE_DIFF: 2,
   },
 
+  // ============================================================
+  // PTS TIZIMI
+  // ============================================================
   PLACEMENT_POINTS: {
     1: 10,
     2: 6,
@@ -236,34 +296,33 @@ module.exports = {
     8: 1,
   },
 
-  // Achievements
+  // ============================================================
+  // ACHIEVEMENTS
+  // ============================================================
   ACHIEVEMENTS: {
     FIRST_BLOOD: { id: 'first_blood', name: '🥇 Birinchi qon', desc: 'Birinchi kill' },
     HUNDRED_KILLS: { id: 'hundred_kills', name: '💯 100 kill', desc: '100 ta kill' },
-    FIVE_WINS: { id: 'five_wins', name: '🏆 5 g\'alaba', desc: '5 marta 1-o\'rin' },
-    TEN_MATCHES: { id: 'ten_matches', name: '🎮 10 o\'yin', desc: '10 ta kartada qatnashish' },
-    CAPTAIN_MASTER: { id: 'captain_master', name: '👑 Captain', desc: 'Komanda captain\'i' },
-    CHICKEN_DINNER: { id: 'chicken_dinner', name: '🍗 Winner Winner', desc: '1-o\'rin' },
+    FIVE_WINS: { id: 'five_wins', name: "🏆 5 g'alaba", desc: "5 marta 1-o'rin" },
+    TEN_MATCHES: { id: 'ten_matches', name: "🎮 10 o'yin", desc: '10 ta kartada qatnashish' },
+    CAPTAIN_MASTER: { id: 'captain_master', name: '👑 Captain', desc: "Komanda captain'i" },
+    CHICKEN_DINNER: { id: 'chicken_dinner', name: '🍗 Winner Winner', desc: "1-o'rin" },
   },
 
-  // Team statuses
+  // ============================================================
+  // TEAM STATUSES
+  // ============================================================
   TEAM_STATUS: {
     ACTIVE: 'active',
     INACTIVE: 'inactive',
   },
 
-  // Tournament stages
+  // ============================================================
+  // TOURNAMENT STAGES
+  // ============================================================
   STAGES: {
     SINGLE: 'single',
     QUARTER: 'quarter',
     SEMI: 'semi',
     FINAL: 'final',
-  },
-
-  // Languages
-  LANGS: {
-    UZ: 'uz',
-    RU: 'ru',
-    EN: 'en',
   },
 };

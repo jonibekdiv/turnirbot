@@ -1,19 +1,27 @@
-// PTS tizimi — ball hisoblash va standings
+// ============================================================
+// PTS TIZIMI — Ball hisoblash va Standings
+// ============================================================
 const { PLACEMENT_POINTS } = require('../constants');
 const { escapeHtml } = require('../utils/telegramUtils');
 
-// O'rin uchun ball
+// ============================================================
+// O'RIN UCHUN BALL
+// ============================================================
 function getPlacementPoints(placement) {
   return PLACEMENT_POINTS[placement] || 0;
 }
 
-// Kill uchun ball (1 kill = 1 pts)
+// ============================================================
+// KILL UCHUN BALL (1 kill = 1 pts)
+// ============================================================
 function getKillPoints(kills) {
   const k = parseInt(kills, 10);
   return isNaN(k) || k < 0 ? 0 : k;
 }
 
-// Bitta karta uchun jami ball
+// ============================================================
+// BITTA KARTA UCHUN JAMI BALL
+// ============================================================
 function calculateTotal(placement, kills) {
   return getPlacementPoints(placement) + getKillPoints(kills);
 }
@@ -29,7 +37,7 @@ function calculateStandings(tournament, matchData, teamsMap) {
     const t = teamsMap[teamId];
     standings[teamId] = {
       teamId,
-      name: t?.name || 'Noma\'lum',
+      name: t?.name || "Noma'lum",
       tag: t?.tag || '?',
       matches: 0,
       wins: 0,
@@ -80,7 +88,7 @@ function parseMatchInput(text, registeredTeams) {
     .map((l) => l.trim())
     .filter((l) => l.length > 0);
 
-  if (lines.length === 0) throw new Error('Bo\'sh xabar yuborildi');
+  if (lines.length === 0) throw new Error("Bo'sh xabar yuborildi");
 
   // Tag → team map
   const teamByTag = {};
@@ -99,18 +107,16 @@ function parseMatchInput(text, registeredTeams) {
     let m = line.match(/^([A-Za-z0-9_]+)\s*[-|:]\s*(\d+)$/);
     if (!m) m = line.match(/^([A-Za-z0-9_]+)\s+(\d+)$/);
     if (!m) {
-      // Raqamli prefiks: "1. UP - 5" yoki "1) UP 5"
       m = line.match(/^\d+[.)\s]\s*([A-Za-z0-9_]+)\s*[-|:]\s*(\d+)$/);
     }
     if (!m) {
-      // Raqamli prefiks: "1. UP 5"
       m = line.match(/^\d+[.)\s]\s*([A-Za-z0-9_]+)\s+(\d+)$/);
     }
 
     if (!m) {
       throw new Error(
         `❌ ${i + 1}-qator noto'g'ri formatda:\n<code>${escapeHtml(line)}</code>\n\n` +
-        `To'g'ri format: <code>TAG - KILL</code>`
+          `To'g'ri format: <code>TAG - KILL</code>`
       );
     }
 
@@ -141,7 +147,7 @@ function parseMatchInput(text, registeredTeams) {
   if (missing.length > 0) {
     throw new Error(
       `❌ Quyidagi komandalar yo'q:\n` +
-      missing.map((t) => `<b>${t.tag}</b> — ${escapeHtml(t.name)}`).join('\n')
+        missing.map((t) => `<b>${t.tag}</b> — ${escapeHtml(t.name)}`).join('\n')
     );
   }
 
@@ -149,12 +155,11 @@ function parseMatchInput(text, registeredTeams) {
 }
 
 // ============================================================
-// STANDINGS'NI CHIROYLI FORMATDA KO'RSATISH
+// STANDINGS'NI CHIROYLI MATN KO'RINISHIDA
 // ============================================================
 function formatStandings(standings, tournament) {
-  if (!standings.length) return '📭 Hozircha natijalar yo\'q.';
+  if (!standings.length) return "📭 Hozircha natijalar yo'q.";
 
-  // Ustun kengliklari
   const W_NO = 3;
   const W_TEAM = 18;
   const W_WIN = 4;
@@ -201,7 +206,9 @@ function formatStandings(standings, tournament) {
   return lines.join('\n');
 }
 
-// Bitta kartani ko'rsatish
+// ============================================================
+// BITTA KARTANI KO'RSATISH
+// ============================================================
 function formatMatchCard(match, teamsMap) {
   const lines = [];
   lines.push(`╔══════════════════════╗`);
@@ -209,7 +216,6 @@ function formatMatchCard(match, teamsMap) {
   lines.push(`╚══════════════════════╝`);
   lines.push('');
 
-  // Saralash
   const sorted = [...match.results].sort((a, b) => a.placement - b.placement);
 
   const W_NO = 4;
@@ -223,8 +229,7 @@ function formatMatchCard(match, teamsMap) {
     return str + ' '.repeat(len - str.length);
   }
 
-  const header =
-    pad('#', W_NO) + pad('Team', W_TEAM) + pad('Kill', W_KILL) + pad('Pts', W_PTS);
+  const header = pad('#', W_NO) + pad('Team', W_TEAM) + pad('Kill', W_KILL) + pad('Pts', W_PTS);
   const divider = '─'.repeat(header.length);
 
   const rows = sorted.map((r) => {
@@ -242,6 +247,17 @@ function formatMatchCard(match, teamsMap) {
   return lines.join('\n');
 }
 
+// ============================================================
+// STANDINGS'NI PNG RASM SIFATIDA YARATISH
+// ============================================================
+async function generateStandingsPNG(tournament, standings) {
+  const imageService = require('./imageService');
+  return imageService.generateStandingsImage(tournament, standings);
+}
+
+// ============================================================
+// EKSPORT
+// ============================================================
 module.exports = {
   getPlacementPoints,
   getKillPoints,
@@ -250,4 +266,5 @@ module.exports = {
   parseMatchInput,
   formatStandings,
   formatMatchCard,
+  generateStandingsPNG,
 };
