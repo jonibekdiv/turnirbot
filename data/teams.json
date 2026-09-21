@@ -8,7 +8,7 @@
     "captainId": 6580878834,
     "members": [
       6580878834,
-      8619608677
+      8086341647
     ],
     "joinCode": "LNAMZ8AXRX",
     "createdAt": "2026-09-19T18:31:13.048Z"
@@ -25,5 +25,18 @@
     ],
     "joinCode": "XCBU7Z6P68",
     "createdAt": "2026-09-20T10:02:55.201Z"
+  },
+  "team_mubkwu5zphpwve": {
+    "id": "team_mubkwu5zphpwve",
+    "name": "Yahshi inson",
+    "tag": "HA",
+    "avatarFileId": "AgACAgIAAxkBAAIC9mqxd1gbhLX1e0zrPIMVudr0IyJ2AAIaN2sbJmGQSeSKk7ccdtZ1AQADAgADeQADPQQ",
+    "managerUsername": "rangerbekk",
+    "captainId": 8619608677,
+    "members": [
+      8619608677
+    ],
+    "joinCode": "BYCW3XBEDH",
+    "createdAt": "2026-09-21T18:28:52.535Z"
   }
 }

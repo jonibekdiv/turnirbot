@@ -1,5 +1,5 @@
 // ============================================================
-// KONSTANTALAR — To'liq (ko'p tilli)
+// KONSTANTALAR — To'liq (obuna tizimi bilan)
 // ============================================================
 module.exports = {
   // ============================================================
@@ -11,6 +11,46 @@ module.exports = {
     ORGANIZER: 'organizer',
     HOST: 'host',
     PLAYER: 'player',
+  },
+
+  // ============================================================
+  // TURNIR TURI
+  // ============================================================
+  TOURNAMENT_TYPE: {
+    FREE: 'free',
+    PAID: 'paid',
+  },
+
+  // ============================================================
+  // TO'LOV STATUSLARI
+  // ============================================================
+  PAYMENT_STATUS: {
+    PENDING: 'pending',
+    APPROVED: 'approved',
+    REJECTED: 'rejected',
+    CANCELLED: 'cancelled',
+    EXPIRED: 'expired',
+  },
+
+  // ============================================================
+  // KARTA TURLARI
+  // ============================================================
+  CARD_TYPES: {
+    UZCARD: 'uzcard',
+    HUMO: 'humo',
+    VISA: 'visa',
+    MASTERCARD: 'mastercard',
+    UNIONPAY: 'unionpay',
+    OTHER: 'other',
+  },
+
+  CARD_TYPE_LABELS: {
+    uzcard: '💳 UzCard',
+    humo: '💳 Humo',
+    visa: '💳 Visa',
+    mastercard: '💳 MasterCard',
+    unionpay: '💳 UnionPay',
+    other: '💳 Boshqa',
   },
 
   // ============================================================
@@ -30,8 +70,9 @@ module.exports = {
     TEAM_EDIT_BIO: 'team_edit_bio',
     TEAM_EDIT_MANAGER: 'team_edit_manager',
 
-    // ---------- Turnir yaratish (12 qadam) ----------
+    // ---------- Turnir yaratish ----------
     TOUR_CREATE_TITLE: 'tour_create_title',
+    TOUR_CREATE_TYPE: 'tour_create_type',
     TOUR_CREATE_IMAGE: 'tour_create_image',
     TOUR_CREATE_DATE: 'tour_create_date',
     TOUR_CREATE_TIME: 'tour_create_time',
@@ -45,11 +86,31 @@ module.exports = {
     TOUR_CREATE_HOST: 'tour_create_host',
     TOUR_CREATE_CONFIRM: 'tour_create_confirm',
 
+    // ---------- Pullik turnir ----------
+    TOUR_CREATE_AMOUNT: 'tour_create_amount',
+    TOUR_CREATE_CURRENCY: 'tour_create_currency',
+    TOUR_CREATE_CARD_NUMBER: 'tour_create_card_number',
+    TOUR_CREATE_CARD_OWNER: 'tour_create_card_owner',
+    TOUR_CREATE_PAYMENT_INSTR: 'tour_create_payment_instr',
+    TOUR_CREATE_PAYMENT_DEADLINE: 'tour_create_payment_deadline',
+    TOUR_CREATE_PICK_CARD: 'tour_create_pick_card',
+
+    // ---------- Bepul turnir kanallari ----------
+    TOUR_CREATE_CHANNELS: 'tour_create_channels',
+
     // ---------- Turnir tahrirlash ----------
     TOUR_EDIT_FIELD: 'tour_edit_field',
     TOUR_EDIT_VALUE: 'tour_edit_value',
     TOUR_CLONE_DATE: 'tour_clone_date',
     TOUR_CLONE_TIME: 'tour_clone_time',
+
+    // ---------- Kartalar ----------
+    CARD_ADD_NUMBER: 'card_add_number',
+    CARD_ADD_OWNER: 'card_add_owner',
+    CARD_ADD_PHONE: 'card_add_phone',
+    CARD_ADD_TYPE: 'card_add_type',
+    CARD_ADD_BANK: 'card_add_bank',
+    CARD_ADD_CONFIRM: 'card_add_confirm',
 
     // ---------- Host ----------
     HOST_SEND_ROOM_ID: 'host_send_room_id',
@@ -64,6 +125,9 @@ module.exports = {
     PLAYER_SEND_TO_HOST: 'player_send_to_host',
     PLAYER_PUBG_ID: 'player_pubg_id',
 
+    // ---------- Obuna ----------
+    MEMBER_VERIFY: 'member_verify',
+
     // ---------- Admin ----------
     ADMIN_ADD_USER_ID: 'admin_add_user_id',
     ADMIN_ADD_ROLE: 'admin_add_role',
@@ -74,14 +138,19 @@ module.exports = {
     ADMIN_CHANNEL_INPUT: 'admin_channel_input',
     ADMIN_SETTING_EDIT: 'admin_setting_edit',
 
-    // ---------- Qidiruv ----------
-    SEARCH_QUERY: 'search_query',
+    // ---------- To'lov ----------
+    PAYMENT_RECEIPT: 'payment_receipt',
+    PAYMENT_REJECT_REASON: 'payment_reject_reason',
 
     // ---------- Kanal ----------
+    CHANNEL_ADD_INPUT: 'channel_add_input',
     CHANNEL_CUSTOM_TEXT: 'channel_custom_text',
     CHANNEL_CUSTOM_TEXT_BUTTON: 'channel_custom_text_button',
     CHANNEL_CUSTOM_PHOTO: 'channel_custom_photo',
     CHANNEL_CUSTOM_PHOTO_BUTTON: 'channel_custom_photo_button',
+
+    // ---------- Qidiruv ----------
+    SEARCH_QUERY: 'search_query',
   },
 
   // ============================================================
@@ -96,7 +165,7 @@ module.exports = {
     MENU_ADMIN: 'menu:admin',
     MENU_BACK: 'menu:back',
     MENU_MAIN: 'menu:main',
-    MENU_LANGUAGE: 'menu:language',                       // ← YANGI
+    MENU_LANGUAGE: 'menu:language',
 
     // ---------- Komanda ----------
     TEAM_CREATE: 'team:create',
@@ -155,6 +224,47 @@ module.exports = {
     TOUR_REPORT: 'tour:rep:',
     TOUR_WINNERS: 'tour:win:',
 
+    // ---------- Turnir turi ----------
+    TOUR_TYPE_FREE: 'ttype:free',
+    TOUR_TYPE_PAID: 'ttype:paid',
+    TOUR_CURRENCY_SET: 'tcurr:',
+
+    // ---------- Bepul turnir kanallari ----------
+    TOUR_CH_PICK: 'tch:p:',
+    TOUR_CH_DONE: 'tch:done',
+    TOUR_CH_SKIP: 'tch:skip',
+
+    // ---------- Karta tanlash (turnirda) ----------
+    TOUR_PICK_CARD: 'tpick:',
+    TOUR_PICK_CARD_SKIP: 'tpick:skip',
+    TOUR_CARD_MANUAL: 'tpick:manual',
+
+    // ---------- Kanal obuna tekshiruvi ----------
+    CH_VERIFY_ALL: 'chv:all:',
+    CH_VERIFY_MEMBER: 'chv:m:',         // ← YANGI (a'zo tekshiruvi)
+    CH_SUBSCRIBE: 'chv:sub:',
+    CH_BACK: 'chv:back:',
+
+    // ---------- To'lov ----------
+    PAY_SEND_RECEIPT: 'pay:send:',
+    PAY_CANCEL: 'pay:cancel:',
+    PAY_RESEND: 'pay:resend:',
+    PAY_MY: 'pay:my',
+    PAY_APPROVE: 'pay:a:',
+    PAY_REJECT: 'pay:r:',
+    PAY_TEAM_INFO: 'pay:ti:',
+    PAY_TOUR_INFO: 'pay:tri:',
+
+    // ---------- Kartalar boshqaruvi ----------
+    ADMIN_CARDS: 'admin:cards',
+    CARD_ADD: 'card:add',
+    CARD_LIST: 'card:list',
+    CARD_VIEW: 'card:v:',
+    CARD_DELETE: 'card:d:',
+    CARD_DELETE_CONFIRM: 'card:dc:',
+    CARD_SET_DEFAULT: 'card:sd:',
+    CARD_TYPE: 'ctype:',
+
     // ---------- Host ----------
     HOST_TOURS: 'host:tours',
     HOST_OPEN: 'host:open:',
@@ -209,7 +319,21 @@ module.exports = {
     ADMIN_CHANNEL: 'admin:ch',
     ADMIN_SET_EDIT: 'admin:se:',
 
-    // ---------- Kanal ----------
+    // ---------- To'lov paneli ----------
+    ADMIN_PAYMENTS: 'admin:payments',
+    ADMIN_PAYMENTS_PENDING: 'admin:pp',
+    ADMIN_PAYMENTS_APPROVED: 'admin:pa',
+    ADMIN_PAYMENTS_REJECTED: 'admin:pr',
+    ORG_MY_TOURNAMENTS: 'org:mt',
+    ORG_MY_PAYMENTS: 'org:mp',
+    ORG_PENDING_PAYMENTS: 'org:mpp',
+
+    // ---------- Kanallar ----------
+    ADMIN_CHANNELS: 'admin:channels',
+    ADMIN_CHANNELS_ADD: 'admin:cha',
+    ADMIN_CHANNELS_LIST: 'admin:chl',
+
+    // ---------- Kanal (asosiy e'lon) ----------
     CHANNEL_SET: 'channel:set',
     CHANNEL_CHANGE: 'channel:change',
     CHANNEL_DELETE: 'channel:delete',
@@ -219,8 +343,8 @@ module.exports = {
     CHANNEL_SEND_NO_BUTTON: 'channel:send_no_button',
 
     // ---------- Til ----------
-    LANG_SET: 'lang:set:',                                 // ← YANGI
-    LANG_BACK: 'lang:back',                                // ← YANGI
+    LANG_SET: 'lang:set:',
+    LANG_BACK: 'lang:back',
 
     // ---------- Umumiy ----------
     CANCEL: 'common:cancel',
@@ -246,6 +370,11 @@ module.exports = {
     MAX_ETAPA_LEN: 30,
     MAX_BIO_LEN: 150,
     MAX_TAG_LEN: 5,
+    MAX_PAYMENT_AMOUNT: 999999999,
+    MAX_CARD_NUMBER_LEN: 30,
+    MAX_CARD_OWNER_LEN: 60,
+    MAX_PHONE_LEN: 20,
+    MAX_BANK_LEN: 50,
     BROADCAST_DELAY_MS: 60,
     BROADCAST_BATCH: 25,
     PAGE_SIZE: 8,
@@ -261,6 +390,8 @@ module.exports = {
   DEFAULT_MODE: 'Squad',
   DEFAULT_MAX_TEAMS: 18,
   DEFAULT_MAX_PLAYERS: 8,
+  DEFAULT_LANG: 'uz',
+  SUPPORTED_LANGS: ['uz', 'en', 'ru'],
 
   // ============================================================
   // TILLAR
@@ -270,8 +401,11 @@ module.exports = {
     RU: 'ru',
     EN: 'en',
   },
-  DEFAULT_LANG: 'uz',
-  SUPPORTED_LANGS: ['uz', 'en', 'ru'],
+
+  // ============================================================
+  // VALYUTALAR
+  // ============================================================
+  CURRENCIES: ['UZS', 'USD', 'RUB', 'EUR'],
 
   // ============================================================
   // TEAM LIST SOZLAMALARI

@@ -1,5 +1,5 @@
 // ============================================================
-// BOT.JS — Asosiy kirish nuqtasi (xavfsiz)
+// BOT.JS — Asosiy kirish nuqtasi (to'liq)
 // ============================================================
 const { Telegraf, session } = require('telegraf');
 const config = require('./config');
@@ -16,26 +16,61 @@ try {
   cronService = require('./services/cronService');
 } catch (e) {}
 
-// Handlerlar
+let commandsService = null;
+try {
+  commandsService = require('./services/commandsService');
+} catch (e) {
+  console.log('⚠️ commandsService yuklanmadi:', e.message);
+}
+
+// ============================================================
+// HANDLERLAR
+// ============================================================
 const startHandler = require('./handlers/startHandler');
 const languageHandler = require('./handlers/languageHandler');
 const userExtHandler = require('./handlers/userExtHandler');
 const teamHandler = require('./handlers/teamHandler');
 const teamExtHandler = require('./handlers/teamExtHandler');
+
+// Karta handler (turnirdan OLDIN)
+const cardHandler = require('./handlers/cardHandler');
+
+// To'lov va obuna (turnirdan OLDIN)
+const tournamentCreatePaymentHandler = require('./handlers/tournamentCreatePaymentHandler');
+const subscriptionHandler = require('./handlers/subscriptionHandler');
+
+// Turnir handlerlari
 const tournamentHandler = require('./handlers/tournamentHandler');
+const tournamentPaymentHandler = require('./handlers/tournamentPaymentHandler');
 const tournamentExtHandler = require('./handlers/tournamentExtHandler');
+
+// Host
 const hostHandler = require('./handlers/hostHandler');
 const hostExtHandler = require('./handlers/hostExtHandler');
+
+// Media
 const mediaHandler = require('./handlers/mediaHandler');
+
+// Admin
 const adminHandler = require('./handlers/adminHandler');
 const adminExtHandler = require('./handlers/adminExtHandler');
 const channelHandler = require('./handlers/channelHandler');
+const channelAdminHandler = require('./handlers/channelAdminHandler');
+
+// To'lov review
+const paymentHandler = require('./handlers/paymentHandler');
+const organizerPaymentReviewHandler = require('./handlers/organizerPaymentReviewHandler');
+
+// Qidiruv va Inline
 const searchHandler = require('./handlers/searchHandler');
 const inlineHandler = require('./handlers/inlineHandler');
 
+// ============================================================
+// ASOSIY FUNKSIYA
+// ============================================================
 async function main() {
-  if (!config.BOT_TOKEN) throw new Error("BOT_TOKEN .env da yo'q");
-  if (!config.SUPER_ADMIN_ID) throw new Error("SUPER_ADMIN_ID .env da yo'q");
+  if (!config.BOT_TOKEN) throw new Error("BOT_TOKEN .env da ko'rsatilmagan");
+  if (!config.SUPER_ADMIN_ID) throw new Error("SUPER_ADMIN_ID .env da ko'rsatilmagan");
 
   await ensureAllFiles();
 
@@ -45,28 +80,53 @@ async function main() {
   // MIDDLEWARELAR (TARTIB MUHIM!)
   // ============================================================
   bot.use(session());
-  bot.use(rateLimitMiddleware);       // ← 1. Rate limit
-  bot.use(errorHandler);              // ← 2. Xato ushlash
-  bot.use(banCheckMiddleware);        // ← 3. Ban tekshiruv
-  bot.use(authMiddleware);            // ← 4. Auth
-  bot.use(langMiddleware);            // ← 5. Til
+  bot.use(rateLimitMiddleware);
+  bot.use(errorHandler);
+  bot.use(banCheckMiddleware);
+  bot.use(authMiddleware);
+  bot.use(langMiddleware);
 
   // ============================================================
-  // HANDLERLAR
+  // HANDLERLAR (TARTIB MUHIM!)
   // ============================================================
+
+  // 1. Asosiy
   startHandler(bot);
   languageHandler(bot);
+
+  // 2. Foydalanuvchi va komanda
   userExtHandler(bot);
   teamHandler(bot);
   teamExtHandler(bot);
+
+  // 3. Karta handler (CARD_ADD ishlashi uchun turnirdan OLDIN)
+  cardHandler(bot);
+
+  // 4. To'lov va obuna (turnirdan OLDIN)
+  tournamentCreatePaymentHandler(bot);
+  subscriptionHandler(bot);
+
+  // 5. Turnirlar
   tournamentHandler(bot);
+  tournamentPaymentHandler(bot);
   tournamentExtHandler(bot);
+
+  // 6. Host
   hostHandler(bot);
   hostExtHandler(bot);
   mediaHandler(bot);
+
+  // 7. Admin
   adminHandler(bot);
   adminExtHandler(bot);
   channelHandler(bot);
+  channelAdminHandler(bot);
+
+  // 8. To'lov review
+  paymentHandler(bot);
+  organizerPaymentReviewHandler(bot);
+
+  // 9. Qidiruv va Inline
   searchHandler(bot);
   inlineHandler(bot);
 
@@ -78,6 +138,11 @@ async function main() {
     if (err.stack) {
       console.error(err.stack.split('\n').slice(0, 3).join('\n'));
     }
+    try {
+      if (ctx && ctx.reply) {
+        ctx.reply("❌ Xatolik yuz berdi. Keyinroq qayta urinib ko'ring.").catch(() => {});
+      }
+    } catch (e) {}
   });
 
   // ============================================================
@@ -90,6 +155,15 @@ async function main() {
     } catch (e) {}
   }
 
+  // Buyruqlar menyusi
+  if (commandsService) {
+    try {
+      await commandsService.setupAll(bot);
+    } catch (e) {
+      console.log('⚠️ Buyruqlar menyusi xato:', e.message);
+    }
+  }
+
   // ============================================================
   // ISHGA TUSHIRISH
   // ============================================================
@@ -99,10 +173,21 @@ async function main() {
   console.log('╚══════════════════════╝');
   console.log(`👤 Super Admin: ${config.SUPER_ADMIN_ID}`);
   console.log(`🤖 Bot: @${config.BOT_USERNAME}`);
-  console.log('🔒 Xavfsizlik: ✅ Rate limit, Ban check, Error log');
+  console.log('🔒 Xavfsizlik: ✅');
+  console.log("💳 To'lov tizimi: ✅");
+  console.log('💳 Kartalar: ✅');
+  console.log('📢 Kanallar: ✅');
+  console.log('📌 Obuna tizimi: ✅');
+  console.log('');
 
-  process.once('SIGINT', () => bot.stop('SIGINT'));
-  process.once('SIGTERM', () => bot.stop('SIGTERM'));
+  process.once('SIGINT', () => {
+    console.log('\n⏹ SIGINT');
+    bot.stop('SIGINT');
+  });
+  process.once('SIGTERM', () => {
+    console.log('\n⏹ SIGTERM');
+    bot.stop('SIGTERM');
+  });
 }
 
 main().catch((err) => {

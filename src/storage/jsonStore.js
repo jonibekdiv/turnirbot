@@ -6,7 +6,9 @@ const path = require('path');
 const { withLock } = require('./fileLock');
 const { DATA_DIR } = require('../config');
 
-// Standart fayllar
+// ============================================================
+// STANDART FAYLLAR
+// ============================================================
 const DEFAULTS = {
   'users.json': {},
   'teams.json': {},
@@ -20,6 +22,9 @@ const DEFAULTS = {
   'actions.json': { actions: [] },
   'achievements.json': {},
   'templates.json': { templates: {} },
+  'payments.json': {},
+  'channels.json': {},
+  'cards.json': {},
   'settings.json': {
     allowAdminAddAdmin: false,
     minTeamMembers: 1,
@@ -29,6 +34,8 @@ const DEFAULTS = {
     reminder5Minutes: 5,
     channelId: null,
   },
+  
+  'subscriptions.json': {},
 };
 
 function fullPath(file) {
