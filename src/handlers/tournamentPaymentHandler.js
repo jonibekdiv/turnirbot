@@ -218,7 +218,7 @@ module.exports = (bot) => {
 
       return ctx.reply(
         `💱 <b>Valyuta tanlang</b>\n\nIshtirok narxi: <b>${amount}</b>`,
-        { parse_mode: 'HTML', ...currencyKeyboard() }
+        { parse_mode: 'HTML', ...currencyKeyboard(ctx) }
       );
     }
 
@@ -340,7 +340,7 @@ async function showChannelPicker(ctx) {
     `Tanlangan: <b>${selected.length}</b> ta\n\n` +
     `<i>Kanallar bosilganda ✅ belgilanadi. Keyin "Tayyor" bosing.</i>`;
 
-  const kb = channelsPickerKeyboard(channels, selected);
+  const kb = channelsPickerKeyboard(ctx, channels, selected);
 
   try {
     await ctx.editMessageText(text, { parse_mode: 'HTML', ...kb });

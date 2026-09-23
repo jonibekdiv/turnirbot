@@ -1,24 +1,35 @@
 // ============================================================
-// CARD KEYBOARD — Kartalar uchun tugmalar
+// CARD KEYBOARD — Ko'p tilli
 // ============================================================
 const { Markup } = require('telegraf');
-const { CALLBACK, CARD_TYPES } = require('../constants');
+const { CALLBACK } = require('../constants');
+const langService = require('../services/langService');
+
+function getT(ctx) {
+  if (ctx?.t) return ctx.t;
+  const lang = ctx?.state?.lang || langService.DEFAULT_LANG;
+  return (key, vars) => langService.t(lang, key, vars);
+}
 
 // ============================================================
 // KARTALAR PANELI
 // ============================================================
-function cardsPanelKeyboard() {
+function cardsPanelKeyboard(ctx) {
+  const t = getT(ctx);
+
   return Markup.inlineKeyboard([
-    [Markup.button.callback('➕ Yangi karta qo\'shish', CALLBACK.CARD_ADD)],
-    [Markup.button.callback('📋 Kartalar ro\'yxati', CALLBACK.CARD_LIST)],
-    [Markup.button.callback('⬅️ Admin panel', CALLBACK.ADMIN_PANEL)],
+    [Markup.button.callback(t('card_add_btn'), CALLBACK.CARD_ADD)],
+    [Markup.button.callback(t('card_list_btn'), CALLBACK.CARD_LIST)],
+    [Markup.button.callback(t('admin_panel'), CALLBACK.ADMIN_PANEL)],
   ]);
 }
 
 // ============================================================
 // KARTA TURINI TANLASH
 // ============================================================
-function cardTypeKeyboard() {
+function cardTypeKeyboard(ctx) {
+  const t = getT(ctx);
+
   return Markup.inlineKeyboard([
     [
       Markup.button.callback('💳 UzCard', CALLBACK.CARD_TYPE + 'uzcard'),
@@ -30,47 +41,55 @@ function cardTypeKeyboard() {
     ],
     [
       Markup.button.callback('💳 UnionPay', CALLBACK.CARD_TYPE + 'unionpay'),
-      Markup.button.callback('💳 Boshqa', CALLBACK.CARD_TYPE + 'other'),
+      Markup.button.callback('💳 ' + t('card_other_type'), CALLBACK.CARD_TYPE + 'other'),
     ],
-    [Markup.button.callback('❌ Bekor qilish', CALLBACK.CARD_LIST)],
+    [Markup.button.callback(t('btn_cancel'), CALLBACK.CARD_LIST)],
   ]);
 }
 
 // ============================================================
 // KARTA TASDIQLASH
 // ============================================================
-function cardConfirmKeyboard() {
+function cardConfirmKeyboard(ctx) {
+  const t = getT(ctx);
+
   return Markup.inlineKeyboard([
-    [Markup.button.callback('✅ Tasdiqlash', 'card:confirm')],
-    [Markup.button.callback('❌ Bekor qilish', CALLBACK.ADMIN_CARDS)],
+    [Markup.button.callback(t('btn_confirm'), 'card:confirm')],
+    [Markup.button.callback(t('btn_cancel'), CALLBACK.ADMIN_CARDS)],
   ]);
 }
 
 // ============================================================
 // KARTA KO'RISH
 // ============================================================
-function cardViewKeyboard(cardId) {
+function cardViewKeyboard(ctx, cardId) {
+  const t = getT(ctx);
+
   return Markup.inlineKeyboard([
-    [Markup.button.callback('⭐ Default qilish', CALLBACK.CARD_SET_DEFAULT + cardId)],
-    [Markup.button.callback('🗑 O\'chirish', CALLBACK.CARD_DELETE + cardId)],
-    [Markup.button.callback('⬅️ Kartalar', CALLBACK.CARD_LIST)],
+    [Markup.button.callback(t('card_set_default'), CALLBACK.CARD_SET_DEFAULT + cardId)],
+    [Markup.button.callback(t('btn_delete'), CALLBACK.CARD_DELETE + cardId)],
+    [Markup.button.callback(t('card_list_btn'), CALLBACK.CARD_LIST)],
   ]);
 }
 
 // ============================================================
 // KARTANI O'CHIRISH TASDIQLASH
 // ============================================================
-function cardDeleteConfirmKeyboard(cardId) {
+function cardDeleteConfirmKeyboard(ctx, cardId) {
+  const t = getT(ctx);
+
   return Markup.inlineKeyboard([
-    [Markup.button.callback('🗑 Ha, o\'chirish', CALLBACK.CARD_DELETE_CONFIRM + cardId)],
-    [Markup.button.callback('❌ Bekor qilish', CALLBACK.CARD_VIEW + cardId)],
+    [Markup.button.callback(t('btn_delete') + ' ✅', CALLBACK.CARD_DELETE_CONFIRM + cardId)],
+    [Markup.button.callback(t('btn_cancel'), CALLBACK.CARD_VIEW + cardId)],
   ]);
 }
 
 // ============================================================
 // TURNIRDA KARTA TANLASH
 // ============================================================
-function pickCardKeyboard(cards) {
+function pickCardKeyboard(ctx, cards) {
+  const t = getT(ctx);
+
   const rows = [];
 
   cards.slice(0, 8).forEach((card) => {
@@ -83,12 +102,12 @@ function pickCardKeyboard(cards) {
   });
 
   rows.push([
-    Markup.button.callback('✏️ Qo\'lda kiritish', CALLBACK.TOUR_CARD_MANUAL),
+    Markup.button.callback('✏️ ' + t('card_manual_input'), CALLBACK.TOUR_CARD_MANUAL),
   ]);
   rows.push([
-    Markup.button.callback('➕ Yangi karta qo\'shish', CALLBACK.CARD_ADD),
+    Markup.button.callback('➕ ' + t('card_add_btn'), CALLBACK.CARD_ADD),
   ]);
-  rows.push([Markup.button.callback('❌ Bekor qilish', CALLBACK.TOUR_CANCEL)]);
+  rows.push([Markup.button.callback(t('btn_cancel'), CALLBACK.TOUR_CANCEL)]);
 
   return Markup.inlineKeyboard(rows);
 }

@@ -1,5 +1,5 @@
 // ============================================================
-// ADMIN HANDLER — Rolga qarab ruxsatlar
+// ADMIN HANDLER — To'liq (ko'p tilli + turnirni o'chirish)
 // ============================================================
 const { Markup } = require('telegraf');
 const userService = require('../services/userService');
@@ -8,58 +8,92 @@ const tournamentService = require('../services/tournamentService');
 const roleService = require('../services/roleService');
 const broadcastService = require('../services/broadcastService');
 const settingsService = require('../services/settingsService');
+const adminExtService = require('../services/adminExtService');
+const { adminPanel, roleManageKeyboard } = require('../keyboards/adminKeyboard');
+const { CALLBACK, ROLES, STATES, LIMITS } = require('../constants');
 const {
-  adminPanel,
-  roleManageKeyboard,
-  organizerHostsKeyboard,
-  organizerOrgsKeyboard,
-} = require('../keyboards/adminKeyboard');
-const { CALLBACK, ROLES, STATES } = require('../constants');
-const { escapeHtml, displayName, safeEdit, safeAnswer } = require('../utils/telegramUtils');
+  escapeHtml,
+  displayName,
+  safeEdit,
+  safeAnswer,
+} = require('../utils/telegramUtils');
 const { cleanText, isPositiveInt } = require('../utils/validation');
 const {
   hasAnyRole,
   canManageUsers,
   canManageAdmins,
-  canBan,
   canEditSettings,
 } = require('../middlewares/roleGuard');
 const config = require('../config');
 
 module.exports = (bot) => {
   // ============================================================
-  // 1. ADMIN PANEL — Bosh menyu
+  // 1. ADMIN PANEL — BOSH MENYU
   // ============================================================
   bot.action(CALLBACK.MENU_ADMIN, async (ctx) => {
     await safeAnswer(ctx);
+
     if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) {
-      return ctx.reply("⛔ Ruxsat yo'q.");
+      return ctx.reply(ctx.t('error_access'));
     }
+
+    const t = ctx.t;
+    const isOrganizer = ctx.state.role === ROLES.ORGANIZER;
+    const title = isOrganizer
+      ? `🎯 <b>${t('org_panel_title')}</b>`
+      : `🛠 <b>${t('admin_title')}</b>`;
 
     const text =
       `╔══════════════════════╗\n` +
-      `   🛠 <b>ADMIN PANEL</b>\n` +
+      `   ${title}\n` +
       `╚══════════════════════╝\n\n` +
-      `🎭 Rol: <b>${escapeHtml(ctx.state.role)}</b>\n\n` +
-      `👇 Bo'limni tanlang:`;
+      `🎭 ${t('profile_role')}: <b>${escapeHtml(ctx.state.role)}</b>\n\n` +
+      `👇 ${t('admin_panel_subtitle')}`;
 
-    await safeEdit(ctx, text, adminPanel(ctx.state.role));
+    try {
+      await ctx.editMessageText(text, {
+        parse_mode: 'HTML',
+        ...adminPanel(ctx),
+      });
+    } catch (e) {
+      await ctx.reply(text, {
+        parse_mode: 'HTML',
+        ...adminPanel(ctx),
+      });
+    }
   });
 
   bot.action(CALLBACK.ADMIN_PANEL, async (ctx) => {
     await safeAnswer(ctx);
+
     if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) {
-      return ctx.reply("⛔ Ruxsat yo'q.");
+      return ctx.reply(ctx.t('error_access'));
     }
+
+    const t = ctx.t;
+    const isOrganizer = ctx.state.role === ROLES.ORGANIZER;
+    const title = isOrganizer
+      ? `🎯 <b>${t('org_panel_title')}</b>`
+      : `🛠 <b>${t('admin_title')}</b>`;
 
     const text =
       `╔══════════════════════╗\n` +
-      `   🛠 <b>ADMIN PANEL</b>\n` +
+      `   ${title}\n` +
       `╚══════════════════════╝\n\n` +
-      `🎭 Rol: <b>${escapeHtml(ctx.state.role)}</b>\n\n` +
-      `👇 Bo'limni tanlang:`;
+      `🎭 ${t('profile_role')}: <b>${escapeHtml(ctx.state.role)}</b>\n\n` +
+      `👇 ${t('admin_panel_subtitle')}`;
 
-    await safeEdit(ctx, text, adminPanel(ctx.state.role));
+    try {
+      await ctx.editMessageText(text, {
+        parse_mode: 'HTML',
+        ...adminPanel(ctx),
+      });
+    } catch (e) {
+      await ctx.reply(text, {
+        parse_mode: 'HTML',
+        ...adminPanel(ctx),
+      });
+    }
   });
 
   // ============================================================
@@ -68,6 +102,8 @@ module.exports = (bot) => {
   bot.action(CALLBACK.ADMIN_STATS, async (ctx) => {
     await safeAnswer(ctx);
     if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) return;
+
+    const t = ctx.t;
 
     const users = await userService.getAllUsers();
     const teams = await teamService.getAllTeams();
@@ -78,140 +114,324 @@ module.exports = (bot) => {
 
     const active = users.filter((u) => u.status === 'active').length;
     const today = users.filter(
-      (u) => new Date(u.createdAt).toDateString() === new Date().toDateString()
+      (u) =>
+        new Date(u.createdAt).toDateString() === new Date().toDateString()
     ).length;
 
     const text =
-      `📊 <b>Statistika</b>\n\n` +
+      `📊 <b>${t('admin_stats')}</b>\n\n` +
       `━━━━━━━━━━━━━━━━━━━━\n\n` +
-      `👤 Foydalanuvchilar: <b>${users.length}</b>\n` +
-      `🟢 Aktiv: <b>${active}</b>\n` +
-      `📅 Bugun qo'shilgan: <b>${today}</b>\n\n` +
-      `👥 Komandalar: <b>${teams.length}</b>\n` +
-      `🏆 Turnirlar: <b>${tours.length}</b>\n` +
-      `🔥 Faol turnirlar: <b>${tours.filter((t) => t.status === 'open').length}</b>\n\n` +
-      `🎙 Hostlar: <b>${hosts.length}</b>\n` +
-      `🎯 Organizerlar: <b>${orgs.length}</b>\n` +
-      `🛡 Adminlar: <b>${admins.length}</b>`;
+      `👤 ${t('admin_users')}: <b>${users.length}</b>\n` +
+      `🟢 ${t('admin_active')}: <b>${active}</b>\n` +
+      `📅 ${t('daily_new_users')}: <b>${today}</b>\n\n` +
+      `👥 ${t('admin_teams')}: <b>${teams.length}</b>\n` +
+      `🏆 ${t('admin_tournaments')}: <b>${tours.length}</b>\n` +
+      `🔥 ${t('admin_active_tours')}: <b>${
+        tours.filter((x) => x.status === 'open').length
+      }</b>\n\n` +
+      `🎙 ${t('admin_hosts')}: <b>${hosts.length}</b>\n` +
+      `🎯 ${t('admin_orgs')}: <b>${orgs.length}</b>\n` +
+      `🛡 ${t('admin_admins')}: <b>${admins.length}</b>`;
 
-    await safeEdit(ctx, text, adminPanel(ctx.state.role));
+    await safeEdit(ctx, text, adminPanel(ctx));
   });
 
   // ============================================================
-  // 3. FOYDALANUVCHILAR — Faqat Admin/Super Admin
+  // 3. FOYDALANUVCHILAR
   // ============================================================
   bot.action(CALLBACK.ADMIN_USERS, async (ctx) => {
     await safeAnswer(ctx);
     if (!canManageUsers(ctx.state.role)) {
-      return ctx.reply("⛔ Faqat Admin foydalanuvchilarni ko'ra oladi.");
+      return ctx.reply(ctx.t('error_only_admin'));
     }
 
+    const t = ctx.t;
     const users = await userService.getAllUsers();
     const sliced = users.slice(0, 30);
 
     const text =
-      `👤 <b>Foydalanuvchilar (${users.length})</b>\n\n` +
+      `👤 <b>${t('admin_users')} (${users.length})</b>\n\n` +
       sliced
-        .map((u, i) => `${i + 1}. ${escapeHtml(displayName(u))} — <code>${u.id}</code>`)
+        .map(
+          (u, i) =>
+            `${i + 1}. ${escapeHtml(displayName(u))} — <code>${u.id}</code>`
+        )
         .join('\n') +
-      (users.length > 30 ? `\n\n<i>... va yana ${users.length - 30} ta</i>` : '');
+      (users.length > 30
+        ? `\n\n<i>... +${users.length - 30}</i>`
+        : '');
 
-    await safeEdit(ctx, text, adminPanel(ctx.state.role));
+    await safeEdit(ctx, text, adminPanel(ctx));
   });
 
   // ============================================================
-  // 4. KOMANDALAR — Admin + Organizer
+  // 4. KOMANDALAR
   // ============================================================
   bot.action(CALLBACK.ADMIN_TEAMS, async (ctx) => {
     await safeAnswer(ctx);
     if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) return;
 
+    const t = ctx.t;
     const teams = await teamService.getAllTeams();
+
     const text =
-      `👥 <b>Komandalar (${teams.length})</b>\n\n` +
+      `👥 <b>${t('admin_teams')} (${teams.length})</b>\n\n` +
       (teams.length === 0
-        ? "<i>Hozircha komandalar yo'q</i>"
+        ? `<i>${t('no_data')}</i>`
         : teams
             .slice(0, 30)
             .map(
-              (t, i) =>
-                `${i + 1}. <b>${escapeHtml(t.name)}</b> [${escapeHtml(t.tag)}] — ${t.members.length} a'zo`
+              (tm, i) =>
+                `${i + 1}. <b>${escapeHtml(tm.name)}</b> [${escapeHtml(
+                  tm.tag
+                )}] — ${tm.members.length}`
             )
             .join('\n')) +
-      (teams.length > 30 ? `\n\n<i>... va yana ${teams.length - 30} ta</i>` : '');
+      (teams.length > 30 ? `\n\n<i>... +${teams.length - 30}</i>` : '');
 
-    await safeEdit(ctx, text, adminPanel(ctx.state.role));
+    await safeEdit(ctx, text, adminPanel(ctx));
   });
 
   // ============================================================
-  // 5. TURNIRLAR — Admin + Organizer
+  // 5. TURNIRLAR — RO'YXAT + O'CHIRISH
   // ============================================================
   bot.action(CALLBACK.ADMIN_TOURNAMENTS, async (ctx) => {
     await safeAnswer(ctx);
     if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) return;
 
-    const tours = await tournamentService.getAllTournaments();
+    const t = ctx.t;
+    const isOrganizer = ctx.state.role === ROLES.ORGANIZER;
+    const isAdmin =
+      ctx.state.role === ROLES.SUPER_ADMIN || ctx.state.role === ROLES.ADMIN;
 
-    if (tours.length === 0) {
+    // Organizer — faqat o'z turnirlari
+    const tours = isOrganizer
+      ? await tournamentService.getOrganizerTournaments(ctx.from.id)
+      : await tournamentService.getAllTournaments();
+
+    if (!tours.length) {
       const rows = [
-        [Markup.button.callback('➕ Yangi turnir', CALLBACK.TOUR_CREATE)],
-        [Markup.button.callback('⬅️ Admin panel', CALLBACK.ADMIN_PANEL)],
+        [
+          Markup.button.callback(
+            '➕ ' + t('tour_create_again'),
+            CALLBACK.TOUR_CREATE
+          ),
+        ],
+        [
+          Markup.button.callback(t('admin_panel'), CALLBACK.ADMIN_PANEL),
+        ],
       ];
-      return safeEdit(ctx, `🏆 <b>Turnirlar</b>\n\n<i>Hozircha turnirlar yo'q</i>`, {
-        reply_markup: { inline_keyboard: rows },
-      });
+      return safeEdit(
+        ctx,
+        `🏆 <b>${t('admin_tournaments')}</b>\n\n<i>${t('tour_empty')}</i>`,
+        { reply_markup: { inline_keyboard: rows } }
+      );
     }
 
     // Saralash — yangi birinchi
     tours.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     const rows = [];
-    tours.slice(0, 10).forEach((t) => {
-      const titleShort = t.title.length > 20 ? t.title.slice(0, 17) + '...' : t.title;
+    tours.slice(0, 10).forEach((tr) => {
+      const titleShort =
+        tr.title.length > 20 ? tr.title.slice(0, 17) + '...' : tr.title;
       const status =
-        t.registeredTeams.length >= t.maxTeams ? '🔴' : t.status === 'cancelled' ? '🚫' : '🟢';
+        tr.registeredTeams.length >= tr.maxTeams
+          ? '🔴'
+          : tr.status === 'cancelled'
+          ? '🚫'
+          : tr.status === 'finished'
+          ? '✅'
+          : '🟢';
 
-      rows.push([
-        Markup.button.callback(`📂 ${titleShort} ${status}`, CALLBACK.TOUR_OPEN + t.id),
-      ]);
+      const row = [
+        Markup.button.callback(
+          `📂 ${titleShort} ${status}`,
+          CALLBACK.TOUR_OPEN + tr.id
+        ),
+      ];
 
-      // Faqat Admin / Super Admin o'chirishi mumkin
-      if (ctx.state.role === ROLES.SUPER_ADMIN || ctx.state.role === ROLES.ADMIN) {
-        rows[rows.length - 1].push(
-          Markup.button.callback('🗑', CALLBACK.TOUR_DELETE + t.id)
+      // Faqat Admin/Super Admin o'chirishi mumkin
+      if (isAdmin) {
+        row.push(
+          Markup.button.callback('🗑', CALLBACK.TOUR_DELETE + tr.id)
         );
       }
+
+      rows.push(row);
     });
 
     if (tours.length > 10) {
       rows.push([
-        Markup.button.callback(`📋 Yana ${tours.length - 10} ta...`, CALLBACK.ADMIN_TOURNAMENTS),
+        Markup.button.callback(
+          `📋 +${tours.length - 10}`,
+          CALLBACK.ADMIN_TOURNAMENTS
+        ),
       ]);
     }
 
-    rows.push([Markup.button.callback('➕ Yangi turnir', CALLBACK.TOUR_CREATE)]);
-    rows.push([Markup.button.callback('⬅️ Admin panel', CALLBACK.ADMIN_PANEL)]);
+    rows.push([
+      Markup.button.callback(
+        '➕ ' + t('tour_create_again'),
+        CALLBACK.TOUR_CREATE
+      ),
+    ]);
+    rows.push([Markup.button.callback(t('admin_panel'), CALLBACK.ADMIN_PANEL)]);
+
+    const header = isOrganizer
+      ? `🏆 <b>${t('org_my_tournaments')} (${tours.length})</b>`
+      : `🏆 <b>${t('admin_tournaments')} (${tours.length})</b>`;
 
     await safeEdit(
       ctx,
-      `🏆 <b>Turnirlar (${tours.length})</b>\n\n` +
-        `📂 — turnirni ochish\n` +
-        (canManageUsers(ctx.state.role) ? `🗑 — o'chirish\n` : '') +
-        `\n<i>Eng oxirgi 10 ta</i>`,
+      `${header}\n\n` +
+        `📂 — ${t('tour_open')}\n` +
+        (isAdmin ? `🗑 — ${t('tour_delete')}\n` : '') +
+        `\n<i>${t('admin_tour_last_10')}</i>`,
       { reply_markup: { inline_keyboard: rows } }
     );
   });
 
   // ============================================================
-  // 6. HOSTLAR — Admin + Organizer
+  // 6. TURNIRNI O'CHIRISH — TASDIQLASH
+  // ============================================================
+  bot.action(/^tour:del:(.+)$/, async (ctx) => {
+    await safeAnswer(ctx);
+    if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN])) {
+      return ctx.reply(ctx.t('error_access'));
+    }
+
+    const tId = ctx.match[1];
+    const tour = await tournamentService.getTournament(tId);
+    if (!tour) return ctx.reply(ctx.t('tour_not_found'));
+
+    const t = ctx.t;
+
+    const hostInfo = tour.hostId
+      ? `🎙 ${t('host_label')}: <code>${tour.hostId}</code>\n`
+      : '';
+    const teamsInfo = tour.registeredTeams.length
+      ? `👥 ${t('admin_teams')}: <b>${tour.registeredTeams.length}</b>\n`
+      : '';
+
+    const kb = Markup.inlineKeyboard([
+      [
+        Markup.button.callback(
+          '🗑 ' + t('btn_confirm'),
+          'tour:delc:' + tId
+        ),
+      ],
+      [
+        Markup.button.callback(
+          t('btn_cancel'),
+          CALLBACK.ADMIN_TOURNAMENTS
+        ),
+      ],
+    ]);
+
+    await safeEdit(
+      ctx,
+      `╔══════════════════════╗\n` +
+        `   ⚠️ <b>${t('confirm_title')}</b>\n` +
+        `╚══════════════════════╝\n\n` +
+        `🗑 <b>${t('tour_delete_confirm')}</b>\n\n` +
+        `🏆 ${t('name')}: <b>${escapeHtml(tour.title)}</b>\n` +
+        `🆔 ID: <code>${tour.id}</code>\n` +
+        `📅 ${t('date')}: <b>${tour.date}</b>\n` +
+        `⏰ ${t('time')}: <b>${tour.startTime}</b>\n` +
+        `🎮 ${t('mode')}: <b>${escapeHtml(tour.mode)}</b>\n` +
+        teamsInfo +
+        hostInfo +
+        `\n⚠️ <i>${t('tour_delete_warning')}</i>`,
+      { reply_markup: kb.reply_markup }
+    );
+  });
+
+  // ============================================================
+  // 7. TURNIRNI O'CHIRISH — BAJARISH
+  // ============================================================
+  bot.action(/^tour:delc:(.+)$/, async (ctx) => {
+    await safeAnswer(ctx);
+    if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN])) {
+      return ctx.reply(ctx.t('error_access'));
+    }
+
+    const tId = ctx.match[1];
+    const tour = await tournamentService.getTournament(tId);
+    if (!tour) {
+      return ctx.reply(ctx.t('tour_not_found'));
+    }
+
+    const t = ctx.t;
+    const title = tour.title;
+    const hostId = tour.hostId;
+    const teamCount = tour.registeredTeams.length;
+
+    try {
+      // Turnirni o'chirish
+      await tournamentService.deleteTournament(tId);
+
+      // Hostga xabar
+      if (hostId) {
+        try {
+          await ctx.telegram.sendMessage(
+            hostId,
+            `⚠️ <b>${t('tour_deleted_title')}</b>\n\n` +
+              `🏆 <b>${escapeHtml(title)}</b>\n\n` +
+              `<i>${t('tour_deleted_notify')}</i>`,
+            { parse_mode: 'HTML' }
+          );
+        } catch (e) {}
+      }
+
+      // Admin amali log
+      try {
+        await adminExtService.logAction(ctx.from.id, 'DELETE_TOURNAMENT', {
+          target: tId,
+          title,
+        });
+      } catch (e) {}
+
+      const kb = Markup.inlineKeyboard([
+        [
+          Markup.button.callback(
+            t('admin_tournaments'),
+            CALLBACK.ADMIN_TOURNAMENTS
+          ),
+        ],
+        [Markup.button.callback(t('admin_panel'), CALLBACK.ADMIN_PANEL)],
+      ]);
+
+      await safeEdit(
+        ctx,
+        `╔══════════════════════╗\n` +
+          `   ✅ <b>${t('tour_deleted_title')}</b>\n` +
+          `╚══════════════════════╝\n\n` +
+          `🗑 <b>${escapeHtml(title)}</b>\n\n` +
+          (teamCount
+            ? `👥 ${teamCount} ${t('admin_teams')}\n`
+            : '') +
+          (hostId ? `🎙 ${t('host_label')} — ${t('tour_deleted_notify')}\n` : ''),
+        { reply_markup: kb.reply_markup }
+      );
+    } catch (e) {
+      console.error('tour:delc xatosi:', e.message);
+      await ctx.reply(
+        `❌ ${t('error_prefix')} ${e.message || t('error_generic')}`
+      );
+    }
+  });
+
+  // ============================================================
+  // 8. HOSTLAR
   // ============================================================
   bot.action(CALLBACK.ADMIN_HOSTS, async (ctx) => {
     await safeAnswer(ctx);
     if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) return;
 
+    const t = ctx.t;
     const hosts = await roleService.list('host');
 
-    // Har bir hostning username'ini olishga harakat
     const hostsWithNames = [];
     for (const h of hosts.slice(0, 20)) {
       const u = await userService.getUser(h.id);
@@ -220,46 +440,60 @@ module.exports = (bot) => {
     }
 
     const text =
-      `🎙 <b>Hostlar (${hosts.length})</b>\n\n` +
+      `🎙 <b>${t('admin_hosts')} (${hosts.length})</b>\n\n` +
       (hosts.length === 0
-        ? "<i>Hozircha hostlar yo'q</i>"
+        ? `<i>${t('no_data')}</i>`
         : hostsWithNames.join('\n'));
 
-    // Admin uchun to'liq keyboard, Organizer uchun faqat orqaga
+    // Faqat Admin hostlarni boshqarishi mumkin
     const kb =
       ctx.state.role === ROLES.ADMIN || ctx.state.role === ROLES.SUPER_ADMIN
-        ? roleManageKeyboard('host')
-        : organizerHostsKeyboard();
+        ? roleManageKeyboard(ctx, 'host')
+        : Markup.inlineKeyboard([
+            [Markup.button.callback(t('admin_panel'), CALLBACK.ADMIN_PANEL)],
+          ]);
 
     await safeEdit(ctx, text, kb);
   });
 
   // ============================================================
-  // 7. ADMINLAR — Faqat Admin/Super Admin
+  // 9. ADMINLAR
   // ============================================================
   bot.action(CALLBACK.ADMIN_ADMINS, async (ctx) => {
     await safeAnswer(ctx);
     if (!canManageUsers(ctx.state.role)) {
-      return ctx.reply('⛔ Faqat Admin.');
+      return ctx.reply(ctx.t('error_only_admin'));
     }
 
+    const t = ctx.t;
     const admins = await roleService.list('admin');
-    const text =
-      `🛡 <b>Adminlar (${admins.length})</b>\n\n` +
-      (admins.length === 0
-        ? "<i>Hozircha adminlar yo'q (faqat Super Admin)</i>"
-        : admins.map((a) => `• <code>${a.id}</code>`).join('\n'));
 
-    await safeEdit(ctx, text, roleManageKeyboard('admin'));
+    const adminsWithNames = [];
+    for (const a of admins.slice(0, 20)) {
+      const u = await userService.getUser(a.id);
+      const name = u ? displayName(u) : `ID: ${a.id}`;
+      adminsWithNames.push(`• <code>${a.id}</code> — ${escapeHtml(name)}`);
+    }
+
+    const text =
+      `🛡 <b>${t('admin_admins')} (${admins.length})</b>\n\n` +
+      (admins.length === 0
+        ? `<i>${t('admin_only_super')}</i>`
+        : adminsWithNames.join('\n'));
+
+    await safeEdit(ctx, text, roleManageKeyboard(ctx, 'admin'));
   });
 
   // ============================================================
-  // 8. ORGANIZERLAR — Ko'rish hamma, qo'shish/o'chirish faqat Admin
+  // 10. ORGANIZERLAR
   // ============================================================
   bot.action(CALLBACK.ADMIN_ORGS, async (ctx) => {
     await safeAnswer(ctx);
-    if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) return;
+    if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN])) {
+      return ctx.reply(ctx.t('error_only_admin'));
+    }
 
+    const t = ctx.t;
     const orgs = await roleService.list('organizer');
 
     const orgsWithNames = [];
@@ -270,265 +504,325 @@ module.exports = (bot) => {
     }
 
     const text =
-      `🎯 <b>Organizerlar (${orgs.length})</b>\n\n` +
+      `🎯 <b>${t('admin_orgs')} (${orgs.length})</b>\n\n` +
       (orgs.length === 0
-        ? "<i>Hozircha organizerlar yo'q</i>"
+        ? `<i>${t('no_data')}</i>`
         : orgsWithNames.join('\n'));
 
-    const kb =
-      ctx.state.role === ROLES.ADMIN || ctx.state.role === ROLES.SUPER_ADMIN
-        ? roleManageKeyboard('organizer')
-        : organizerOrgsKeyboard();
-
-    await safeEdit(ctx, text, kb);
+    await safeEdit(ctx, text, roleManageKeyboard(ctx, 'organizer'));
   });
 
   // ============================================================
-  // 9. ROL QO'SHISH — Admin + Organizer (host), Admin (org)
+  // 11. ROL QO'SHISH
   // ============================================================
   bot.action(/^admin:addrole:(admin|organizer|host)$/, async (ctx) => {
     await safeAnswer(ctx);
     const role = ctx.match[1];
+    const t = ctx.t;
 
-    // Admin qo'shish
+    // Ruxsat tekshiruvi
     if (role === 'admin') {
       if (!canManageAdmins(ctx.state.role)) {
         const settings = await settingsService.getSettings();
         if (!(ctx.state.role === ROLES.ADMIN && settings.allowAdminAddAdmin)) {
-          return ctx.reply("⛔ Faqat Super Admin admin qo'sha oladi.");
+          return ctx.reply(`⛔ ${t('error_only_super')}`);
         }
       }
     }
 
-    // Organizer qo'shish — faqat Admin/Super Admin
     if (role === 'organizer') {
       if (!canManageUsers(ctx.state.role)) {
-        return ctx.reply("⛔ Faqat Admin organizer qo'sha oladi.");
+        return ctx.reply(`⛔ ${t('error_only_admin')}`);
       }
     }
 
-    // Host qo'shish — Admin + Organizer
     if (role === 'host') {
-      if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) {
-        return ctx.reply("⛔ Ruxsat yo'q.");
+      if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN])) {
+        return ctx.reply(`⛔ ${t('error_only_admin')}`);
       }
     }
 
     ctx.session = { state: STATES.ADMIN_ADD_USER_ID, data: { role } };
+
     await ctx.reply(
-      `➕ Yangi <b>${role}</b> Telegram ID sini yuboring:\n\n` +
-        `<i>Masalan: 123456789</i>\n\n` +
-        `<i>ID ni @userinfobot dan olishingiz mumkin.</i>`,
+      `➕ <b>${t('admin_add_role')} ${role}</b>\n\n` +
+        `${t('admin_send_id')}\n\n` +
+        `<i>${t('admin_id_example')}: 123456789</i>`,
       { parse_mode: 'HTML' }
     );
   });
 
   // ============================================================
-  // 10. ROL O'CHIRISH — Admin + Organizer (host), Admin (org/admin)
+  // 12. ROL O'CHIRISH
   // ============================================================
   bot.action(/^admin:delrole:(admin|organizer|host)$/, async (ctx) => {
     await safeAnswer(ctx);
     const role = ctx.match[1];
+    const t = ctx.t;
 
     if (role === 'admin') {
       if (!canManageAdmins(ctx.state.role)) {
-        return ctx.reply("⛔ Faqat Super Admin adminni o'chira oladi.");
+        return ctx.reply(`⛔ ${t('error_only_super')}`);
       }
     }
 
     if (role === 'organizer') {
       if (!canManageUsers(ctx.state.role)) {
-        return ctx.reply("⛔ Faqat Admin organizer o'chira oladi.");
+        return ctx.reply(`⛔ ${t('error_only_admin')}`);
       }
     }
 
     if (role === 'host') {
-      if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) {
-        return ctx.reply("⛔ Ruxsat yo'q.");
+      if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN])) {
+        return ctx.reply(`⛔ ${t('error_only_admin')}`);
       }
     }
 
-    ctx.session = { state: STATES.ADMIN_ADD_USER_ID, data: { role, remove: true } };
+    ctx.session = {
+      state: STATES.ADMIN_ADD_USER_ID,
+      data: { role, remove: true },
+    };
+
     await ctx.reply(
-      `➖ O'chiriladigan <b>${role}</b> Telegram ID sini yuboring:`,
+      `➖ <b>${t('admin_delete_role')} ${role}</b>\n\n` +
+        `${t('admin_send_id')}`,
       { parse_mode: 'HTML' }
     );
   });
 
   // ============================================================
-  // 11. SOZLAMALAR — Faqat Super Admin
+  // 13. SOZLAMALAR
   // ============================================================
   bot.action(CALLBACK.ADMIN_SETTINGS, async (ctx) => {
     await safeAnswer(ctx);
     if (!canEditSettings(ctx.state.role)) {
-      return ctx.reply('⛔ Faqat Super Admin.');
+      return ctx.reply(ctx.t('error_only_super'));
     }
 
+    const t = ctx.t;
     const s = await settingsService.getSettings();
+
     const kb = Markup.inlineKeyboard([
       [
         Markup.button.callback(
-          `Admin Admin qo'sha oladimi: ${s.allowAdminAddAdmin ? '✅' : '❌'}`,
+          `${t('admin_admin_add')}: ${s.allowAdminAddAdmin ? '✅' : '❌'}`,
           'admin:toggle:allowAdminAddAdmin'
         ),
       ],
-      [Markup.button.callback('⬅️ Admin panel', CALLBACK.ADMIN_PANEL)],
+      [Markup.button.callback(t('admin_panel'), CALLBACK.ADMIN_PANEL)],
     ]);
 
     await safeEdit(
       ctx,
-      `⚙️ <b>Sozlamalar</b>\n\n` +
-        `👥 Min a'zolar: <b>${s.minTeamMembers}</b>\n` +
-        `👥 Max a'zolar: <b>${s.maxTeamMembers}</b>\n` +
-        `🏆 Max komandalar: <b>${s.maxTeamsPerTournament}</b>`,
+      `⚙️ <b>${t('admin_settings')}</b>\n\n` +
+        `👥 ${t('admin_min_members')}: <b>${s.minTeamMembers}</b>\n` +
+        `👥 ${t('admin_max_members')}: <b>${s.maxTeamMembers}</b>\n` +
+        `🏆 ${t('admin_max_teams')}: <b>${s.maxTeamsPerTournament}</b>`,
       { reply_markup: kb.reply_markup }
     );
   });
 
   bot.action(/^admin:toggle:(.+)$/, async (ctx) => {
     if (!canEditSettings(ctx.state.role)) {
-      return safeAnswer(ctx, "⛔ Ruxsat yo'q");
+      return safeAnswer(ctx, `⛔ ${ctx.t('error_access')}`);
     }
+
     const key = ctx.match[1];
     const s = await settingsService.getSettings();
     await settingsService.updateSettings({ [key]: !s[key] });
-    await safeAnswer(ctx, '✅ Yangilandi');
+    await safeAnswer(ctx, `✅ ${ctx.t('success')}`);
 
+    const t = ctx.t;
     const s2 = await settingsService.getSettings();
+
     const kb = Markup.inlineKeyboard([
       [
         Markup.button.callback(
-          `Admin Admin qo'sha oladimi: ${s2.allowAdminAddAdmin ? '✅' : '❌'}`,
+          `${t('admin_admin_add')}: ${s2.allowAdminAddAdmin ? '✅' : '❌'}`,
           'admin:toggle:allowAdminAddAdmin'
         ),
       ],
-      [Markup.button.callback('⬅️ Admin panel', CALLBACK.ADMIN_PANEL)],
+      [Markup.button.callback(t('admin_panel'), CALLBACK.ADMIN_PANEL)],
     ]);
+
     await safeEdit(
       ctx,
-      `⚙️ <b>Sozlamalar</b>\n\n` +
-        `👥 Min a'zolar: <b>${s2.minTeamMembers}</b>\n` +
-        `👥 Max a'zolar: <b>${s2.maxTeamMembers}</b>\n` +
-        `🏆 Max komandalar: <b>${s2.maxTeamsPerTournament}</b>`,
+      `⚙️ <b>${t('admin_settings')}</b>\n\n` +
+        `👥 ${t('admin_min_members')}: <b>${s2.minTeamMembers}</b>\n` +
+        `👥 ${t('admin_max_members')}: <b>${s2.maxTeamMembers}</b>\n` +
+        `🏆 ${t('admin_max_teams')}: <b>${s2.maxTeamsPerTournament}</b>`,
       { reply_markup: kb.reply_markup }
     );
   });
 
   // ============================================================
-  // 12. REKLAMA YUBORISH — Admin + Organizer
+  // 14. REKLAMA YUBORISH
   // ============================================================
   bot.action(CALLBACK.ADMIN_BROADCAST, async (ctx) => {
     await safeAnswer(ctx);
     if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) return;
 
-    const tours = await tournamentService.getAllTournaments();
-    const rows = tours.slice(0, 15).map((t) => [
-      Markup.button.callback(`📢 ${t.title.slice(0, 25)}`, CALLBACK.TOUR_BROADCAST + t.id),
-    ]);
-    rows.push([Markup.button.callback('⬅️ Admin panel', CALLBACK.ADMIN_PANEL)]);
+    const t = ctx.t;
+    const isOrganizer = ctx.state.role === ROLES.ORGANIZER;
 
-    await safeEdit(ctx, '📢 <b>Reklama yuborish</b>\n\nTurnirni tanlang:', {
-      reply_markup: { inline_keyboard: rows },
-    });
+    const tours = isOrganizer
+      ? await tournamentService.getOrganizerTournaments(ctx.from.id)
+      : await tournamentService.getAllTournaments();
+
+    const rows = tours.slice(0, 15).map((tr) => [
+      Markup.button.callback(
+        `📢 ${tr.title.slice(0, 25)}`,
+        CALLBACK.TOUR_BROADCAST + tr.id
+      ),
+    ]);
+    rows.push([Markup.button.callback(t('admin_panel'), CALLBACK.ADMIN_PANEL)]);
+
+    const subtitle = isOrganizer
+      ? t('org_pick_your_tournament')
+      : t('ch_pick_for_reklama');
+
+    await safeEdit(
+      ctx,
+      `📢 <b>${t('admin_broadcast')}</b>\n\n${subtitle}`,
+      { reply_markup: { inline_keyboard: rows } }
+    );
   });
 
+  // ============================================================
+  // 15. TURNIR REKLAMASINI YUBORISH
+  // ============================================================
   bot.action(/^tour:bc:(.+)$/, async (ctx) => {
     await safeAnswer(ctx);
     if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) return;
 
-    const t = await tournamentService.getTournament(ctx.match[1]);
-    if (!t) return ctx.reply('❗ Topilmadi.');
+    const t = ctx.t;
+    const tr = await tournamentService.getTournament(ctx.match[1]);
+    if (!tr) return ctx.reply(ctx.t('tour_not_found'));
+
+    // Organizer — faqat o'z turniri
+    if (ctx.state.role === ROLES.ORGANIZER) {
+      if (Number(tr.organizerId) !== Number(ctx.from.id)) {
+        return ctx.reply(`⛔ ${t('org_not_owner')}`);
+      }
+    }
 
     const caption =
-      `🏆 <b>${escapeHtml(t.title)}</b>\n\n` +
-      `📅 ${t.date} | ⏰ ${t.startTime}\n` +
-      `🎮 ${escapeHtml(t.mode)} | 🗺 ${escapeHtml(t.map || 'Erangel')}\n` +
-      `👥 ${t.registeredTeams.length}/${t.maxTeams}\n` +
-      (t.description ? `\n📄 ${escapeHtml(t.description)}\n` : '') +
-      `\nRo'yxatdan o'tish uchun turnirga kiring!`;
+      `🏆 <b>${escapeHtml(tr.title)}</b>\n\n` +
+      `📅 ${tr.date} | ⏰ ${tr.startTime}\n` +
+      `🎮 ${escapeHtml(tr.mode)} | 🗺 ${escapeHtml(tr.map || 'Erangel')}\n` +
+      `👥 ${tr.registeredTeams.length}/${tr.maxTeams}\n` +
+      (tr.description ? `\n📄 ${escapeHtml(tr.description)}\n` : '') +
+      `\n${t('tour_press_to_open')}`;
 
     const button = Markup.button.url(
-      '🎮 Turnirga kirish',
-      `https://t.me/${config.BOT_USERNAME}?start=${t.id}`
+      '🎮 ' + t('tour_open'),
+      `https://t.me/${config.BOT_USERNAME}?start=${tr.id}`
     );
 
-    await ctx.reply('⏳ Reklama yuborilmoqda...');
-    const res = await broadcastService.broadcastToAllUsers(bot, {
-      image: t.imageFileId,
-      caption,
-      button,
-    });
+    await ctx.reply(`⏳ ${t('loading')}`);
 
-    await safeEdit(
-      ctx,
-      `✅ <b>Reklama yuborildi</b>\n\n` +
-        `📌 Jami: <b>${res.total}</b>\n` +
-        `✅ Muvaffaqiyatli: <b>${res.sent}</b>\n` +
-        `❌ Xato: <b>${res.failed}</b>`,
-      adminPanel(ctx.state.role)
-    );
+    // Broadcast statistikasini boshlash
+    const broadcastStatsService = require('../services/broadcastStatsService');
+
+    try {
+      const users = await userService.getAllUsers();
+
+      const bcEntry = await broadcastStatsService.startBroadcast({
+        adminId: ctx.from.id,
+        type: 'all',
+        tournamentId: tr.id,
+        title: tr.title,
+        totalTargets: users.length,
+      });
+
+      const res = await broadcastService.broadcastToAllUsers(bot, {
+        image: tr.imageFileId,
+        caption,
+        button,
+      });
+
+      await broadcastStatsService.finishBroadcast(bcEntry.id, {
+        sent: res.sent,
+        failed: res.failed,
+        blocked: res.blocked || 0,
+      });
+
+      await safeEdit(
+        ctx,
+        `✅ <b>${t('ch_announced')}</b>\n\n` +
+          `📌 ${t('bc_stats_total')}: <b>${res.total}</b>\n` +
+          `✅ ${t('bc_stats_sent')}: <b>${res.sent}</b>\n` +
+          `❌ ${t('bc_stats_failed')}: <b>${res.failed}</b>`,
+        adminPanel(ctx)
+      );
+    } catch (e) {
+      console.error('tour:bc xatosi:', e.message);
+      await ctx.reply(`❌ ${t('error_prefix')} ${e.message}`);
+    }
   });
 
   // ============================================================
-  // 13. FSM — ROL QO'SHISH/O'CHIRISH
+  // 16. FSM — ROL QO'SHISH/O'CHIRISH
   // ============================================================
   bot.on('text', async (ctx, next) => {
     if (ctx.session?.state !== STATES.ADMIN_ADD_USER_ID) return next();
 
+    const t = ctx.t;
     const { role, remove } = ctx.session.data;
 
     // Ruxsatni qayta tekshirish
     if (role === 'admin' && !canManageAdmins(ctx.state.role)) {
       ctx.session = { state: null, data: {} };
-      return ctx.reply("⛔ Ruxsat yo'q.");
+      return ctx.reply(ctx.t('error_access'));
     }
     if (role === 'organizer' && !canManageUsers(ctx.state.role)) {
       ctx.session = { state: null, data: {} };
-      return ctx.reply("⛔ Ruxsat yo'q.");
+      return ctx.reply(ctx.t('error_access'));
     }
-    if (role === 'host' && !hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) {
+    if (role === 'host' && !hasAnyRole(ctx.state.role, [ROLES.ADMIN])) {
       ctx.session = { state: null, data: {} };
-      return ctx.reply("⛔ Ruxsat yo'q.");
+      return ctx.reply(ctx.t('error_access'));
     }
 
     const v = cleanText(ctx.message.text, 20);
     if (!isPositiveInt(v)) {
-      return ctx.reply('❗ Faqat raqamli Telegram ID:');
+      return ctx.reply(ctx.t('error_only_digits'));
     }
+
     const targetId = Number(v);
     ctx.session = { state: null, data: {} };
 
     try {
       if (remove) {
-        // Super Admin'ni o'chirib bo'lmaydi
         if (targetId === Number(config.SUPER_ADMIN_ID)) {
           return ctx.reply("⛔ Super Admin'ni o'chirib bo'lmaydi.");
         }
 
         await roleService.remove(role, targetId);
         await ctx.reply(
-          `✅ <b>${role}</b> o'chirildi: <code>${targetId}</code>`,
+          `✅ <b>${role}</b> — <code>${targetId}</code> (${t('btn_delete')})`,
           { parse_mode: 'HTML' }
         );
       } else {
         await roleService.add(role, targetId, ctx.from.id);
         await ctx.reply(
-          `✅ <b>${role}</b> qo'shildi: <code>${targetId}</code>`,
+          `✅ <b>${role}</b> — <code>${targetId}</code> (${t('btn_add')})`,
           { parse_mode: 'HTML' }
         );
 
-        // Yangi rol egasiga xabar
         try {
           await ctx.telegram.sendMessage(
             targetId,
-            `🎉 Sizga <b>${role}</b> roli berildi!\n\n` +
-              `Botni qayta ishga tushirish uchun /start bosing.`,
+            `🎉 <b>${role}</b> — ${t('admin_role_granted')}\n\n` +
+              `/start`,
             { parse_mode: 'HTML' }
           );
         } catch (e) {}
       }
     } catch (e) {
-      await ctx.reply('❌ Xatolik: ' + (e.message || 'xato'));
+      await ctx.reply(
+        `${ctx.t('error_prefix')} ${e.message || ctx.t('error_generic')}`
+      );
     }
   });
 };

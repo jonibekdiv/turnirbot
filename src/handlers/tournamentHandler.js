@@ -1,5 +1,5 @@
 // ============================================================
-// TURNIR HANDLERLARI — To'liq (Super Admin ham ro'yxatdan o'ta oladi)
+// TURNIR HANDLERLARI — To'liq
 // ============================================================
 const { Markup } = require('telegraf');
 const tournamentService = require('../services/tournamentService');
@@ -22,8 +22,18 @@ const {
 } = require('../keyboards/paymentKeyboard');
 const { pickCardKeyboard } = require('../keyboards/cardKeyboard');
 const { CALLBACK, STATES, LIMITS, ROLES, DEFAULT_MAP } = require('../constants');
-const { cleanText, isValidDate, isValidTime, isPositiveInt } = require('../utils/validation');
-const { escapeHtml, safeEdit, safeAnswer, displayName } = require('../utils/telegramUtils');
+const {
+  cleanText,
+  isValidDate,
+  isValidTime,
+  isPositiveInt,
+} = require('../utils/validation');
+const {
+  escapeHtml,
+  safeEdit,
+  safeAnswer,
+  displayName,
+} = require('../utils/telegramUtils');
 const { parseDateTime, isSameDayTashkent } = require('../utils/dateUtils');
 const { hasAnyRole } = require('../middlewares/roleGuard');
 
@@ -91,7 +101,7 @@ async function showCardPicker(ctx) {
     `📍 <b>Qadam: Karta tanlash</b>\n\n` +
     `Quyidagi kartalardan birini tanlang yoki qo'lda kiriting:`;
 
-  await ctx.reply(text, { parse_mode: 'HTML', ...pickCardKeyboard(cards) });
+  await ctx.reply(text, { parse_mode: 'HTML', ...pickCardKeyboard(ctx, cards) });
 }
 
 async function moveToImageStep(ctx) {
@@ -115,11 +125,11 @@ module.exports = (bot) => {
   bot.action(CALLBACK.MENU_TOURNAMENTS, async (ctx) => {
     await safeAnswer(ctx);
     try {
-      await safeEdit(ctx, ctx.t('tournaments_title'), tournamentsMenu());
+      await safeEdit(ctx, ctx.t('tournaments_title'), tournamentsMenu(ctx));
     } catch (e) {
       await ctx.reply(ctx.t('tournaments_title'), {
         parse_mode: 'HTML',
-        ...tournamentsMenu(),
+        ...tournamentsMenu(ctx),
       });
     }
   });
@@ -128,7 +138,11 @@ module.exports = (bot) => {
   // 2. BO'LIM TANLANGANDA
   // ============================================================
   bot.action(
-    [CALLBACK.TOUR_TODAY, CALLBACK.TOUR_UPCOMING, CALLBACK.TOUR_FINISHED],
+    [
+      CALLBACK.TOUR_TODAY,
+      CALLBACK.TOUR_UPCOMING,
+      CALLBACK.TOUR_FINISHED,
+    ],
     async (ctx) => {
       await safeAnswer(ctx);
       const key = ctx.callbackQuery.data;
@@ -153,8 +167,7 @@ module.exports = (bot) => {
   });
 
   // ============================================================
-  // 4. TURNIRNI OCHISH
-  // (staff ham captain bo'lsa ro'yxat tugmasi ko'rinadi)
+  // 4. TURNIRNI OCHISH (staff ham captain bo'lsa ro'yxat ko'rinadi)
   // ============================================================
   bot.action(/^tour:open:(.+)$/, async (ctx) => {
     await safeAnswer(ctx);
@@ -166,20 +179,48 @@ module.exports = (bot) => {
       });
     }
 
+    // Foydalanuvchi va komanda ma'lumotlari
     const user = await userService.getUser(ctx.from.id);
     const team = user?.teamId ? await teamService.getTeam(user.teamId) : null;
 
     const isStaff = hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER]);
-    const isCaptain = team && team.captainId === ctx.from.id;
-    const isRegistered = team && t.registeredTeams.includes(team.id);
+    const isCaptain = !!(
+      team && Number(team.captainId) === Number(ctx.from.id)
+    );
+    const isRegistered = !!(team && t.registeredTeams.includes(team.id));
     const isFull = t.registeredTeams.length >= t.maxTeams;
-    const isClosed =
-      t.registrationDeadline && new Date(t.registrationDeadline) < new Date();
+    const isClosed = !!(
+      t.registrationDeadline && new Date(t.registrationDeadline) < new Date()
+    );
 
-    // ---------- Asosiy tugmalar (hammaga) ----------
+    // Debug uchun loglar
+    console.log('tour:open:', {
+      userId: ctx.from.id,
+      role: ctx.state.role,
+      hasTeam: !!team,
+      teamId: team?.id,
+      teamCaptain: team?.captainId,
+      isCaptain,
+      isRegistered,
+      isFull,
+      isClosed,
+      tourType: t.type,
+    });
+
+    // ---------- Asosiy tugmalar ----------
     const buttons = [
-      [Markup.button.callback(ctx.t('tour_standings'), CALLBACK.TOUR_STANDINGS + t.id)],
-      [Markup.button.callback(ctx.t('tour_teamlist'), CALLBACK.TOUR_TEAMLIST + t.id)],
+      [
+        Markup.button.callback(
+          ctx.t('tour_standings'),
+          CALLBACK.TOUR_STANDINGS + t.id
+        ),
+      ],
+      [
+        Markup.button.callback(
+          ctx.t('tour_teamlist'),
+          CALLBACK.TOUR_TEAMLIST + t.id
+        ),
+      ],
     ];
 
     // ---------- Ro'yxatdan o'tish (captain uchun) ----------
@@ -188,14 +229,26 @@ module.exports = (bot) => {
         t.type === 'paid'
           ? ctx.t('tour_register_paid')
           : ctx.t('tour_register');
-      buttons.push([Markup.button.callback(regLabel, CALLBACK.TOUR_REGISTER + t.id)]);
+      buttons.push([
+        Markup.button.callback(regLabel, CALLBACK.TOUR_REGISTER + t.id),
+      ]);
     }
 
-    // Agar allaqachon ro'yxatdan o'tgan bo'lsa
+    // Captain lekin allaqachon ro'yxatdan o'tgan
     if (isCaptain && isRegistered) {
       buttons.push([
         Markup.button.callback(
           '✅ ' + ctx.t('already_registered'),
+          'no_action'
+        ),
+      ]);
+    }
+
+    // Captain emas, lekin teamda bor (staff emas)
+    if (team && !isCaptain && !isStaff) {
+      buttons.push([
+        Markup.button.callback(
+          "ℹ️ Faqat captain ro'yxatdan o'tkazadi",
           'no_action'
         ),
       ]);
@@ -218,10 +271,7 @@ module.exports = (bot) => {
           ),
         ]);
       }
-    }
 
-    // ---------- Host bilan bog'lanish ----------
-    if (team && isRegistered) {
       buttons.push([
         Markup.button.callback(
           ctx.t('tour_contact_host'),
@@ -230,7 +280,7 @@ module.exports = (bot) => {
       ]);
     }
 
-    // ---------- STAFF uchun qo'shimcha tugmalar ----------
+    // ---------- STAFF uchun qo'shimcha ----------
     if (isStaff) {
       buttons.push([
         Markup.button.callback(ctx.t('tour_edit'), CALLBACK.TOUR_EDIT + t.id),
@@ -251,7 +301,10 @@ module.exports = (bot) => {
         Markup.button.callback(ctx.t('tour_report'), CALLBACK.TOUR_REPORT + t.id),
       ]);
       buttons.push([
-        Markup.button.callback(ctx.t('tour_winners'), CALLBACK.TOUR_WINNERS + t.id),
+        Markup.button.callback(
+          ctx.t('tour_winners'),
+          CALLBACK.TOUR_WINNERS + t.id
+        ),
       ]);
       buttons.push([
         Markup.button.callback(
@@ -286,7 +339,9 @@ module.exports = (bot) => {
         CALLBACK.MENU_TOURNAMENTS
       ),
     ]);
-    buttons.push([Markup.button.callback(ctx.t('menu_main'), CALLBACK.MENU_MAIN)]);
+    buttons.push([
+      Markup.button.callback(ctx.t('menu_main'), CALLBACK.MENU_MAIN),
+    ]);
 
     const text = formatTournamentText(t, true);
 
@@ -297,7 +352,9 @@ module.exports = (bot) => {
           parse_mode: 'HTML',
           reply_markup: { inline_keyboard: buttons },
         });
-      } catch (e) {}
+      } catch (e) {
+        // rasm xatosi — matnga o'tamiz
+      }
     }
 
     try {
@@ -314,10 +371,10 @@ module.exports = (bot) => {
   });
 
   // ============================================================
-  // 4.1 "ALLAQACHON RO'YXATDAN O'TGAN" tugmasi
+  // 4.1 "NO ACTION" TUGMASI (bo'sh)
   // ============================================================
   bot.action('no_action', async (ctx) => {
-    await safeAnswer(ctx, '✅ ' + ctx.t('already_registered'));
+    await safeAnswer(ctx);
   });
 
   // ============================================================
@@ -360,7 +417,7 @@ module.exports = (bot) => {
       );
 
       if (!isVerified) {
-        const kb = subscriptionKeyboard(t.id, t.requiredChannels);
+        const kb = subscriptionKeyboard(ctx, t.id, t.requiredChannels);
 
         return ctx.reply(
           `╔══════════════════════╗\n` +
@@ -402,7 +459,9 @@ module.exports = (bot) => {
           `🏆 <b>${escapeHtml(t.title)}</b>\n\n` +
           `━━━━━━━━━━━━━━━━━━━━\n\n` +
           `🆔 Room ID: <code>${escapeHtml(t.roomId || ctx.t('not_yet'))}</code>\n` +
-          `🔒 ${ctx.t('password')}: <code>${escapeHtml(t.roomPassword || ctx.t('not_yet'))}</code>\n\n` +
+          `🔒 ${ctx.t('password')}: <code>${escapeHtml(
+            t.roomPassword || ctx.t('not_yet')
+          )}</code>\n\n` +
           `${ctx.t('room_partial_desc')}`,
         {
           parse_mode: 'HTML',
@@ -503,9 +562,19 @@ module.exports = (bot) => {
       const imagePath = await pointsService.generateStandingsPNG(t, standings);
 
       const kb = Markup.inlineKeyboard([
-        [Markup.button.callback(ctx.t('btn_refresh'), CALLBACK.TOUR_STANDINGS + t.id)],
+        [
+          Markup.button.callback(
+            ctx.t('btn_refresh'),
+            CALLBACK.TOUR_STANDINGS + t.id
+          ),
+        ],
         [Markup.button.callback(ctx.t('btn_as_text'), 'tour:st_text:' + t.id)],
-        [Markup.button.callback(ctx.t('btn_back_tournament'), CALLBACK.TOUR_OPEN + t.id)],
+        [
+          Markup.button.callback(
+            ctx.t('btn_back_tournament'),
+            CALLBACK.TOUR_OPEN + t.id
+          ),
+        ],
         [Markup.button.callback(ctx.t('menu_main'), CALLBACK.MENU_MAIN)],
       ]);
 
@@ -518,7 +587,9 @@ module.exports = (bot) => {
         {
           caption:
             `📊 <b>${escapeHtml(t.title)}</b>\n` +
-            `${ctx.t('matches')}: <b>${matchData.matches.length}</b> | ${ctx.t('teams')}: <b>${t.registeredTeams.length}</b>`,
+            `${ctx.t('matches')}: <b>${matchData.matches.length}</b> | ${ctx.t(
+              'teams'
+            )}: <b>${t.registeredTeams.length}</b>`,
           parse_mode: 'HTML',
           reply_markup: kb.reply_markup,
         }
@@ -528,20 +599,33 @@ module.exports = (bot) => {
 
       const text = pointsService.formatStandings(standings, t);
       const kb = Markup.inlineKeyboard([
-        [Markup.button.callback(ctx.t('btn_refresh'), CALLBACK.TOUR_STANDINGS + t.id)],
-        [Markup.button.callback(ctx.t('btn_back_tournament'), CALLBACK.TOUR_OPEN + t.id)],
+        [
+          Markup.button.callback(
+            ctx.t('btn_refresh'),
+            CALLBACK.TOUR_STANDINGS + t.id
+          ),
+        ],
+        [
+          Markup.button.callback(
+            ctx.t('btn_back_tournament'),
+            CALLBACK.TOUR_OPEN + t.id
+          ),
+        ],
       ]);
 
       try {
         await ctx.telegram.deleteMessage(ctx.chat.id, loading.message_id);
       } catch (err) {}
 
-      await ctx.reply(text, { parse_mode: 'HTML', reply_markup: kb.reply_markup });
+      await ctx.reply(text, {
+        parse_mode: 'HTML',
+        reply_markup: kb.reply_markup,
+      });
     }
   });
 
   // ============================================================
-  // 5.1 MATN KO'RINISHIDA
+  // 5.1 NATIJALAR — MATN KO'RINISHIDA
   // ============================================================
   bot.action(/^tour:st_text:(.+)$/, async (ctx) => {
     await safeAnswer(ctx);
@@ -560,12 +644,25 @@ module.exports = (bot) => {
     const text = pointsService.formatStandings(standings, t);
 
     const kb = Markup.inlineKeyboard([
-      [Markup.button.callback(ctx.t('btn_as_image'), CALLBACK.TOUR_STANDINGS + t.id)],
-      [Markup.button.callback(ctx.t('btn_back_tournament'), CALLBACK.TOUR_OPEN + t.id)],
+      [
+        Markup.button.callback(
+          ctx.t('btn_as_image'),
+          CALLBACK.TOUR_STANDINGS + t.id
+        ),
+      ],
+      [
+        Markup.button.callback(
+          ctx.t('btn_back_tournament'),
+          CALLBACK.TOUR_OPEN + t.id
+        ),
+      ],
       [Markup.button.callback(ctx.t('menu_main'), CALLBACK.MENU_MAIN)],
     ]);
 
-    await ctx.reply(text, { parse_mode: 'HTML', reply_markup: kb.reply_markup });
+    await ctx.reply(text, {
+      parse_mode: 'HTML',
+      reply_markup: kb.reply_markup,
+    });
   });
 
   // ============================================================
@@ -584,8 +681,18 @@ module.exports = (bot) => {
     const text = await teamListService.buildTeamList(t);
 
     const buttons = [
-      [Markup.button.callback(ctx.t('btn_refresh'), CALLBACK.TOUR_TEAMLIST + t.id)],
-      [Markup.button.callback(ctx.t('btn_back_tournament'), CALLBACK.TOUR_OPEN + t.id)],
+      [
+        Markup.button.callback(
+          ctx.t('btn_refresh'),
+          CALLBACK.TOUR_TEAMLIST + t.id
+        ),
+      ],
+      [
+        Markup.button.callback(
+          ctx.t('btn_back_tournament'),
+          CALLBACK.TOUR_OPEN + t.id
+        ),
+      ],
       [Markup.button.callback(ctx.t('menu_main'), CALLBACK.MENU_MAIN)],
     ];
 
@@ -621,11 +728,17 @@ module.exports = (bot) => {
     const t = await tournamentService.getTournament(tId);
     if (!t) return ctx.reply(ctx.t('tour_not_found'));
 
+    // Foydalanuvchi
     const user = await userService.getUser(ctx.from.id);
     if (!user?.teamId) {
-      return ctx.reply(ctx.t('error_team_not_member'), {
-        reply_markup: backToTournament(t.id).reply_markup,
-      });
+      return ctx.reply(
+        "❗ <b>Siz komandada emassiz.</b>\n\n" +
+          "Avval komanda yarating yoki mavjud komandaga qo'shiling.",
+        {
+          parse_mode: 'HTML',
+          reply_markup: backToTournament(t.id).reply_markup,
+        }
+      );
     }
 
     const team = await teamService.getTeam(user.teamId);
@@ -635,31 +748,43 @@ module.exports = (bot) => {
       });
     }
 
-    if (team.captainId !== ctx.from.id) {
-      return ctx.reply(ctx.t('error_not_captain'), {
-        reply_markup: backToTournament(t.id).reply_markup,
-      });
+    // Faqat captain
+    if (Number(team.captainId) !== Number(ctx.from.id)) {
+      return ctx.reply(
+        "❗ <b>Faqat komanda captain'i ro'yxatdan o'tkaza oladi.</b>\n\n" +
+          `<i>Siz captain emassiz. Captain'dan so'rang.</i>`,
+        {
+          parse_mode: 'HTML',
+          reply_markup: backToTournament(t.id).reply_markup,
+        }
+      );
     }
 
-    if (t.registrationDeadline && new Date(t.registrationDeadline) < new Date()) {
+    // Muddat tugagan
+    if (
+      t.registrationDeadline &&
+      new Date(t.registrationDeadline) < new Date()
+    ) {
       return ctx.reply(ctx.t('error_registration_closed'), {
         reply_markup: backToTournament(t.id).reply_markup,
       });
     }
 
+    // Allaqachon ro'yxatdan o'tgan
     if (t.registeredTeams.includes(team.id)) {
       return ctx.reply(ctx.t('error_already_registered'), {
         reply_markup: backToTournament(t.id).reply_markup,
       });
     }
 
+    // To'lgan
     if (t.registeredTeams.length >= t.maxTeams) {
       return ctx.reply(ctx.t('error_tournament_full'), {
         reply_markup: backToTournament(t.id).reply_markup,
       });
     }
 
-    // TUR TURI BO'YICHA AJRATISH
+    // ---------- PULLIK TURNIR ----------
     if (t.type === 'paid') {
       return ctx.reply(
         `💳 <b>${ctx.t('tour_type_paid')}</b>\n\n` +
@@ -687,10 +812,67 @@ module.exports = (bot) => {
       );
     }
 
-    // Bepul — obuna tekshiruvi
+    // ---------- BEPUL TURNIR ----------
+    // Kanalsiz bo'lsa — to'g'ridan-to'g'ri ro'yxatga
+    const channels = t.requiredChannels || [];
+
+    if (!channels.length) {
+      const res = await tournamentService.registerTeam(t.id, team.id);
+      if (!res.ok) {
+        return ctx.reply(`❗ Xatolik: ${res.reason}`, {
+          reply_markup: backToTournament(t.id).reply_markup,
+        });
+      }
+
+      // Hostga xabar
+      if (t.hostId) {
+        try {
+          await ctx.telegram.sendMessage(
+            t.hostId,
+            `ℹ️ <b>${escapeHtml(t.title)}</b> turniriga yangi komanda:\n<b>${escapeHtml(
+              team.name
+            )} [${escapeHtml(team.tag)}]</b>`,
+            { parse_mode: 'HTML' }
+          );
+        } catch (e) {}
+      }
+
+      return ctx.reply(
+        `╔══════════════════════╗\n` +
+          `   🎉 <b>MUVAFFAQIYAT!</b>\n` +
+          `╚══════════════════════╝\n\n` +
+          `✅ <b>${escapeHtml(
+            team.name
+          )}</b> komandasi turnirga ro'yxatdan o'tdi!\n\n` +
+          `🏆 ${escapeHtml(t.title)}\n` +
+          `👥 Komandalar: <b>${t.registeredTeams.length + 1}/${
+            t.maxTeams
+          }</b>`,
+        {
+          parse_mode: 'HTML',
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: "📋 Komandalar ro'yxati",
+                  callback_data: CALLBACK.TOUR_TEAMLIST + t.id,
+                },
+              ],
+              [
+                {
+                  text: ctx.t('btn_back_tournament'),
+                  callback_data: CALLBACK.TOUR_OPEN + t.id,
+                },
+              ],
+            ],
+          },
+        }
+      );
+    }
+
+    // Kanallar bor — obuna sahifasiga
     return ctx.reply(
-      `📢 <b>${ctx.t('tour_type_free')}</b>\n\n` +
-        `${ctx.t('tour_free_start')}`,
+      `📢 <b>${ctx.t('tour_type_free')}</b>\n\n${ctx.t('tour_free_start')}`,
       {
         parse_mode: 'HTML',
         reply_markup: {
@@ -763,7 +945,7 @@ module.exports = (bot) => {
     d.hostId = Number(hostId) || hostId;
     ctx.session.state = STATES.TOUR_CREATE_CONFIRM;
     const summary = await buildConfirmSummary(ctx, d);
-    return ctx.reply(summary, { parse_mode: 'HTML', ...confirmTournament() });
+    return ctx.reply(summary, { parse_mode: 'HTML', ...confirmTournament(ctx) });
   });
 
   bot.action('tour:ph:skip', async (ctx) => {
@@ -777,7 +959,7 @@ module.exports = (bot) => {
     d.hostId = null;
     ctx.session.state = STATES.TOUR_CREATE_CONFIRM;
     const summary = await buildConfirmSummary(ctx, d);
-    return ctx.reply(summary, { parse_mode: 'HTML', ...confirmTournament() });
+    return ctx.reply(summary, { parse_mode: 'HTML', ...confirmTournament(ctx) });
   });
 
   // ============================================================
@@ -825,7 +1007,12 @@ module.exports = (bot) => {
 
       const kb = Markup.inlineKeyboard([
         [Markup.button.callback(ctx.t('tour_open'), CALLBACK.TOUR_OPEN + t.id)],
-        [Markup.button.callback(ctx.t('tour_create_again'), CALLBACK.TOUR_CREATE)],
+        [
+          Markup.button.callback(
+            ctx.t('tour_create_again'),
+            CALLBACK.TOUR_CREATE
+          ),
+        ],
         [Markup.button.callback(ctx.t('menu_admin'), CALLBACK.ADMIN_PANEL)],
       ]);
 
@@ -838,7 +1025,9 @@ module.exports = (bot) => {
           `💳 ${ctx.t('tour_type_label')}: <b>${typeLabel}</b>\n` +
           `📅 ${t.date} | ⏰ ${t.startTime}\n` +
           `🎮 ${escapeHtml(t.mode)}\n` +
-          `🎙 ${ctx.t('host_label')}: <b>${d.hostId ? ctx.t('yes') : ctx.t('no')}</b>\n\n` +
+          `🎙 ${ctx.t('host_label')}: <b>${
+            d.hostId ? ctx.t('yes') : ctx.t('no')
+          }</b>\n\n` +
           `━━━━━━━━━━━━━━━━━━━━\n\n` +
           `${ctx.t('tour_created_hint')}`,
         { parse_mode: 'HTML', reply_markup: kb.reply_markup }
@@ -895,7 +1084,7 @@ module.exports = (bot) => {
 
       return ctx.reply(ctx.t('tour_type_pick'), {
         parse_mode: 'HTML',
-        ...tournamentTypeKeyboard(),
+        ...tournamentTypeKeyboard(ctx),
       });
     }
 
@@ -914,10 +1103,10 @@ module.exports = (bot) => {
       ctx.session.data.amount = amount;
       ctx.session.state = STATES.TOUR_CREATE_CURRENCY;
 
-      return ctx.reply(
-        ctx.t('payment_currency_prompt', { amount }),
-        { parse_mode: 'HTML', ...currencyKeyboard() }
-      );
+      return ctx.reply(ctx.t('payment_currency_prompt', { amount }), {
+        parse_mode: 'HTML',
+        ...currencyKeyboard(ctx),
+      });
     }
 
     // PULLIK: CARD NUMBER (qo'lda)
@@ -1235,16 +1424,29 @@ module.exports = (bot) => {
     const team = user?.teamId ? await teamService.getTeam(user.teamId) : null;
 
     const isStaff = hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER]);
-    const isCaptain = team && team.captainId === ctx.from.id;
-    const isRegistered = team && t.registeredTeams.includes(team.id);
+    const isCaptain = !!(
+      team && Number(team.captainId) === Number(ctx.from.id)
+    );
+    const isRegistered = !!(team && t.registeredTeams.includes(team.id));
     const isFull = t.registeredTeams.length >= t.maxTeams;
-    const isClosed =
-      t.registrationDeadline && new Date(t.registrationDeadline) < new Date();
+    const isClosed = !!(
+      t.registrationDeadline && new Date(t.registrationDeadline) < new Date()
+    );
 
     const summary = formatTournamentText(t, true);
     const buttons = [
-      [Markup.button.callback(ctx.t('tour_standings'), CALLBACK.TOUR_STANDINGS + t.id)],
-      [Markup.button.callback(ctx.t('tour_teamlist'), CALLBACK.TOUR_TEAMLIST + t.id)],
+      [
+        Markup.button.callback(
+          ctx.t('tour_standings'),
+          CALLBACK.TOUR_STANDINGS + t.id
+        ),
+      ],
+      [
+        Markup.button.callback(
+          ctx.t('tour_teamlist'),
+          CALLBACK.TOUR_TEAMLIST + t.id
+        ),
+      ],
     ];
 
     if (isCaptain && !isRegistered && !isFull && !isClosed) {
@@ -1252,12 +1454,17 @@ module.exports = (bot) => {
         t.type === 'paid'
           ? ctx.t('tour_register_paid')
           : ctx.t('tour_register');
-      buttons.push([Markup.button.callback(regLabel, CALLBACK.TOUR_REGISTER + t.id)]);
+      buttons.push([
+        Markup.button.callback(regLabel, CALLBACK.TOUR_REGISTER + t.id),
+      ]);
     }
 
     if (isCaptain && isRegistered) {
       buttons.push([
-        Markup.button.callback('✅ ' + ctx.t('already_registered'), 'no_action'),
+        Markup.button.callback(
+          '✅ ' + ctx.t('already_registered'),
+          'no_action'
+        ),
       ]);
     }
 
@@ -1301,7 +1508,9 @@ module.exports = (bot) => {
       ]);
     }
 
-    buttons.push([Markup.button.callback(ctx.t('menu_main'), CALLBACK.MENU_MAIN)]);
+    buttons.push([
+      Markup.button.callback(ctx.t('menu_main'), CALLBACK.MENU_MAIN),
+    ]);
 
     if (t.imageFileId) {
       try {
@@ -1333,17 +1542,62 @@ module.exports = (bot) => {
     if (!t) return ctx.reply(ctx.t('tour_not_found'));
 
     const kb = Markup.inlineKeyboard([
-      [Markup.button.callback('🏆 ' + ctx.t('name'), 'tour:editf:' + tId + ':title')],
-      [Markup.button.callback('📅 ' + ctx.t('date'), 'tour:editf:' + tId + ':date')],
-      [Markup.button.callback('⏰ ' + ctx.t('time'), 'tour:editf:' + tId + ':time')],
-      [Markup.button.callback('🎮 ' + ctx.t('mode'), 'tour:editf:' + tId + ':mode')],
+      [
+        Markup.button.callback(
+          '🏆 ' + ctx.t('name'),
+          'tour:editf:' + tId + ':title'
+        ),
+      ],
+      [
+        Markup.button.callback(
+          '📅 ' + ctx.t('date'),
+          'tour:editf:' + tId + ':date'
+        ),
+      ],
+      [
+        Markup.button.callback(
+          '⏰ ' + ctx.t('time'),
+          'tour:editf:' + tId + ':time'
+        ),
+      ],
+      [
+        Markup.button.callback(
+          '🎮 ' + ctx.t('mode'),
+          'tour:editf:' + tId + ':mode'
+        ),
+      ],
       [Markup.button.callback('💲 PRIZ', 'tour:editf:' + tId + ':prize')],
       [Markup.button.callback('♾️ MAP', 'tour:editf:' + tId + ':mapTag')],
-      [Markup.button.callback('⭐️ ' + ctx.t('stage'), 'tour:editf:' + tId + ':etapa')],
-      [Markup.button.callback('👥 ' + ctx.t('max_teams'), 'tour:editf:' + tId + ':maxTeams')],
-      [Markup.button.callback('📄 ' + ctx.t('description'), 'tour:editf:' + tId + ':desc')],
-      [Markup.button.callback('🎙 ' + ctx.t('host_label'), 'tour:editf:' + tId + ':host')],
-      [Markup.button.callback(ctx.t('btn_back_tournament'), CALLBACK.TOUR_OPEN + tId)],
+      [
+        Markup.button.callback(
+          '⭐️ ' + ctx.t('stage'),
+          'tour:editf:' + tId + ':etapa'
+        ),
+      ],
+      [
+        Markup.button.callback(
+          '👥 ' + ctx.t('max_teams'),
+          'tour:editf:' + tId + ':maxTeams'
+        ),
+      ],
+      [
+        Markup.button.callback(
+          '📄 ' + ctx.t('description'),
+          'tour:editf:' + tId + ':desc'
+        ),
+      ],
+      [
+        Markup.button.callback(
+          '🎙 ' + ctx.t('host_label'),
+          'tour:editf:' + tId + ':host'
+        ),
+      ],
+      [
+        Markup.button.callback(
+          ctx.t('btn_back_tournament'),
+          CALLBACK.TOUR_OPEN + tId
+        ),
+      ],
     ]);
 
     await safeEdit(
@@ -1489,7 +1743,9 @@ module.exports = (bot) => {
         'tour:ah_set:' + tId + ':' + h.id
       ),
     ]);
-    rows.push([Markup.button.callback(ctx.t('btn_cancel'), CALLBACK.TOUR_OPEN + tId)]);
+    rows.push([
+      Markup.button.callback(ctx.t('btn_cancel'), CALLBACK.TOUR_OPEN + tId),
+    ]);
 
     await ctx.reply(
       `🎙 <b>${ctx.t('tour_assign_host')}</b>\n\n` +
@@ -1597,7 +1853,9 @@ async function showTournamentList(ctx, key, page) {
   if (!list.length) {
     return safeEdit(
       ctx,
-      `${sectionEmoji} <b>${ctx.t(sectionNameKey)}</b>\n\n📭 ${ctx.t('tour_empty')}`,
+      `${sectionEmoji} <b>${ctx.t(sectionNameKey)}</b>\n\n📭 ${ctx.t(
+        'tour_empty'
+      )}`,
       backToList()
     );
   }
@@ -1634,7 +1892,9 @@ async function showTournamentList(ctx, key, page) {
     lines.push(
       `<b>${num}. ${escapeHtml(t.title)}</b> ${typeEmoji}\n` +
         `   📅 ${t.date} | ⏰ ${t.startTime}\n` +
-        `   🎮 ${escapeHtml(t.mode)} | 👥 ${t.registeredTeams.length}/${t.maxTeams} ${regStatus}`
+        `   🎮 ${escapeHtml(t.mode)} | 👥 ${t.registeredTeams.length}/${
+          t.maxTeams
+        } ${regStatus}`
     );
     lines.push('');
   });
@@ -1702,7 +1962,7 @@ async function sendHostPicker(ctx) {
     const summary = await buildConfirmSummary(ctx, ctx.session.data);
     return ctx.reply(
       `⚠️ <i>${ctx.t('host_none_skip')}</i>\n\n` + summary,
-      { parse_mode: 'HTML', ...confirmTournament() }
+      { parse_mode: 'HTML', ...confirmTournament(ctx) }
     );
   }
 
@@ -1733,7 +1993,9 @@ async function buildConfirmSummary(ctx, d) {
 
   const typeLabel =
     d.type === 'paid'
-      ? `💳 ${ctx.t('tour_type_paid')} (${d.amount || '?'} ${d.currency || ''})`
+      ? `💳 ${ctx.t('tour_type_paid')} (${d.amount || '?'} ${
+          d.currency || ''
+        })`
       : `🆓 ${ctx.t('tour_type_free')}`;
 
   const channelCount = (d.requiredChannels || []).length;
@@ -1753,9 +2015,13 @@ async function buildConfirmSummary(ctx, d) {
     `⭐️ ${ctx.t('stage')}: <b>${escapeHtml(d.etapa || '-')}</b>\n` +
     `👥 ${ctx.t('max_teams')}: <b>${d.maxTeams}</b>\n` +
     (d.type === 'paid'
-      ? `💰 ${ctx.t('payment_amount')}: <b>${d.amount} ${d.currency}</b>\n💳 ${ctx.t('payment_card')}: <code>${escapeHtml(d.cardNumber || '-')}</code>\n` +
+      ? `💰 ${ctx.t('payment_amount')}: <b>${d.amount} ${d.currency}</b>\n💳 ${ctx.t(
+          'payment_card'
+        )}: <code>${escapeHtml(d.cardNumber || '-')}</code>\n` +
         (d.cardOwner
-          ? `👤 ${ctx.t('payment_card_owner')}: <b>${escapeHtml(d.cardOwner)}</b>\n`
+          ? `👤 ${ctx.t('payment_card_owner')}: <b>${escapeHtml(
+              d.cardOwner
+            )}</b>\n`
           : '')
       : '') +
     (d.type === 'free' && channelCount
@@ -1780,7 +2046,9 @@ function formatTournamentText(t, detailed = false) {
     `🏆 <b>${escapeHtml(t.title)}</b>`,
     `📅 Sana: <b>${t.date}</b>`,
     `⏰ Vaqt: <b>${t.startTime}</b> (${t.timezone || 'Asia/Tashkent'})`,
-    `🎮 Rejim: <b>${escapeHtml(t.mode)}</b> | 🗺 <b>${escapeHtml(t.map || DEFAULT_MAP)}</b>`,
+    `🎮 Rejim: <b>${escapeHtml(t.mode)}</b> | 🗺 <b>${escapeHtml(
+      t.map || DEFAULT_MAP
+    )}</b>`,
   ];
 
   if (t.prize) lines.push(`💲 PRIZ: <b>${escapeHtml(t.prize)}</b>`);

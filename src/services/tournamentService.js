@@ -1,5 +1,5 @@
 // ============================================================
-// TOURNAMENT SERVICE — Turnir boshqaruvi (to'lov bilan)
+// TOURNAMENT SERVICE — Turnir boshqaruvi (to'lov + kanallar)
 // ============================================================
 const store = require('../storage/jsonStore');
 const { generateId } = require('../utils/idGenerator');
@@ -178,7 +178,7 @@ async function setStatus(tournamentId, status) {
 }
 
 // ============================================================
-// ORGANIZER TURNIRLARI
+// ORGANIZER TURNIRLARI (faqat o'zi yaratgan)
 // ============================================================
 async function getOrganizerTournaments(organizerId) {
   const data = await store.read(FILE);

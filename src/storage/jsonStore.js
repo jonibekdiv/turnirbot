@@ -25,6 +25,17 @@ const DEFAULTS = {
   'payments.json': {},
   'channels.json': {},
   'cards.json': {},
+  'subscriptions.json': {},
+
+  // Yangi funksiyalar uchun
+  'waitlists.json': {},
+  'reservations.json': {},
+  'broadcast_stats.json': { broadcasts: {} },
+  'live_scores.json': {},
+  'referrals.json': {},
+  'achievements.json': {},
+  'recaps.json': {},
+
   'settings.json': {
     allowAdminAddAdmin: false,
     minTeamMembers: 1,
@@ -33,9 +44,9 @@ const DEFAULTS = {
     reminder10Minutes: 10,
     reminder5Minutes: 5,
     channelId: null,
+    reserveTimeoutMin: 5,
+    waitlistMax: 30,
   },
-  
-  'subscriptions.json': {},
 };
 
 function fullPath(file) {

@@ -207,7 +207,7 @@ function formatStandings(standings, tournament) {
 }
 
 // ============================================================
-// BITTA KARTANI KO'RSATISH
+// BITTA KARTANI KO'RSATISH — Ball bo'yicha saralash
 // ============================================================
 function formatMatchCard(match, teamsMap) {
   const lines = [];
@@ -216,9 +216,26 @@ function formatMatchCard(match, teamsMap) {
   lines.push(`╚══════════════════════╝`);
   lines.push('');
 
-  const sorted = [...match.results].sort((a, b) => a.placement - b.placement);
+  // ⚡ BALL BO'YICHA SARALASH (kamayish tartibida)
+  // 1. Ball (yuqoridan pastga)
+  // 2. Kill (agar ball teng bo'lsa)
+  // 3. O'rin (agar kill ham teng bo'lsa)
+  const sorted = [...match.results].sort((a, b) => {
+    const ptsA = calculateTotal(a.placement, a.kills);
+    const ptsB = calculateTotal(b.placement, b.kills);
 
-  const W_NO = 4;
+    // 1. Ball bo'yicha
+    if (ptsB !== ptsA) return ptsB - ptsA;
+
+    // 2. Kill bo'yicha
+    if ((b.kills || 0) !== (a.kills || 0)) return (b.kills || 0) - (a.kills || 0);
+
+    // 3. O'rin bo'yicha
+    return (a.placement || 999) - (b.placement || 999);
+  });
+
+  // Ustun kengliklari
+  const W_RANK = 3;
   const W_TEAM = 18;
   const W_KILL = 5;
   const W_PTS = 5;
@@ -229,16 +246,22 @@ function formatMatchCard(match, teamsMap) {
     return str + ' '.repeat(len - str.length);
   }
 
-  const header = pad('#', W_NO) + pad('Team', W_TEAM) + pad('Kill', W_KILL) + pad('Pts', W_PTS);
+  const header =
+    pad('#', W_RANK) +
+    pad('Team', W_TEAM) +
+    pad('Kill', W_KILL) +
+    pad('Pts', W_PTS);
+
   const divider = '─'.repeat(header.length);
 
-  const rows = sorted.map((r) => {
+  // ⚡ Saralash bo'yicha raqamlash (1, 2, 3, ...)
+  const rows = sorted.map((r, index) => {
     const team = teamsMap[r.teamId];
     const pts = calculateTotal(r.placement, r.kills);
     return (
-      pad(r.placement, W_NO) +
+      pad(index + 1, W_RANK) +
       pad((team?.name || '?').slice(0, W_TEAM - 1), W_TEAM) +
-      pad(r.kills, W_KILL) +
+      pad(r.kills || 0, W_KILL) +
       pad(pts, W_PTS)
     );
   });

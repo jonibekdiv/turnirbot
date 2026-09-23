@@ -33,5 +33,28 @@
         "createdBy": 8811053020
       }
     ]
+  },
+  "tour_mud0sm0ei3beud": {
+    "tournamentId": "tour_mud0sm0ei3beud",
+    "matches": [
+      {
+        "id": "m_mud32ncxlavs5f",
+        "number": 1,
+        "results": [
+          {
+            "teamId": "team_mud18m1y0ilfw4",
+            "placement": 1,
+            "kills": 5
+          },
+          {
+            "teamId": "team_mu8q4593j6v9dv",
+            "placement": 2,
+            "kills": 10
+          }
+        ],
+        "createdAt": "2026-09-22T19:45:02.913Z",
+        "createdBy": 8811053020
+      }
+    ]
   }
 }

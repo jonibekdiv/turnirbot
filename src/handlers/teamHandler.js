@@ -1,11 +1,24 @@
+// ============================================================
+// TEAM HANDLER — Ko'p tilli (TUZATILGAN)
+// ============================================================
 const { Markup } = require('telegraf');
 const teamService = require('../services/teamService');
 const userService = require('../services/userService');
-const { teamMenu, confirmTeam, cancelKeyboard } = require('../keyboards/teamKeyboard');
+const {
+  teamMenu,
+  confirmTeam,
+  cancelKeyboard,
+} = require('../keyboards/teamKeyboard');
 const { mainKeyboard } = require('../keyboards/mainKeyboard');
 const { CALLBACK, STATES, LIMITS } = require('../constants');
 const { cleanText } = require('../utils/validation');
-const { escapeHtml, displayName, safeEdit, safeAnswer } = require('../utils/telegramUtils');
+const {
+  escapeHtml,
+  displayName,
+  safeEdit,
+  safeAnswer,
+} = require('../utils/telegramUtils');
+const langService = require('../services/langService');
 const config = require('../config');
 
 module.exports = (bot) => {
@@ -14,26 +27,48 @@ module.exports = (bot) => {
   // ============================================================
   bot.action(CALLBACK.MENU_TEAM, async (ctx) => {
     await safeAnswer(ctx);
-    await safeEdit(ctx, '👥 <b>Komandam</b>\n\nKerakli amalni tanlang:', teamMenu);
+
+    const t = ctx.t;
+
+    // ✅ TUZATILDI: teamMenu(ctx) — funktsiya chaqirish
+    await safeEdit(
+      ctx,
+      `👥 <b>${t('team_title')}</b>\n\n${t('team_subtitle')}`,
+      teamMenu(ctx)
+    );
   });
 
   // ============================================================
-  // 2. KOMANDA YARATISH — BOSHLASH
+  // 2. KOMANDA YARATISH
   // ============================================================
   bot.action(CALLBACK.TEAM_CREATE, async (ctx) => {
     await safeAnswer(ctx);
+    const t = ctx.t;
+
     const user = await userService.getUser(ctx.from.id);
     if (user?.teamId) {
-      return safeEdit(ctx, '❗ Siz allaqachon komandadasiz.');
+      return safeEdit(ctx, `❗ ${t('team_already_member')}`);
     }
+
     ctx.session = { state: STATES.TEAM_CREATE_NAME, data: {} };
-    await safeEdit(ctx, '1️⃣ Komanda nomini kiriting:', cancelKeyboard);
+
+    await safeEdit(
+      ctx,
+      `1️⃣ ${t('team_ask_name')}`,
+      cancelKeyboard(ctx)
+    );
   });
 
   bot.action(CALLBACK.TEAM_RETRY, async (ctx) => {
     await safeAnswer(ctx);
+    const t = ctx.t;
+
     ctx.session = { state: STATES.TEAM_CREATE_NAME, data: {} };
-    await safeEdit(ctx, '1️⃣ Komanda nomini qayta kiriting:', cancelKeyboard);
+    await safeEdit(
+      ctx,
+      `1️⃣ ${t('team_ask_name_again')}`,
+      cancelKeyboard(ctx)
+    );
   });
 
   // ============================================================
@@ -41,10 +76,13 @@ module.exports = (bot) => {
   // ============================================================
   bot.action(CALLBACK.TEAM_CONFIRM, async (ctx) => {
     await safeAnswer(ctx);
+    const t = ctx.t;
+
     const d = ctx.session?.data || {};
     if (!d.name) {
-      return safeEdit(ctx, '❗ Ma\'lumot yo\'q. Qaytadan boshlang.');
+      return safeEdit(ctx, `❗ ${t('error_no_data')}`);
     }
+
     try {
       const team = await teamService.createTeam({
         name: d.name,
@@ -56,25 +94,29 @@ module.exports = (bot) => {
       ctx.session = { state: null, data: {} };
 
       const deepLink = `https://t.me/${config.BOT_USERNAME}?start=join_${team.joinCode}`;
+
+      const role = ctx.state.role || 'player';
+      const lang = ctx.state.lang || 'uz';
+
       await safeEdit(
         ctx,
-        `✅ <b>Komanda yaratildi!</b>\n\n` +
-        `🏷 Nom: <b>${escapeHtml(team.name)}</b>\n` +
-        `🔖 Teg: <b>${escapeHtml(team.tag)}</b>\n` +
-        `🔑 Qo'shilish kodi: <code>${team.joinCode}</code>\n\n` +
-        `🔗 Do'stlarni taklif qilish havolasi:\n${deepLink}`,
-        mainKeyboard(ctx.state.role)
+        `✅ <b>${t('team_created')}</b>\n\n` +
+          `${t('name')}: <b>${escapeHtml(team.name)}</b>\n` +
+          `${t('team_tag_label')}: <b>${escapeHtml(team.tag)}</b>\n` +
+          `${t('team_join_code')}: <code>${team.joinCode}</code>\n\n` +
+          `${t('team_invite_link')}:\n${deepLink}`,
+        mainKeyboard(role, lang)
       );
     } catch (e) {
       ctx.session = { state: null, data: {} };
-      await ctx.reply('❌ Xatolik: ' + (e.message || 'xato'));
+      await ctx.reply(`❌ ${t('error_prefix')} ${e.message || t('error_generic')}`);
     }
   });
 
   bot.action(CALLBACK.TEAM_CANCEL, async (ctx) => {
     await safeAnswer(ctx);
     ctx.session = { state: null, data: {} };
-    await safeEdit(ctx, '❌ Bekor qilindi.');
+    await safeEdit(ctx, `❌ ${ctx.t('cancel')}`);
   });
 
   // ============================================================
@@ -82,12 +124,19 @@ module.exports = (bot) => {
   // ============================================================
   bot.action(CALLBACK.TEAM_JOIN, async (ctx) => {
     await safeAnswer(ctx);
+    const t = ctx.t;
+
     const user = await userService.getUser(ctx.from.id);
     if (user?.teamId) {
-      return safeEdit(ctx, '❗ Siz allaqachon komandadasiz.');
+      return safeEdit(ctx, `❗ ${t('team_already_member')}`);
     }
+
     ctx.session = { state: STATES.TEAM_JOIN_CODE, data: {} };
-    await safeEdit(ctx, '🔑 Komanda qo\'shilish kodini yuboring:', cancelKeyboard);
+    await safeEdit(
+      ctx,
+      `🔑 ${t('team_ask_join_code')}`,
+      cancelKeyboard(ctx)
+    );
   });
 
   // ============================================================
@@ -95,21 +144,28 @@ module.exports = (bot) => {
   // ============================================================
   bot.action(CALLBACK.TEAM_MY, async (ctx) => {
     await safeAnswer(ctx);
+    const t = ctx.t;
+
     const user = await userService.getUser(ctx.from.id);
     if (!user?.teamId) {
-      return safeEdit(ctx, '❗ Siz komandada emassiz.');
+      return safeEdit(ctx, `❗ ${t('team_no_team')}`);
     }
+
     const team = await teamService.getTeam(user.teamId);
     if (!team) {
-      return safeEdit(ctx, '❗ Komanda topilmadi.');
+      return safeEdit(ctx, `❗ ${t('error_not_found')}`);
     }
 
     const captain = await userService.getUser(team.captainId);
     const lines = [];
-    lines.push(`👥 <b>${escapeHtml(team.name)} [${escapeHtml(team.tag)}]</b>`);
-    lines.push(`👑 Captain: <b>${escapeHtml(displayName(captain))}</b>`);
-    lines.push(`🔑 Kod: <code>${team.joinCode}</code>`);
-    lines.push(`👥 A'zolar (${team.members.length}/${LIMITS.MAX_PLAYERS_PER_TEAM}):`);
+    lines.push(
+      `👥 <b>${escapeHtml(team.name)} [${escapeHtml(team.tag)}]</b>`
+    );
+    lines.push(`👑 ${t('team_captain')}: <b>${escapeHtml(displayName(captain))}</b>`);
+    lines.push(`🔑 ${t('team_join_code')}: <code>${team.joinCode}</code>`);
+    lines.push(
+      `👥 ${t('team_members_title')} (${team.members.length}/${LIMITS.MAX_PLAYERS_PER_TEAM}):`
+    );
 
     for (let i = 0; i < team.members.length; i++) {
       const u = await userService.getUser(team.members[i]);
@@ -117,16 +173,16 @@ module.exports = (bot) => {
       lines.push(` ${i + 1}. ${isCaptain}${escapeHtml(displayName(u))}`);
     }
 
-    // Rasm mavjud bo'lsa — rasm bilan yuboramiz
     if (team.avatarFileId) {
       try {
         return await ctx.replyWithPhoto(team.avatarFileId, {
           caption: lines.join('\n'),
           parse_mode: 'HTML',
         });
-      } catch (e) { /* rasm yo'q */ }
+      } catch (e) {}
     }
-    await safeEdit(ctx, lines.join('\n'));
+
+    await safeEdit(ctx, lines.join('\n'), teamMenu(ctx));
   });
 
   // ============================================================
@@ -134,42 +190,47 @@ module.exports = (bot) => {
   // ============================================================
   bot.action(CALLBACK.TEAM_LEAVE, async (ctx) => {
     await safeAnswer(ctx);
+    const t = ctx.t;
+
     const user = await userService.getUser(ctx.from.id);
     if (!user?.teamId) {
-      return safeEdit(ctx, '❗ Siz komandada emassiz.');
+      return safeEdit(ctx, `❗ ${t('team_no_team')}`);
     }
+
     const team = await teamService.getTeam(user.teamId);
     if (!team) {
-      return safeEdit(ctx, '❗ Komanda topilmadi.');
+      return safeEdit(ctx, `❗ ${t('error_not_found')}`);
     }
 
     const result = await teamService.removeMember(team.id, user.id);
-    let msg = '✅ Siz komandani tark etdingiz.';
+    let msg = `✅ ${t('team_left')}`;
 
     if (result?.captainTransferred) {
       try {
         await ctx.telegram.sendMessage(
           result.captainTransferred,
-          'ℹ️ Siz komandaning yangi captain\'i bo\'ldingiz.'
+          `ℹ️ ${t('team_you_new_captain')}`
         );
-      } catch (e) { /* foydalanuvchi bloklagan */ }
-    }
-    if (result?.deleted) {
-      msg = '✅ Komanda o\'chirildi (siz yagona a\'zo edingiz).';
+      } catch (e) {}
     }
 
-    // Captain'ga xabar
+    if (result?.deleted) {
+      msg = `✅ ${t('team_deleted')}`;
+    }
+
     if (!result?.deleted && team.captainId !== user.id) {
       try {
         await ctx.telegram.sendMessage(
           team.captainId,
-          `ℹ️ <b>${escapeHtml(displayName(user))}</b> komandani tark etdi.`,
+          `ℹ️ <b>${escapeHtml(displayName(user))}</b> ${t('team_left_notify')}`,
           { parse_mode: 'HTML' }
         );
-      } catch (e) { /* bloklangan */ }
+      } catch (e) {}
     }
 
-    await safeEdit(ctx, msg, mainKeyboard(ctx.state.role));
+    const role = ctx.state.role || 'player';
+    const lang = ctx.state.lang || 'uz';
+    await safeEdit(ctx, msg, mainKeyboard(role, lang));
   });
 
   // ============================================================
@@ -178,30 +239,33 @@ module.exports = (bot) => {
   bot.on('text', async (ctx, next) => {
     const s = ctx.session?.state;
     if (!s) return next();
+    const t = ctx.t;
 
-    // ---------- KOMANDA NOMI ----------
+    // ---------- NOM ----------
     if (s === STATES.TEAM_CREATE_NAME) {
       const name = cleanText(ctx.message.text, LIMITS.MAX_NAME_LEN);
       if (name.length < 2) {
-        return ctx.reply('❗ Nom juda qisqa. Qayta kiriting:');
+        return ctx.reply(`❗ ${t('team_name_short')}`, cancelKeyboard(ctx));
       }
       ctx.session.data.name = name;
       ctx.session.state = STATES.TEAM_CREATE_TAG;
-      return ctx.reply('2️⃣ Komanda tegini kiriting (2-5 belgi, faqat harflar va raqamlar):');
+      return ctx.reply(`2️⃣ ${t('team_ask_tag')}`, cancelKeyboard(ctx));
     }
 
-    // ---------- KOMANDA TEGI ----------
+    // ---------- TEG ----------
     if (s === STATES.TEAM_CREATE_TAG) {
-      const tag = cleanText(ctx.message.text, 5).toUpperCase().replace(/[^A-Z0-9]/g, '');
+      const tag = cleanText(ctx.message.text, 5)
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, '');
       if (tag.length < 2) {
-        return ctx.reply('❗ Teg kamida 2 belgi (harflar va raqamlar):');
+        return ctx.reply(`❗ ${t('team_tag_short')}`, cancelKeyboard(ctx));
       }
       ctx.session.data.tag = tag;
       ctx.session.state = STATES.TEAM_CREATE_AVATAR;
-      return ctx.reply('3️⃣ Komanda avatarini rasm sifatida yuboring:');
+      return ctx.reply(`3️⃣ ${t('team_ask_avatar')}`, cancelKeyboard(ctx));
     }
 
-    // ---------- MANAGER USERNAME ----------
+    // ---------- MANAGER ----------
     if (s === STATES.TEAM_CREATE_MANAGER) {
       const m = cleanText(ctx.message.text, 40).replace(/^@/, '');
       ctx.session.data.managerUsername = m;
@@ -209,13 +273,16 @@ module.exports = (bot) => {
 
       const d = ctx.session.data;
       const summary =
-        `📋 <b>Tasdiqlash</b>\n\n` +
-        `🏷 Nom: <b>${escapeHtml(d.name)}</b>\n` +
-        `🔖 Teg: <b>${escapeHtml(d.tag)}</b>\n` +
-        `🖼 Avatar: <b>${d.avatarFileId ? '✅ yuklangan' : 'yo\'q'}</b>\n` +
-        `👑 Manager: <b>@${escapeHtml(d.managerUsername || '-')}</b>\n` +
-        `👤 Yaratuvchi: <b>${escapeHtml(displayName(ctx.from))}</b>`;
-      return ctx.reply(summary, { parse_mode: 'HTML', ...confirmTeam });
+        `📋 <b>${t('confirm_title')}</b>\n\n` +
+        `${t('name')}: <b>${escapeHtml(d.name)}</b>\n` +
+        `${t('team_tag_label')}: <b>${escapeHtml(d.tag)}</b>\n` +
+        `${t('image')}: <b>${d.avatarFileId ? '✅' : '—'}</b>\n` +
+        `${t('team_manager')}: <b>@${escapeHtml(d.managerUsername || '-')}</b>\n` +
+        `${t('team_creator')}: <b>${escapeHtml(displayName(ctx.from))}</b>`;
+      return ctx.reply(summary, {
+        parse_mode: 'HTML',
+        ...confirmTeam(ctx),
+      });
     }
 
     // ---------- QO'SHILISH KODI ----------
@@ -224,30 +291,29 @@ module.exports = (bot) => {
       ctx.session = { state: null, data: {} };
 
       const team = await teamService.getTeamByCode(code);
-      if (!team) return ctx.reply('❗ Kod noto\'g\'ri yoki eskirgan.');
+      if (!team) return ctx.reply(`❗ ${t('team_code_invalid')}`);
 
       const user = await userService.getUser(ctx.from.id);
-      if (user?.teamId) return ctx.reply('❗ Siz allaqachon komandadasiz.');
+      if (user?.teamId) return ctx.reply(`❗ ${t('team_already_member')}`);
       if (!(await teamService.canAddMember(team.id))) {
-        return ctx.reply('❗ Komanda to\'lgan (maksimal 8 o\'yinchi).');
+        return ctx.reply(`❗ ${t('team_full')}`);
       }
 
       await teamService.addMember(team.id, user.id);
       await userService.setUserTeam(user.id, team.id);
 
       await ctx.reply(
-        `✅ <b>${escapeHtml(team.name)} [${escapeHtml(team.tag)}]</b> komandasiga qo'shildingiz!`,
+        `✅ <b>${escapeHtml(team.name)} [${escapeHtml(team.tag)}]</b> — ${t('team_joined')}`,
         { parse_mode: 'HTML' }
       );
 
-      // Captain'ga xabar
       try {
         await ctx.telegram.sendMessage(
           team.captainId,
-          `ℹ️ Yangi a'zo komandaga qo'shildi:\n<b>${escapeHtml(displayName(ctx.from))}</b>`,
+          `ℹ️ ${t('team_new_member')}: <b>${escapeHtml(displayName(ctx.from))}</b>`,
           { parse_mode: 'HTML' }
         );
-      } catch (e) { /* bloklangan */ }
+      } catch (e) {}
       return;
     }
 
@@ -263,7 +329,8 @@ module.exports = (bot) => {
       const fileId = ctx.message.photo[ctx.message.photo.length - 1].file_id;
       ctx.session.data.avatarFileId = fileId;
       ctx.session.state = STATES.TEAM_CREATE_MANAGER;
-      return ctx.reply('4️⃣ Komanda manager yoki captain Telegram username\'ini yuboring (@ belgisisiz ham bo\'ladi):');
+      const t = ctx.t;
+      return ctx.reply(`4️⃣ ${t('team_ask_manager')}`, cancelKeyboard(ctx));
     }
     return next();
   });

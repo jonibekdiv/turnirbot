@@ -1,5 +1,5 @@
 // ============================================================
-// PAYMENT SERVICE — To'lov tizimi
+// PAYMENT SERVICE — To'lov tizimi (organizer filter bilan)
 // ============================================================
 const store = require('../storage/jsonStore');
 const { generateId } = require('../utils/idGenerator');
@@ -35,7 +35,7 @@ async function createPayment({
     tournamentId,
     teamId,
     captainId,
-    organizerId,
+    organizerId: Number(organizerId) || null,
     receiptFileId: receiptFileId || null,
     receiptType: receiptType || null,
     receiptCaption: receiptCaption || '',
@@ -68,7 +68,9 @@ async function getPayment(paymentId) {
 // ============================================================
 async function getTournamentPayments(tournamentId) {
   const data = await store.read(FILE);
-  return Object.values(data).filter((p) => p.tournamentId === tournamentId);
+  return Object.values(data).filter(
+    (p) => p.tournamentId === tournamentId
+  );
 }
 
 // ============================================================
@@ -101,22 +103,24 @@ async function getActivePayment(tournamentId, teamId) {
 async function getCaptainPayments(captainId) {
   const data = await store.read(FILE);
   return Object.values(data)
-    .filter((p) => p.captainId === Number(captainId))
+    .filter((p) => Number(p.captainId) === Number(captainId))
     .sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
 }
 
 // ============================================================
-// ORGANIZER UCHUN TO'LOVLAR
+// ORGANIZER UCHUN TO'LOVLAR (faqat o'z turnirlari)
 // ============================================================
 async function getOrganizerPayments(organizerId, status = null) {
   const data = await store.read(FILE);
   let list = Object.values(data).filter(
-    (p) => p.organizerId === Number(organizerId)
+    (p) => Number(p.organizerId) === Number(organizerId)
   );
   if (status) {
     list = list.filter((p) => p.status === status);
   }
-  return list.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+  return list.sort(
+    (a, b) => new Date(b.submittedAt) - new Date(a.submittedAt)
+  );
 }
 
 // ============================================================
@@ -128,7 +132,9 @@ async function getAllPayments(status = null) {
   if (status) {
     list = list.filter((p) => p.status === status);
   }
-  return list.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+  return list.sort(
+    (a, b) => new Date(b.submittedAt) - new Date(a.submittedAt)
+  );
 }
 
 // ============================================================
@@ -220,6 +226,9 @@ async function getTournamentStats(tournamentId) {
   };
 }
 
+// ============================================================
+// EKSPORT
+// ============================================================
 module.exports = {
   createPayment,
   getPayment,

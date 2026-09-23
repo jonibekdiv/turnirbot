@@ -1,5 +1,5 @@
 // ============================================================
-// KONSTANTALAR — To'liq (obuna tizimi bilan)
+// KONSTANTALAR — To'liq (barcha yangi funksiyalar bilan)
 // ============================================================
 module.exports = {
   // ============================================================
@@ -51,6 +51,25 @@ module.exports = {
     mastercard: '💳 MasterCard',
     unionpay: '💳 UnionPay',
     other: '💳 Boshqa',
+  },
+
+  // ============================================================
+  // TURNIR STATUSLARI
+  // ============================================================
+  TOUR_STATUS: {
+    OPEN: 'open',
+    FINISHED: 'finished',
+    CANCELLED: 'cancelled',
+  },
+
+  // ============================================================
+  // BRON STATUSLARI
+  // ============================================================
+  RESERVE_STATUS: {
+    PENDING: 'pending',
+    CONFIRMED: 'confirmed',
+    EXPIRED: 'expired',
+    RELEASED: 'released',
   },
 
   // ============================================================
@@ -121,6 +140,10 @@ module.exports = {
     HOST_EDIT_MATCH: 'host_edit_match',
     HOST_PRIZE_INPUT: 'host_prize_input',
 
+    // ---------- Live score (#23) ----------
+    LIVE_SCORE_INPUT: 'live_score_input',
+    LIVE_PLACE_INPUT: 'live_place_input',
+
     // ---------- O'yinchi ----------
     PLAYER_SEND_TO_HOST: 'player_send_to_host',
     PLAYER_PUBG_ID: 'player_pubg_id',
@@ -137,6 +160,7 @@ module.exports = {
     ADMIN_DM_MSG: 'admin_dm_msg',
     ADMIN_CHANNEL_INPUT: 'admin_channel_input',
     ADMIN_SETTING_EDIT: 'admin_setting_edit',
+    ADMIN_BROADCAST_CUSTOM: 'admin_broadcast_custom',
 
     // ---------- To'lov ----------
     PAYMENT_RECEIPT: 'payment_receipt',
@@ -148,6 +172,15 @@ module.exports = {
     CHANNEL_CUSTOM_TEXT_BUTTON: 'channel_custom_text_button',
     CHANNEL_CUSTOM_PHOTO: 'channel_custom_photo',
     CHANNEL_CUSTOM_PHOTO_BUTTON: 'channel_custom_photo_button',
+
+    // ---------- Turnir yakunlash (#1) ----------
+    TOUR_FINISH_CONFIRM: 'tour_finish_confirm',
+
+    // ---------- Kutish ro'yxati (#3) ----------
+    WAITLIST_JOIN: 'waitlist_join',
+
+    // ---------- Bron (#20) ----------
+    RESERVE_CONFIRM: 'reserve_confirm',
 
     // ---------- Qidiruv ----------
     SEARCH_QUERY: 'search_query',
@@ -234,14 +267,14 @@ module.exports = {
     TOUR_CH_DONE: 'tch:done',
     TOUR_CH_SKIP: 'tch:skip',
 
-    // ---------- Karta tanlash (turnirda) ----------
+    // ---------- Karta tanlash ----------
     TOUR_PICK_CARD: 'tpick:',
     TOUR_PICK_CARD_SKIP: 'tpick:skip',
     TOUR_CARD_MANUAL: 'tpick:manual',
 
-    // ---------- Kanal obuna tekshiruvi ----------
+    // ---------- Kanal obuna ----------
     CH_VERIFY_ALL: 'chv:all:',
-    CH_VERIFY_MEMBER: 'chv:m:',         // ← YANGI (a'zo tekshiruvi)
+    CH_VERIFY_MEMBER: 'chv:m:',
     CH_SUBSCRIBE: 'chv:sub:',
     CH_BACK: 'chv:back:',
 
@@ -254,8 +287,9 @@ module.exports = {
     PAY_REJECT: 'pay:r:',
     PAY_TEAM_INFO: 'pay:ti:',
     PAY_TOUR_INFO: 'pay:tri:',
+    PAY_VIEW: 'pay:view:',
 
-    // ---------- Kartalar boshqaruvi ----------
+    // ---------- Kartalar ----------
     ADMIN_CARDS: 'admin:cards',
     CARD_ADD: 'card:add',
     CARD_LIST: 'card:list',
@@ -324,6 +358,8 @@ module.exports = {
     ADMIN_PAYMENTS_PENDING: 'admin:pp',
     ADMIN_PAYMENTS_APPROVED: 'admin:pa',
     ADMIN_PAYMENTS_REJECTED: 'admin:pr',
+
+    // ---------- Organizer panel ----------
     ORG_MY_TOURNAMENTS: 'org:mt',
     ORG_MY_PAYMENTS: 'org:mp',
     ORG_PENDING_PAYMENTS: 'org:mpp',
@@ -333,7 +369,7 @@ module.exports = {
     ADMIN_CHANNELS_ADD: 'admin:cha',
     ADMIN_CHANNELS_LIST: 'admin:chl',
 
-    // ---------- Kanal (asosiy e'lon) ----------
+    // ---------- Kanal e'lon ----------
     CHANNEL_SET: 'channel:set',
     CHANNEL_CHANGE: 'channel:change',
     CHANNEL_DELETE: 'channel:delete',
@@ -346,8 +382,62 @@ module.exports = {
     LANG_SET: 'lang:set:',
     LANG_BACK: 'lang:back',
 
+    // ============================================================
+    // YANGI FUNKSIYALAR (#1, #3, #6, #10, #14, #15, #17, #19, #20, #23)
+    // ============================================================
+
+    // ---------- #1: Turnir yakunlash va e'lon ----------
+    TOUR_FINISH: 'tf:finish:',
+    TOUR_FINISH_YES: 'tf:yes:',
+    TOUR_FINISH_NO: 'tf:no:',
+    TOUR_PUBLISH_CHANNEL: 'tf:pub:',
+
+    // ---------- #3: Kutish ro'yxati ----------
+    WAITLIST_JOIN: 'wl:join:',
+    WAITLIST_LEAVE: 'wl:leave:',
+    WAITLIST_VIEW: 'wl:view:',
+    WAITLIST_ACCEPT: 'wl:accept:',
+    WAITLIST_DECLINE: 'wl:decline:',
+    WAITLIST_OWN: 'wl:own',
+
+    // ---------- #6: Guest rejim ----------
+    GUEST_VIEW: 'gv:view:',
+    GUEST_TOUR: 'gv:tour:',
+    GUEST_LIST: 'gv:list',
+
+    // ---------- #10, #15: Komanda statistikasi ----------
+    TEAM_STATS_FULL: 'ts:full',
+    TEAM_HISTORY_FULL: 'ts:hist',
+    TEAM_LEADERBOARD: 'ts:lb',
+    TEAM_RANK: 'ts:rank',
+
+    // ---------- #14: Turnir eslatma ----------
+    TOUR_REMINDER_VIEW: 'trm:v:',
+
+    // ---------- #17: Reklama statistikasi ----------
+    ADMIN_BC_STATS: 'bcs:view',
+    ADMIN_BC_STATS_LIST: 'bcs:list',
+    ADMIN_BC_STATS_VIEW: 'bcs:v:',
+
+    // ---------- #20: Bron qilish ----------
+    RESERVE_START: 'rs:start:',
+    RESERVE_OK: 'rs:ok:',
+    RESERVE_TIMEOUT: 'rs:timeout:',
+    RESERVE_RELEASE: 'rs:release:',
+    RESERVE_VIEW: 'rs:view',
+
+    // ---------- #23: Live score ----------
+    LIVE_START: 'ls:start:',
+    LIVE_ADD: 'ls:add:',
+    LIVE_KILL: 'ls:add_k:',
+    LIVE_PLACE: 'ls:add_p:',
+    LIVE_VIEW: 'ls:view:',
+    LIVE_END: 'ls:end:',
+    LIVE_PICK_TEAM: 'ls:pick:',
+
     // ---------- Umumiy ----------
     CANCEL: 'common:cancel',
+    NO_ACTION: 'no_action',
     SEARCH_START: 'search:start',
     SEARCH_TOUR: 'search:tour',
     SEARCH_TEAM: 'search:team',
@@ -381,6 +471,12 @@ module.exports = {
     TOUR_PAGE_SIZE: 5,
     LOGS_PAGE_SIZE: 20,
     ACTIONS_PAGE_SIZE: 15,
+
+    // Yangi limitlar
+    RESERVE_TIMEOUT_MIN: 5,
+    WAITLIST_MAX_PER_TOUR: 30,
+    REMINDER_DAY_BEFORE_MIN: 1440,
+    REMINDER_HOUR_BEFORE_MIN: 60,
   },
 
   // ============================================================

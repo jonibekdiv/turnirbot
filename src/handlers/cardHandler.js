@@ -48,12 +48,12 @@ module.exports = (bot) => {
     try {
       await ctx.editMessageText(text, {
         parse_mode: 'HTML',
-        ...cardsPanelKeyboard(),
+        ...cardsPanelKeyboard(ctx),
       });
     } catch (e) {
       await ctx.reply(text, {
         parse_mode: 'HTML',
-        ...cardsPanelKeyboard(),
+        ...cardsPanelKeyboard(ctx),
       });
     }
   });
@@ -75,7 +75,7 @@ module.exports = (bot) => {
         ctx,
         `📭 <b>Kartalar yo'q</b>\n\n` +
           `Yangi karta qo'shish uchun pastdagi tugmani bosing:`,
-        cardsPanelKeyboard()
+        cardsPanelKeyboard(ctx)
       );
     }
 
@@ -153,12 +153,12 @@ module.exports = (bot) => {
     try {
       await ctx.editMessageText(text, {
         parse_mode: 'HTML',
-        ...cardViewKeyboard(cardId),
+        ...cardViewKeyboard(ctx, cardId),
       });
     } catch (e) {
       await ctx.reply(text, {
         parse_mode: 'HTML',
-        ...cardViewKeyboard(cardId),
+        ...cardViewKeyboard(ctx, cardId),
       });
     }
   });
@@ -302,7 +302,7 @@ module.exports = (bot) => {
       `━━━━━━━━━━━━━━━━━━━━\n\n` +
       `❗️ <i>Bu amalni qaytarib bo'lmaydi</i>`;
 
-    await safeEdit(ctx, text, cardDeleteConfirmKeyboard(cardId));
+    await safeEdit(ctx, text, cardDeleteConfirmKeyboard(ctx, cardId));
   });
 
   // ============================================================
@@ -462,7 +462,7 @@ module.exports = (bot) => {
     await ctx.editMessageText(
       `📍 Qadam <b>4/5</b>\n\n` +
         `💳 <b>Karta turini tanlang:</b>`,
-      { parse_mode: 'HTML', ...cardTypeKeyboard() }
+      { parse_mode: 'HTML', ...cardTypeKeyboard(ctx) }
     );
   });
 
@@ -481,7 +481,7 @@ async function showCardConfirm(ctx) {
     return ctx.reply(
       `📍 Qadam <b>4/5</b>\n\n` +
         `💳 <b>Karta turini tanlang:</b>`,
-      { parse_mode: 'HTML', ...cardTypeKeyboard() }
+      { parse_mode: 'HTML', ...cardTypeKeyboard(ctx) }
     );
   }
 
@@ -500,7 +500,7 @@ async function showCardConfirm(ctx) {
     `💳 <b>Turi:</b> ${typeLabel}\n` +
     (d.bank ? `🏦 <b>Bank:</b> ${escapeHtml(d.bank)}\n` : '');
 
-  await ctx.reply(text, { parse_mode: 'HTML', ...cardConfirmKeyboard() });
+  await ctx.reply(text, { parse_mode: 'HTML', ...cardConfirmKeyboard(ctx) });
 }
 
 module.exports.showCardConfirm = showCardConfirm;

@@ -14,7 +14,9 @@ const reminderService = require('./services/reminderService');
 let cronService = null;
 try {
   cronService = require('./services/cronService');
-} catch (e) {}
+} catch (e) {
+  console.log('⚠️ cronService yuklanmadi:', e.message);
+}
 
 let commandsService = null;
 try {
@@ -24,44 +26,55 @@ try {
 }
 
 // ============================================================
-// HANDLERLAR
+// HANDLERLAR — HAR BIRI FAQAT BIR MARTA
 // ============================================================
+
+// 1. Asosiy
 const startHandler = require('./handlers/startHandler');
 const languageHandler = require('./handlers/languageHandler');
+
+// 2. Foydalanuvchi va komanda
 const userExtHandler = require('./handlers/userExtHandler');
 const teamHandler = require('./handlers/teamHandler');
 const teamExtHandler = require('./handlers/teamExtHandler');
 
-// Karta handler (turnirdan OLDIN)
+// 3. Karta
 const cardHandler = require('./handlers/cardHandler');
 
-// To'lov va obuna (turnirdan OLDIN)
+// 4. To'lov va obuna
 const tournamentCreatePaymentHandler = require('./handlers/tournamentCreatePaymentHandler');
 const subscriptionHandler = require('./handlers/subscriptionHandler');
 
-// Turnir handlerlari
+// 5. Turnirlar
 const tournamentHandler = require('./handlers/tournamentHandler');
 const tournamentPaymentHandler = require('./handlers/tournamentPaymentHandler');
 const tournamentExtHandler = require('./handlers/tournamentExtHandler');
 
-// Host
+// 6. YANGI HANDLERLAR
+const waitlistHandler = require('./handlers/waitlistHandler');
+const teamStatsHandler = require('./handlers/teamStatsHandler');
+const broadcastStatsHandler = require('./handlers/broadcastStatsHandler');
+const liveScoreHandler = require('./handlers/liveScoreHandler');
+
+// 7. Host
 const hostHandler = require('./handlers/hostHandler');
 const hostExtHandler = require('./handlers/hostExtHandler');
-
-// Media
 const mediaHandler = require('./handlers/mediaHandler');
 
-// Admin
+// 8. Admin
 const adminHandler = require('./handlers/adminHandler');
 const adminExtHandler = require('./handlers/adminExtHandler');
+const organizerHandler = require('./handlers/organizerHandler');
+
+// 9. Channel
 const channelHandler = require('./handlers/channelHandler');
 const channelAdminHandler = require('./handlers/channelAdminHandler');
 
-// To'lov review
+// 10. To'lov review
 const paymentHandler = require('./handlers/paymentHandler');
 const organizerPaymentReviewHandler = require('./handlers/organizerPaymentReviewHandler');
 
-// Qidiruv va Inline
+// 11. Qidiruv va Inline
 const searchHandler = require('./handlers/searchHandler');
 const inlineHandler = require('./handlers/inlineHandler');
 
@@ -69,8 +82,12 @@ const inlineHandler = require('./handlers/inlineHandler');
 // ASOSIY FUNKSIYA
 // ============================================================
 async function main() {
-  if (!config.BOT_TOKEN) throw new Error("BOT_TOKEN .env da ko'rsatilmagan");
-  if (!config.SUPER_ADMIN_ID) throw new Error("SUPER_ADMIN_ID .env da ko'rsatilmagan");
+  if (!config.BOT_TOKEN) {
+    throw new Error("BOT_TOKEN .env da ko'rsatilmagan");
+  }
+  if (!config.SUPER_ADMIN_ID) {
+    throw new Error("SUPER_ADMIN_ID .env da ko'rsatilmagan");
+  }
 
   await ensureAllFiles();
 
@@ -99,10 +116,10 @@ async function main() {
   teamHandler(bot);
   teamExtHandler(bot);
 
-  // 3. Karta handler (CARD_ADD ishlashi uchun turnirdan OLDIN)
+  // 3. Karta handler
   cardHandler(bot);
 
-  // 4. To'lov va obuna (turnirdan OLDIN)
+  // 4. To'lov va obuna
   tournamentCreatePaymentHandler(bot);
   subscriptionHandler(bot);
 
@@ -111,22 +128,31 @@ async function main() {
   tournamentPaymentHandler(bot);
   tournamentExtHandler(bot);
 
-  // 6. Host
+  // 6. YANGI HANDLERLAR
+  waitlistHandler(bot);
+  teamStatsHandler(bot);
+  broadcastStatsHandler(bot);
+  liveScoreHandler(bot);
+
+  // 7. Host
   hostHandler(bot);
   hostExtHandler(bot);
   mediaHandler(bot);
 
-  // 7. Admin
+  // 8. Admin
   adminHandler(bot);
   adminExtHandler(bot);
+  organizerHandler(bot);
+
+  // 9. Channel
   channelHandler(bot);
   channelAdminHandler(bot);
 
-  // 8. To'lov review
+  // 10. To'lov review
   paymentHandler(bot);
   organizerPaymentReviewHandler(bot);
 
-  // 9. Qidiruv va Inline
+  // 11. Qidiruv va Inline
   searchHandler(bot);
   inlineHandler(bot);
 
@@ -140,7 +166,9 @@ async function main() {
     }
     try {
       if (ctx && ctx.reply) {
-        ctx.reply("❌ Xatolik yuz berdi. Keyinroq qayta urinib ko'ring.").catch(() => {});
+        ctx
+          .reply("❌ Xatolik yuz berdi. Keyinroq qayta urinib ko'ring.")
+          .catch(() => {});
       }
     } catch (e) {}
   });
@@ -149,10 +177,13 @@ async function main() {
   // XIZMATLAR
   // ============================================================
   reminderService.start(bot);
+
   if (cronService) {
     try {
       cronService.start(bot);
-    } catch (e) {}
+    } catch (e) {
+      console.log('⚠️ Cron xato:', e.message);
+    }
   }
 
   // Buyruqlar menyusi
@@ -173,11 +204,23 @@ async function main() {
   console.log('╚══════════════════════╝');
   console.log(`👤 Super Admin: ${config.SUPER_ADMIN_ID}`);
   console.log(`🤖 Bot: @${config.BOT_USERNAME}`);
+  console.log('');
   console.log('🔒 Xavfsizlik: ✅');
   console.log("💳 To'lov tizimi: ✅");
   console.log('💳 Kartalar: ✅');
   console.log('📢 Kanallar: ✅');
   console.log('📌 Obuna tizimi: ✅');
+  console.log('🎯 Organizer panel: ✅');
+  console.log("📋 Kutish ro'yxati: ✅");
+  console.log('📊 Komanda statistikasi: ✅');
+  console.log('📢 Reklama statistikasi: ✅');
+  console.log('🔴 Live score: ✅');
+  console.log('⏳ Bron tizimi: ✅');
+  console.log('📅 Kunlik eslatmalar: ✅');
+  console.log('👁 Guest rejim: ✅');
+  console.log('📚 Tarix: ✅');
+  console.log('📅 Kalendar: ✅');
+  console.log('📋 Shablonlar: ✅');
   console.log('');
 
   process.once('SIGINT', () => {

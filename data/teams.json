@@ -7,24 +7,10 @@
     "managerUsername": "rangerbek",
     "captainId": 6580878834,
     "members": [
-      6580878834,
-      8086341647
+      6580878834
     ],
     "joinCode": "LNAMZ8AXRX",
     "createdAt": "2026-09-19T18:31:13.048Z"
-  },
-  "team_mu9nebmmgwo9pz": {
-    "id": "team_mu9nebmmgwo9pz",
-    "name": "Diyor chmo",
-    "tag": "CHMO",
-    "avatarFileId": "AgACAgEAAxkBAAIBu2qvrymgCgi93-7Abv3B4ezstpRmAAJxDGsbRQR5RS4TBnrRil4jAQADAgADeQADPQQ",
-    "managerUsername": "diyorbek_1306",
-    "captainId": 8811053020,
-    "members": [
-      8811053020
-    ],
-    "joinCode": "XCBU7Z6P68",
-    "createdAt": "2026-09-20T10:02:55.201Z"
   },
   "team_mubkwu5zphpwve": {
     "id": "team_mubkwu5zphpwve",
@@ -38,5 +24,18 @@
     ],
     "joinCode": "BYCW3XBEDH",
     "createdAt": "2026-09-21T18:28:52.535Z"
+  },
+  "team_mud18m1y0ilfw4": {
+    "id": "team_mud18m1y0ilfw4",
+    "name": "Hi",
+    "tag": "SHES",
+    "avatarFileId": "AgACAgQAAxkBAAIDv2qyzqo8-wABOBstGykriMt4kx69cgACORBrG1I1mVHKN1zq0BJ1DQEAAwIAA3kAAz0E",
+    "managerUsername": "kuchuk",
+    "captainId": 8086341647,
+    "members": [
+      8086341647
+    ],
+    "joinCode": "A3FFSXGC9Z",
+    "createdAt": "2026-09-22T18:53:41.926Z"
   }
 }

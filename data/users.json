@@ -4,22 +4,22 @@
     "username": "rangerbek",
     "firstName": "Жонибек",
     "lastName": "",
-    "languageCode": "ru",
+    "languageCode": "uz",
     "teamId": "team_mu8q4593j6v9dv",
     "status": "active",
     "createdAt": "2026-09-19T18:07:20.279Z",
-    "updatedAt": "2026-09-21T18:58:42.081Z"
+    "updatedAt": "2026-09-23T16:32:20.769Z"
   },
   "8811053020": {
     "id": 8811053020,
     "username": null,
     "firstName": "🍃",
     "lastName": "",
-    "languageCode": "ru",
-    "teamId": "team_mu9nebmmgwo9pz",
+    "languageCode": "uz",
+    "teamId": null,
     "status": "active",
     "createdAt": "2026-09-19T18:42:49.464Z",
-    "updatedAt": "2026-09-21T18:25:57.124Z"
+    "updatedAt": "2026-09-22T20:17:32.881Z"
   },
   "6441840191": {
     "id": 6441840191,
@@ -116,9 +116,9 @@
     "firstName": "RANGERservis",
     "lastName": "",
     "languageCode": "uz",
-    "teamId": "team_mu8q4593j6v9dv",
+    "teamId": "team_mud18m1y0ilfw4",
     "status": "active",
     "createdAt": "2026-09-21T16:46:35.447Z",
-    "updatedAt": "2026-09-21T18:47:12.480Z"
+    "updatedAt": "2026-09-22T18:53:41.939Z"
   }
 }

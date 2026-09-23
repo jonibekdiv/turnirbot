@@ -1,5 +1,5 @@
 {
-  "allowAdminAddAdmin": true,
+  "allowAdminAddAdmin": false,
   "minTeamMembers": 1,
   "maxTeamMembers": 8,
   "maxTeamsPerTournament": 18,

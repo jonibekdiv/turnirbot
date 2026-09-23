@@ -1,1 +1,49 @@
-{}
+{
+  "actions": [
+    {
+      "adminId": 6580878834,
+      "action": "DELETE_TOURNAMENT",
+      "details": {
+        "target": "tour_mud0sm0ei3beud",
+        "title": "Pmgo"
+      },
+      "at": "2026-09-22T20:18:07.392Z"
+    },
+    {
+      "adminId": 6580878834,
+      "action": "DELETE_TOURNAMENT",
+      "details": {
+        "target": "tour_mucz1uni3mrjg4",
+        "title": "Pmsl"
+      },
+      "at": "2026-09-22T20:18:15.005Z"
+    },
+    {
+      "adminId": 6580878834,
+      "action": "DELETE_TOURNAMENT",
+      "details": {
+        "target": "tour_mubksad8xawmqd",
+        "title": "PMSL Season 5"
+      },
+      "at": "2026-09-22T20:18:21.254Z"
+    },
+    {
+      "adminId": 6580878834,
+      "action": "DELETE_TOURNAMENT",
+      "details": {
+        "target": "tour_mubkh4g7hxvmas",
+        "title": "PMSL Season 5"
+      },
+      "at": "2026-09-22T20:18:25.796Z"
+    },
+    {
+      "adminId": 6580878834,
+      "action": "DELETE_TOURNAMENT",
+      "details": {
+        "target": "tour_mubffwtflm0wfb",
+        "title": "ranger turnaments"
+      },
+      "at": "2026-09-22T20:18:30.551Z"
+    }
+  ]
+}
