@@ -1,0 +1,75 @@
+{
+  "logs": [
+    {
+      "id": "log_muehbn5komc36v",
+      "action": "CREATE_STAGES",
+      "actorId": 6580878834,
+      "tournamentId": "tour_muefizaibpckfa",
+      "stageId": null,
+      "matchId": null,
+      "teamId": null,
+      "details": {
+        "stagesCount": 3
+      },
+      "result": "success",
+      "at": "2026-09-23T19:11:43.352Z"
+    },
+    {
+      "id": "log_muehc4gxr7x2cb",
+      "action": "START_STAGE",
+      "actorId": 6580878834,
+      "tournamentId": "tour_muefizaibpckfa",
+      "stageId": "stage_muehbmpbepq3h6",
+      "matchId": null,
+      "teamId": null,
+      "details": {},
+      "result": "success",
+      "at": "2026-09-23T19:12:05.793Z"
+    },
+    {
+      "id": "log_muei6wu8qs4by5",
+      "action": "CREATE_STAGES",
+      "actorId": 6580878834,
+      "tournamentId": "tour_muei69ozggrvtv",
+      "stageId": null,
+      "matchId": null,
+      "teamId": null,
+      "details": {
+        "stagesCount": 3,
+        "firstStageDate": "2026-09-25",
+        "lastStageEndDate": "2026-10-03",
+        "totalDays": 7
+      },
+      "result": "success",
+      "at": "2026-09-23T19:36:02.240Z"
+    },
+    {
+      "id": "log_muei8gtldvjeez",
+      "action": "START_STAGE",
+      "actorId": 6580878834,
+      "tournamentId": "tour_muei69ozggrvtv",
+      "stageId": "stage_muei6ws0aiwc7e",
+      "matchId": null,
+      "teamId": null,
+      "details": {},
+      "result": "success",
+      "at": "2026-09-23T19:37:14.793Z"
+    },
+    {
+      "id": "log_mufo7vkq8h9ut2",
+      "action": "WALLET_TOURNAMENT_PAYMENT",
+      "actorId": 6580878834,
+      "tournamentId": "tour_mufnxam6eyds19",
+      "stageId": null,
+      "matchId": null,
+      "teamId": "team_mu8q4593j6v9dv",
+      "details": {
+        "amount": 50000,
+        "promoCode": null,
+        "newBalance": 9949999
+      },
+      "result": "success",
+      "at": "2026-09-24T15:12:31.130Z"
+    }
+  ]
+}

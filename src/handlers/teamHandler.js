@@ -1,5 +1,5 @@
 // ============================================================
-// TEAM HANDLER — Ko'p tilli (TUZATILGAN)
+// TEAM HANDLER — Ko'p tilli (3 tilda)
 // ============================================================
 const { Markup } = require('telegraf');
 const teamService = require('../services/teamService');
@@ -27,10 +27,8 @@ module.exports = (bot) => {
   // ============================================================
   bot.action(CALLBACK.MENU_TEAM, async (ctx) => {
     await safeAnswer(ctx);
-
     const t = ctx.t;
 
-    // ✅ TUZATILDI: teamMenu(ctx) — funktsiya chaqirish
     await safeEdit(
       ctx,
       `👥 <b>${t('team_title')}</b>\n\n${t('team_subtitle')}`,
@@ -115,8 +113,9 @@ module.exports = (bot) => {
 
   bot.action(CALLBACK.TEAM_CANCEL, async (ctx) => {
     await safeAnswer(ctx);
+    const t = ctx.t;
     ctx.session = { state: null, data: {} };
-    await safeEdit(ctx, `❌ ${ctx.t('cancel')}`);
+    await safeEdit(ctx, `❌ ${t('cancel')}`);
   });
 
   // ============================================================

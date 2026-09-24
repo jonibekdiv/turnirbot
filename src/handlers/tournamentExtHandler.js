@@ -1,5 +1,6 @@
 // ============================================================
-// TOURNAMENT EXT HANDLER — Tarix, Kalendar, Shablonlar, va boshqalar
+// TOURNAMENT EXT HANDLER — Tarix, Kalendar, Shablonlar,
+// Kanalga e'lon, Natijalar kanalga, va boshqalar
 // ============================================================
 const { Markup } = require('telegraf');
 const tournamentService = require('../services/tournamentService');
@@ -10,6 +11,7 @@ const templateService = require('../services/templateService');
 const reservationService = require('../services/reservationService');
 const matchService = require('../services/matchService');
 const pointsService = require('../services/pointsService');
+const auditService = require('../services/auditService');
 const { CALLBACK, ROLES, TOUR_STATUS, LIMITS } = require('../constants');
 const { escapeHtml, safeEdit, safeAnswer } = require('../utils/telegramUtils');
 const { hasAnyRole } = require('../middlewares/roleGuard');
@@ -33,6 +35,9 @@ function backToTournament(ctx, id) {
   ]);
 }
 
+// ============================================================
+// MODULE
+// ============================================================
 module.exports = (bot) => {
   // ============================================================
   // 1. TURNIRLAR TARIXI
@@ -45,7 +50,6 @@ module.exports = (bot) => {
       const all = await tournamentService.getAllTournaments();
       const now = new Date();
 
-      // Tugagan yoki yakunlangan turnirlar
       const history = all
         .filter((tour) => {
           const d = new Date(`${tour.date}T${tour.startTime}:00+05:00`);
@@ -117,7 +121,6 @@ module.exports = (bot) => {
       const tour = await tournamentService.getTournament(tId);
       if (!tour) return ctx.reply(t('tour_not_found'));
 
-      // Hisobot
       const matchData = await matchService.getTournamentMatches(tId);
       const teamsMap = {};
       for (const tid of tour.registeredTeams) {
@@ -183,9 +186,7 @@ module.exports = (bot) => {
     await safeAnswer(ctx);
 
     try {
-      const t = ctx.t;
       const now = new Date();
-      // Toshkent vaqti bo'yicha
       const tashkentDate = new Date(
         now.toLocaleString('en-US', { timeZone: 'Asia/Tashkent' })
       );
@@ -255,10 +256,7 @@ module.exports = (bot) => {
               `📋 ${tpl.name.slice(0, 30)}`,
               CALLBACK.TOUR_TEMPLATE_USE + tpl.id
             ),
-            Markup.button.callback(
-              '🗑',
-              'tour:tpl_del:' + tpl.id
-            ),
+            Markup.button.callback('🗑', 'tour:tpl_del:' + tpl.id),
           ]);
         });
       } else {
@@ -266,10 +264,7 @@ module.exports = (bot) => {
       }
 
       rows.push([
-        Markup.button.callback(
-          '➕ ' + t('tour_create_again'),
-          CALLBACK.TOUR_CREATE
-        ),
+        Markup.button.callback('➕ ' + t('tour_create_again'), CALLBACK.TOUR_CREATE),
       ]);
       rows.push([Markup.button.callback(t('admin_panel'), CALLBACK.ADMIN_PANEL)]);
 
@@ -302,7 +297,6 @@ module.exports = (bot) => {
       const tpl = await templateService.getTemplate(tplId);
       if (!tpl) return ctx.reply(t('error_not_found'));
 
-      // Shablonni sessiyaga yuklash
       ctx.session = {
         state: 'tour_create_date',
         data: {
@@ -338,7 +332,6 @@ module.exports = (bot) => {
       await templateService.deleteTemplate(ctx.match[1]);
       await ctx.reply(`✅ ${t('success')}`);
 
-      // Shablonlar ro'yxatiga qaytamiz
       await ctx.telegram.sendMessage(ctx.chat.id, t('tour_template_btn'), {
         reply_markup: {
           inline_keyboard: [
@@ -357,7 +350,223 @@ module.exports = (bot) => {
   });
 
   // ============================================================
-  // 8. TURNIRNI YAKUNLASH (#1)
+  // 8. ⚡️ TURNIRNI KANALGA E'LON QILISH (ASOSIY)
+  // ============================================================
+  bot.action(/^tour:anc:(.+)$/, async (ctx) => {
+    await safeAnswer(ctx);
+
+    if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) {
+      return ctx.reply("⛔ Ruxsat yo'q.");
+    }
+
+    const tId = ctx.match[1];
+    const tournament = await tournamentService.getTournament(tId);
+    if (!tournament) {
+      return ctx.reply(ctx.t('tour_not_found'));
+    }
+
+    // Organizer — faqat o'z turniri
+    if (ctx.state.role === ROLES.ORGANIZER) {
+      if (Number(tournament.organizerId) !== Number(ctx.from.id)) {
+        return ctx.reply(`⛔ ${ctx.t('org_not_owner')}`);
+      }
+    }
+
+    // Kanal ulanganmi?
+    const channelId = await channelService.getChannel();
+    if (!channelId) {
+      return ctx.reply(
+        `⚠️ <b>Kanal ulanmagan</b>\n\n` +
+          `Avval kanalni sozlang:\n` +
+          `🛠 Admin panel → 📢 Kanal sozlamalari`,
+        {
+          parse_mode: 'HTML',
+          reply_markup: Markup.inlineKeyboard([
+            [
+              Markup.button.callback(
+                '📢 Kanal sozlamalari',
+                CALLBACK.ADMIN_CHANNEL
+              ),
+            ],
+            [
+              Markup.button.callback(
+                '⬅️ Turnirga qaytish',
+                CALLBACK.TOUR_OPEN + tournament.id
+              ),
+            ],
+          ]).reply_markup,
+        }
+      );
+    }
+
+    const loading = await ctx.reply("⏳ Kanalga e'lon qilinmoqda...");
+
+    try {
+      const res = await channelService.announceToChannel(bot, tournament);
+
+      try {
+        await ctx.telegram.deleteMessage(ctx.chat.id, loading.message_id);
+      } catch (e) {}
+
+      if (res.ok) {
+        try {
+          await auditService.log({
+            action: 'ANNOUNCE_TOURNAMENT',
+            actorId: ctx.from.id,
+            tournamentId: tournament.id,
+            details: { messageId: res.messageId },
+          });
+        } catch (e) {}
+
+        await ctx.reply(
+          `╔══════════════════════╗\n` +
+            `   ✅ <b>E'LON QILINDI!</b>\n` +
+            `╚══════════════════════╝\n\n` +
+            `🏆 <b>${escapeHtml(tournament.title)}</b>\n\n` +
+            `━━━━━━━━━━━━━━━━━━━━\n\n` +
+            `📤 Kanalga muvaffaqiyatli yuborildi\n` +
+            `🆔 Message ID: <code>${res.messageId}</code>`,
+          {
+            parse_mode: 'HTML',
+            reply_markup: Markup.inlineKeyboard([
+              [
+                Markup.button.callback(
+                  "🔄 Qayta e'lon qilish",
+                  'tour:anc:' + tournament.id
+                ),
+              ],
+              [
+                Markup.button.callback(
+                  '⬅️ Turnirga qaytish',
+                  CALLBACK.TOUR_OPEN + tournament.id
+                ),
+              ],
+            ]).reply_markup,
+          }
+        );
+      } else {
+        await ctx.reply(
+          `❌ <b>E'lon qilishda xatolik</b>\n\n` +
+            `📌 Sabab: <code>${escapeHtml(res.reason || "Noma'lum")}</code>\n\n` +
+            `💡 <b>Tekshiring:</b>\n` +
+            `• Bot kanalda adminmi?\n` +
+            `• Bot "Post messages" huquqiga egami?\n` +
+            `• Kanal ID to'g'rimi?`,
+          {
+            parse_mode: 'HTML',
+            reply_markup: Markup.inlineKeyboard([
+              [
+                Markup.button.callback(
+                  '📢 Kanal sozlamalari',
+                  CALLBACK.ADMIN_CHANNEL
+                ),
+              ],
+              [
+                Markup.button.callback(
+                  '🔄 Qayta urinish',
+                  'tour:anc:' + tournament.id
+                ),
+              ],
+              [
+                Markup.button.callback(
+                  '⬅️ Turnirga qaytish',
+                  CALLBACK.TOUR_OPEN + tournament.id
+                ),
+              ],
+            ]).reply_markup,
+          }
+        );
+      }
+    } catch (e) {
+      console.error('tour:anc xatosi:', e.message);
+      try {
+        await ctx.telegram.deleteMessage(ctx.chat.id, loading.message_id);
+      } catch (err) {}
+      await ctx.reply(`❌ Xatolik: ${e.message}`);
+    }
+  });
+
+  // ============================================================
+  // 9. ⚡️ TURNIR YAKUNIY NATIJALARINI KANALGA
+  // ============================================================
+  bot.action(/^tour:pub_results:(.+)$/, async (ctx) => {
+    await safeAnswer(ctx);
+
+    if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) {
+      return ctx.reply("⛔ Ruxsat yo'q.");
+    }
+
+    const tId = ctx.match[1];
+    const tournament = await tournamentService.getTournament(tId);
+    if (!tournament) return ctx.reply(ctx.t('tour_not_found'));
+
+    const matchData = await matchService.getTournamentMatches(tournament.id);
+    const teamsMap = {};
+    for (const tid of tournament.registeredTeams) {
+      const team = await teamService.getTeam(tid);
+      if (team) teamsMap[tid] = team;
+    }
+
+    const standings = pointsService.calculateStandings(
+      tournament,
+      matchData,
+      teamsMap
+    );
+
+    if (!standings.length) {
+      return ctx.reply("📭 Natijalar yo'q");
+    }
+
+    const loading = await ctx.reply('⏳ Yuborilmoqda...');
+
+    try {
+      const res = await channelService.publishTournamentResults(
+        bot,
+        tournament,
+        standings
+      );
+
+      try {
+        await ctx.telegram.deleteMessage(ctx.chat.id, loading.message_id);
+      } catch (e) {}
+
+      if (res.ok) {
+        await ctx.reply(
+          `✅ <b>Natijalar kanalga yuborildi</b>\n\n🆔 ${res.messageId}`,
+          {
+            parse_mode: 'HTML',
+            reply_markup: Markup.inlineKeyboard([
+              [
+                Markup.button.callback(
+                  '⬅️ Turnirga qaytish',
+                  CALLBACK.TOUR_OPEN + tournament.id
+                ),
+              ],
+            ]).reply_markup,
+          }
+        );
+      } else {
+        await ctx.reply(`❌ ${res.reason}`, {
+          reply_markup: Markup.inlineKeyboard([
+            [
+              Markup.button.callback(
+                '⬅️ Turnirga qaytish',
+                CALLBACK.TOUR_OPEN + tournament.id
+              ),
+            ],
+          ]).reply_markup,
+        });
+      }
+    } catch (e) {
+      try {
+        await ctx.telegram.deleteMessage(ctx.chat.id, loading.message_id);
+      } catch (err) {}
+      await ctx.reply(`❌ ${e.message}`);
+    }
+  });
+
+  // ============================================================
+  // 10. TURNIRNI YAKUNLASH
   // ============================================================
   bot.action(/^tf:finish:(.+)$/, async (ctx) => {
     await safeAnswer(ctx);
@@ -376,16 +585,10 @@ module.exports = (bot) => {
 
       const kb = Markup.inlineKeyboard([
         [
-          Markup.button.callback(
-            '✅ ' + t('btn_confirm'),
-            'tf:yes:' + tId
-          ),
+          Markup.button.callback('✅ ' + t('btn_confirm'), 'tf:yes:' + tId),
         ],
         [
-          Markup.button.callback(
-            t('btn_cancel'),
-            'tf:no:' + tId
-          ),
+          Markup.button.callback(t('btn_cancel'), 'tf:no:' + tId),
         ],
       ]);
 
@@ -453,7 +656,7 @@ module.exports = (bot) => {
   });
 
   // ============================================================
-  // 9. KANALGA YAKUNIY HISOBOT
+  // 11. KANALGA YAKUNIY HISOBOT
   // ============================================================
   bot.action(/^tf:pub:(.+)$/, async (ctx) => {
     await safeAnswer(ctx);
@@ -488,7 +691,6 @@ module.exports = (bot) => {
         return ctx.reply(`❗ ${t('no_results_yet')}`);
       }
 
-      // Natijalarni kanalga yuborish
       const result = await channelService.publishTournamentResults(
         bot,
         tour,
@@ -498,9 +700,7 @@ module.exports = (bot) => {
       if (result.ok) {
         await ctx.reply(`✅ ${t('tour_published')}`);
       } else {
-        await ctx.reply(
-          `❌ ${t('tour_publish_fail')}: ${result.reason}`
-        );
+        await ctx.reply(`❌ ${t('tour_publish_fail')}: ${result.reason}`);
       }
     } catch (e) {
       console.error('tf:pub xatosi:', e.message);
@@ -509,7 +709,7 @@ module.exports = (bot) => {
   });
 
   // ============================================================
-  // 10. BRON QILISH (#20)
+  // 12. BRON QILISH
   // ============================================================
   bot.action(/^rs:start:(.+)$/, async (ctx) => {
     await safeAnswer(ctx);
@@ -538,7 +738,6 @@ module.exports = (bot) => {
         return ctx.reply(t('error_tournament_full'));
       }
 
-      // Eski aktiv bron?
       const existing = await reservationService.getReservationByTeam(
         tId,
         team.id
@@ -605,9 +804,7 @@ module.exports = (bot) => {
       const res = await reservationService.confirmReservation(rId);
 
       if (!res.ok) {
-        return ctx.reply(
-          `❌ ${t('reserve_expired')}: ${res.reason}`
-        );
+        return ctx.reply(`❌ ${t('reserve_expired')}: ${res.reason}`);
       }
 
       const r = res.reservation;
@@ -615,13 +812,11 @@ module.exports = (bot) => {
       const team = await teamService.getTeam(r.teamId);
       if (!tour || !team) return;
 
-      // Ro'yxatga qo'shish
       const reg = await tournamentService.registerTeam(tour.id, team.id);
       if (!reg.ok) {
         return ctx.reply(`❗ ${reg.reason}`);
       }
 
-      // Hostga xabar
       if (tour.hostId) {
         try {
           await ctx.telegram.sendMessage(
@@ -675,7 +870,7 @@ module.exports = (bot) => {
   });
 
   // ============================================================
-  // 11. GUEST REJIM (#6)
+  // 13. GUEST REJIM
   // ============================================================
   bot.action(/^gv:tour:(.+)$/, async (ctx) => {
     await safeAnswer(ctx);
@@ -724,16 +919,15 @@ module.exports = (bot) => {
           lines.push(
             `${medal} <b>${escapeHtml(s.name)}</b> [${escapeHtml(s.tag)}]`
           );
-          lines.push(`   💯 ${s.totalPoints} | 🎯 ${s.totalKills} | 🥇 ${s.wins}`);
+          lines.push(
+            `   💯 ${s.totalPoints} | 🎯 ${s.totalKills} | 🥇 ${s.wins}`
+          );
         });
       }
 
       const kb = Markup.inlineKeyboard([
         [
-          Markup.button.callback(
-            '🔄 ' + t('btn_refresh'),
-            'gv:tour:' + tId
-          ),
+          Markup.button.callback('🔄 ' + t('btn_refresh'), 'gv:tour:' + tId),
         ],
         [Markup.button.callback(t('menu_main'), CALLBACK.MENU_MAIN)],
       ]);
@@ -779,18 +973,16 @@ module.exports = (bot) => {
       ]);
       rows.push([Markup.button.callback(t('menu_main'), CALLBACK.MENU_MAIN)]);
 
-      await safeEdit(
-        ctx,
-        `👁 <b>${t('guest_title')}</b>\n\n${t('guest_pick')}`,
-        { reply_markup: { inline_keyboard: rows } }
-      );
+      await safeEdit(ctx, `👁 <b>${t('guest_title')}</b>\n\n${t('guest_pick')}`, {
+        reply_markup: { inline_keyboard: rows },
+      });
     } catch (e) {
       console.error('gv:list xatosi:', e.message);
     }
   });
 
   // ============================================================
-  // 12. LIVE SCORE — HOST TUGMASI
+  // 14. LIVE SCORE — HOST TUGMASI
   // ============================================================
   bot.action(/^host:live:(.+)$/, async (ctx) => {
     await safeAnswer(ctx);
@@ -810,29 +1002,17 @@ module.exports = (bot) => {
 
       if (isActive) {
         rows.push([
-          Markup.button.callback(
-            '🎯 ' + t('live_add_kill'),
-            'ls:add:' + tId
-          ),
+          Markup.button.callback('🎯 ' + t('live_add_kill'), 'ls:add:' + tId),
         ]);
         rows.push([
-          Markup.button.callback(
-            '👁 ' + t('live_view'),
-            'ls:view:' + tId
-          ),
+          Markup.button.callback('👁 ' + t('live_view'), 'ls:view:' + tId),
         ]);
         rows.push([
-          Markup.button.callback(
-            '⏹ ' + t('live_end'),
-            'ls:end:' + tId
-          ),
+          Markup.button.callback('⏹ ' + t('live_end'), 'ls:end:' + tId),
         ]);
       } else {
         rows.push([
-          Markup.button.callback(
-            '🔴 ' + t('live_start'),
-            'ls:start:' + tId
-          ),
+          Markup.button.callback('🔴 ' + t('live_start'), 'ls:start:' + tId),
         ]);
       }
 
@@ -856,7 +1036,7 @@ module.exports = (bot) => {
   });
 
   // ============================================================
-  // 13. TURNIRNI BEKOR QILISH
+  // 15. TURNIRNI BEKOR QILISH
   // ============================================================
   bot.action(/^tour:cancel:(.+)$/, async (ctx) => {
     await safeAnswer(ctx);
@@ -877,10 +1057,7 @@ module.exports = (bot) => {
           ),
         ],
         [
-          Markup.button.callback(
-            t('btn_cancel'),
-            CALLBACK.TOUR_OPEN + tId
-          ),
+          Markup.button.callback(t('btn_cancel'), CALLBACK.TOUR_OPEN + tId),
         ],
       ]);
 
@@ -908,7 +1085,6 @@ module.exports = (bot) => {
 
       await tournamentService.setStatus(tId, TOUR_STATUS.CANCELLED);
 
-      // A'zolarga xabar
       const memberIds = new Set();
       for (const teamId of tour.registeredTeams) {
         const team = await teamService.getTeam(teamId);
@@ -941,7 +1117,7 @@ module.exports = (bot) => {
   });
 
   // ============================================================
-  // 14. TURNIR HISOBOTI
+  // 16. TURNIR HISOBOTI
   // ============================================================
   bot.action(/^tour:rep:(.+)$/, async (ctx) => {
     await safeAnswer(ctx);
@@ -1023,7 +1199,7 @@ module.exports = (bot) => {
   });
 
   // ============================================================
-  // 15. G'OLIBLAR E'LONI
+  // 17. G'OLIBLAR E'LONI
   // ============================================================
   bot.action(/^tour:win:(.+)$/, async (ctx) => {
     await safeAnswer(ctx);
@@ -1063,7 +1239,7 @@ module.exports = (bot) => {
       lines.push('');
 
       const medals = ['🥇', '🥈', '🥉'];
-      const rankNames = ['1-O\'RIN', '2-O\'RIN', '3-O\'RIN'];
+      const rankNames = ["1-O'RIN", "2-O'RIN", "3-O'RIN"];
 
       for (let i = 0; i < Math.min(3, standings.length); i++) {
         const s = standings[i];
@@ -1100,7 +1276,7 @@ module.exports = (bot) => {
   });
 
   // ============================================================
-  // 16. TURNIRNI NUSXALASH
+  // 18. TURNIRNI NUSXALASH
   // ============================================================
   bot.action(/^tour:clone:(.+)$/, async (ctx) => {
     await safeAnswer(ctx);
@@ -1125,7 +1301,10 @@ module.exports = (bot) => {
           `━━━━━━━━━━━━━━━━━━━━\n\n` +
           `📅 ${t('tour_create_date_prompt')}\n` +
           `<i>/skip</i>`,
-        { parse_mode: 'HTML', reply_markup: backToTournament(ctx, tId).reply_markup }
+        {
+          parse_mode: 'HTML',
+          reply_markup: backToTournament(ctx, tId).reply_markup,
+        }
       );
     } catch (e) {
       console.error('tour:clone xatosi:', e.message);
@@ -1133,7 +1312,7 @@ module.exports = (bot) => {
   });
 
   // ============================================================
-  // 17. TURNIR HAVOLASI
+  // 19. TURNIR HAVOLASI
   // ============================================================
   bot.action(/^tour:link:(.+)$/, async (ctx) => {
     await safeAnswer(ctx);
@@ -1141,7 +1320,7 @@ module.exports = (bot) => {
     try {
       const t = ctx.t;
       const tId = ctx.match[1];
-      const link = `https://t.me/${config.BOT_USERNAME}?start=${tId}`;
+      const link = `https://t.me/${config.BOT_USERNAME.replace('@', '')}?start=${tId}`;
 
       const kb = Markup.inlineKeyboard([
         [
@@ -1160,8 +1339,7 @@ module.exports = (bot) => {
 
       await safeEdit(
         ctx,
-        `🔗 <b>${t('tour_link')}</b>\n\n` +
-          `<code>${escapeHtml(link)}</code>`,
+        `🔗 <b>${t('tour_link')}</b>\n\n` + `<code>${escapeHtml(link)}</code>`,
         { reply_markup: kb.reply_markup }
       );
     } catch (e) {
@@ -1170,7 +1348,7 @@ module.exports = (bot) => {
   });
 
   // ============================================================
-  // 18. TURNIR STATISTIKASI
+  // 20. TURNIR STATISTIKASI
   // ============================================================
   bot.action(/^tour:stats:(.+)$/, async (ctx) => {
     await safeAnswer(ctx);
@@ -1234,7 +1412,7 @@ module.exports = (bot) => {
   });
 
   // ============================================================
-  // 19. TURNIR ETAPINI TANLASH
+  // 21. TURNIR ETAPINI TANLASH
   // ============================================================
   bot.action(/^tour:stage:(.+)$/, async (ctx) => {
     await safeAnswer(ctx);
@@ -1339,7 +1517,6 @@ async function showCalendar(ctx, year, month, isEdit) {
   if (!tours.length) {
     lines.push(`<i>${t('tour_empty')}</i>`);
   } else {
-    // Kunlar bo'yicha guruhlash
     const byDay = {};
     tours.forEach((tour) => {
       const day = tour.date.slice(8, 10);
@@ -1363,7 +1540,6 @@ async function showCalendar(ctx, year, month, isEdit) {
       });
   }
 
-  // Oldingi / Keyingi oy
   let prevM = month - 1;
   let prevY = year;
   if (prevM < 1) {
@@ -1394,17 +1570,10 @@ async function showCalendar(ctx, year, month, isEdit) {
   const text = lines.join('\n');
 
   try {
-    if (isEdit) {
-      await ctx.editMessageText(text, {
-        parse_mode: 'HTML',
-        reply_markup: { inline_keyboard: rows },
-      });
-    } else {
-      await ctx.editMessageText(text, {
-        parse_mode: 'HTML',
-        reply_markup: { inline_keyboard: rows },
-      });
-    }
+    await ctx.editMessageText(text, {
+      parse_mode: 'HTML',
+      reply_markup: { inline_keyboard: rows },
+    });
   } catch (e) {
     await ctx.reply(text, {
       parse_mode: 'HTML',

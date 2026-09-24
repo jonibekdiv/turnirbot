@@ -1,5 +1,5 @@
 // ============================================================
-// CARD HANDLER — Kartalar boshqaruvi
+// CARD HANDLER — Kartalar boshqaruvi (3 tilda)
 // ============================================================
 const { Markup } = require('telegraf');
 const cardService = require('../services/cardService');
@@ -23,65 +23,58 @@ const {
 
 module.exports = (bot) => {
   // ============================================================
-  // KARTALAR PANELI
+  // 1. KARTALAR PANELI
   // ============================================================
   bot.action(CALLBACK.ADMIN_CARDS, async (ctx) => {
     await safeAnswer(ctx);
+    const t = ctx.t;
+
     if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) {
-      return ctx.reply(ctx.t('error_access'));
+      return ctx.reply(`⛔ ${t('error_access')}`);
     }
 
     const isAdmin = ctx.state.role === ROLES.SUPER_ADMIN || ctx.state.role === ROLES.ADMIN;
-    const cards = isAdmin
-      ? await cardService.getAllCards()
-      : await cardService.getUserCards(ctx.from.id);
+    const cards = isAdmin ? await cardService.getAllCards() : await cardService.getUserCards(ctx.from.id);
 
     const text =
       `╔══════════════════════╗\n` +
-      `   💳 <b>KARTALAR</b>\n` +
+      `   💳 <b>${t('card_title')}</b>\n` +
       `╚══════════════════════╝\n\n` +
-      `📊 Jami: <b>${cards.length}</b> ta karta\n\n` +
+      `📊 ${t('promotion_total')}: <b>${cards.length}</b>\n\n` +
       `━━━━━━━━━━━━━━━━━━━━\n\n` +
-      `💡 <i>Turnir yaratishda karta tanlash mumkin</i>\n\n` +
-      `👇 Amalni tanlang:`;
+      `💡 <i>${t('card_type_pick_prompt')}</i>\n\n` +
+      `👇 ${t('support_choose_type')}`;
 
     try {
-      await ctx.editMessageText(text, {
-        parse_mode: 'HTML',
-        ...cardsPanelKeyboard(ctx),
-      });
+      await ctx.editMessageText(text, { parse_mode: 'HTML', ...cardsPanelKeyboard(ctx) });
     } catch (e) {
-      await ctx.reply(text, {
-        parse_mode: 'HTML',
-        ...cardsPanelKeyboard(ctx),
-      });
+      await ctx.reply(text, { parse_mode: 'HTML', ...cardsPanelKeyboard(ctx) });
     }
   });
 
   // ============================================================
-  // KARTALAR RO'YXATI
+  // 2. RO'YXAT
   // ============================================================
   bot.action(CALLBACK.CARD_LIST, async (ctx) => {
     await safeAnswer(ctx);
+    const t = ctx.t;
+
     if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) return;
 
     const isAdmin = ctx.state.role === ROLES.SUPER_ADMIN || ctx.state.role === ROLES.ADMIN;
-    const cards = isAdmin
-      ? await cardService.getAllCards()
-      : await cardService.getUserCards(ctx.from.id);
+    const cards = isAdmin ? await cardService.getAllCards() : await cardService.getUserCards(ctx.from.id);
 
     if (!cards.length) {
       return safeEdit(
         ctx,
-        `📭 <b>Kartalar yo'q</b>\n\n` +
-          `Yangi karta qo'shish uchun pastdagi tugmani bosing:`,
+        `📭 <b>${t('card_no_cards')}</b>\n\n${t('card_list_empty')}`,
         cardsPanelKeyboard(ctx)
       );
     }
 
-    const lines = [`💳 <b>Kartalar (${cards.length})</b>`, '', '━━━━━━━━━━━━━━━━━━━━', ''];
-
+    const lines = [`💳 <b>${t('card_list_title')} (${cards.length})</b>`, '', '━━━━━━━━━━━━━━━━━━━━', ''];
     const rows = [];
+
     cards.slice(0, 15).forEach((card, i) => {
       const defaultIcon = card.isDefault ? '⭐ ' : '';
       const typeLabel = CARD_TYPE_LABELS[card.type] || '💳';
@@ -100,8 +93,8 @@ module.exports = (bot) => {
       ]);
     });
 
-    rows.push([Markup.button.callback('➕ Yangi karta', CALLBACK.CARD_ADD)]);
-    rows.push([Markup.button.callback('⬅️ Orqaga', CALLBACK.ADMIN_CARDS)]);
+    rows.push([Markup.button.callback(t('card_add_btn'), CALLBACK.CARD_ADD)]);
+    rows.push([Markup.button.callback(t('btn_back'), CALLBACK.ADMIN_CARDS)]);
 
     try {
       await ctx.editMessageText(lines.join('\n'), {
@@ -117,82 +110,79 @@ module.exports = (bot) => {
   });
 
   // ============================================================
-  // KARTANI KO'RISH
+  // 3. KARTANI KO'RISH
   // ============================================================
   bot.action(/^card:v:(.+)$/, async (ctx) => {
     await safeAnswer(ctx);
+    const t = ctx.t;
+
     if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) return;
 
     const cardId = ctx.match[1];
     const card = await cardService.getCard(cardId);
-    if (!card) return ctx.reply(ctx.t('error_not_found'));
+    if (!card) return ctx.reply(t('card_not_found'));
 
-    // Ruxsat tekshirish
     const isAdmin = ctx.state.role === ROLES.SUPER_ADMIN || ctx.state.role === ROLES.ADMIN;
     if (!isAdmin && Number(card.addedBy) !== Number(ctx.from.id)) {
-      return ctx.reply(ctx.t('error_access'));
+      return ctx.reply(`⛔ ${t('error_access')}`);
     }
 
     const typeLabel = CARD_TYPE_LABELS[card.type] || '💳';
 
     const text =
       `╔══════════════════════╗\n` +
-      `   💳 <b>KARTA</b>\n` +
+      `   💳 <b>${t('card_title')}</b>\n` +
       `╚══════════════════════╝\n\n` +
-      `👤 <b>Egasi:</b> ${escapeHtml(card.owner)}\n\n` +
-      `🔢 <b>Raqami:</b>\n` +
+      `👤 <b>${t('wallet_admin_owner_label')}:</b> ${escapeHtml(card.owner)}\n\n` +
+      `🔢 <b>${t('card_ask_number')}:</b>\n` +
       `<code>${cardService.formatCardNumber(card.number)}</code>\n\n` +
-      `📱 <b>Telefon:</b>\n` +
+      `📱 <b>${t('card_ask_phone')}:</b>\n` +
       `<code>${escapeHtml(card.phone || '-')}</code>\n\n` +
-      `💳 <b>Turi:</b> ${typeLabel}\n` +
+      `💳 <b>${t('promo_type_label')}:</b> ${typeLabel}\n` +
       (card.bank ? `🏦 <b>Bank:</b> ${escapeHtml(card.bank)}\n` : '') +
-      (card.isDefault ? `⭐ <b>Default karta</b>\n` : '') +
+      (card.isDefault ? `⭐ <b>${t('card_default_label')}</b>\n` : '') +
       `\n━━━━━━━━━━━━━━━━━━━━\n\n` +
-      `📅 Qo'shilgan: ${new Date(card.createdAt).toLocaleString('uz-UZ')}`;
+      `📅 ${new Date(card.createdAt).toLocaleString('uz-UZ')}`;
 
     try {
-      await ctx.editMessageText(text, {
-        parse_mode: 'HTML',
-        ...cardViewKeyboard(ctx, cardId),
-      });
+      await ctx.editMessageText(text, { parse_mode: 'HTML', ...cardViewKeyboard(ctx, cardId) });
     } catch (e) {
-      await ctx.reply(text, {
-        parse_mode: 'HTML',
-        ...cardViewKeyboard(ctx, cardId),
-      });
+      await ctx.reply(text, { parse_mode: 'HTML', ...cardViewKeyboard(ctx, cardId) });
     }
   });
 
   // ============================================================
-  // KARTA QO'SHISH — BOSHLASH
+  // 4. YANGI KARTA — BOSHLASH
   // ============================================================
   bot.action(CALLBACK.CARD_ADD, async (ctx) => {
     await safeAnswer(ctx);
+    const t = ctx.t;
+
     if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) return;
 
     ctx.session = { state: STATES.CARD_ADD_NUMBER, data: {} };
 
     await ctx.reply(
-      `➕ <b>Yangi karta qo'shish</b>\n\n` +
-        `📍 Qadam <b>1/5</b>\n\n` +
-        `🔢 <b>Karta raqamini kiriting:</b>\n\n` +
-        `<i>Masalan: 8600 1234 5678 9012</i>`,
+      `➕ <b>${t('card_add_title')}</b>\n\n` +
+        `📍 ${t('card_add_step')} <b>1/5</b>\n\n` +
+        `🔢 <b>${t('card_ask_number')}:</b>\n\n` +
+        `<i>${t('card_ask_number_example')}</i>`,
       {
         parse_mode: 'HTML',
         reply_markup: {
-          inline_keyboard: [
-            [Markup.button.callback('❌ Bekor qilish', CALLBACK.ADMIN_CARDS)],
-          ],
+          inline_keyboard: [[Markup.button.callback(t('btn_cancel'), CALLBACK.ADMIN_CARDS)]],
         },
       }
     );
   });
 
   // ============================================================
-  // KARTA TURINI TANLASH
+  // 5. KARTA TURI TANLASH
   // ============================================================
   bot.action(/^ctype:(\w+)$/, async (ctx) => {
     await safeAnswer(ctx);
+    const t = ctx.t;
+
     if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) return;
     if (!ctx.session?.data || ctx.session.state !== STATES.CARD_ADD_TYPE) return;
 
@@ -201,15 +191,15 @@ module.exports = (bot) => {
     ctx.session.state = STATES.CARD_ADD_BANK;
 
     await ctx.editMessageText(
-      `📍 Qadam <b>5/5</b>\n\n` +
-        `🏦 <b>Bank nomini kiriting</b> (yoki /skip):\n\n` +
-        `<i>Masalan: Kapitalbank, TBC, Uzum Bank</i>`,
+      `📍 ${t('card_add_step')} <b>5/5</b>\n\n` +
+        `🏦 <b>${t('card_ask_bank')}</b>\n\n` +
+        `<i>${t('card_ask_bank_example')}</i>`,
       {
         parse_mode: 'HTML',
         reply_markup: {
           inline_keyboard: [
-            [Markup.button.callback('⏭ O\'tkazib yuborish', 'card:bank_skip')],
-            [Markup.button.callback('❌ Bekor qilish', CALLBACK.ADMIN_CARDS)],
+            [Markup.button.callback(t('card_skip_bank'), 'card:bank_skip')],
+            [Markup.button.callback(t('btn_cancel'), CALLBACK.ADMIN_CARDS)],
           ],
         },
       }
@@ -217,7 +207,7 @@ module.exports = (bot) => {
   });
 
   // ============================================================
-  // BANKNI O'TKAZIB YUBORISH
+  // 6. BANKNI SKIP
   // ============================================================
   bot.action('card:bank_skip', async (ctx) => {
     await safeAnswer(ctx);
@@ -229,16 +219,36 @@ module.exports = (bot) => {
   });
 
   // ============================================================
-  // KARTANI TASDIQLASH
+  // 7. TELEFON SKIP
+  // ============================================================
+  bot.action('card:phone_skip', async (ctx) => {
+    await safeAnswer(ctx);
+    const t = ctx.t;
+
+    if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) return;
+    if (!ctx.session?.data) return;
+
+    ctx.session.data.phone = null;
+    ctx.session.state = STATES.CARD_ADD_TYPE;
+
+    await ctx.editMessageText(
+      `📍 ${t('card_add_step')} <b>4/5</b>\n\n` +
+        `💳 <b>${t('card_type_pick_prompt')}</b>`,
+      { parse_mode: 'HTML', ...cardTypeKeyboard(ctx) }
+    );
+  });
+
+  // ============================================================
+  // 8. KARTANI TASDIQLASH
   // ============================================================
   bot.action('card:confirm', async (ctx) => {
     await safeAnswer(ctx);
+    const t = ctx.t;
+
     if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) return;
 
     const d = ctx.session?.data;
-    if (!d || !d.number || !d.owner) {
-      return ctx.reply(ctx.t('error_no_data'));
-    }
+    if (!d || !d.number || !d.owner) return ctx.reply(`❗ ${t('error_no_data')}`);
 
     try {
       const card = await cardService.createCard({
@@ -256,83 +266,83 @@ module.exports = (bot) => {
 
       await safeEdit(
         ctx,
-        `✅ <b>Karta qo'shildi!</b>\n\n` +
-          `👤 Egasi: <b>${escapeHtml(card.owner)}</b>\n` +
-          `🔢 Raqami: <code>${cardService.formatCardNumber(card.number)}</code>\n` +
-          (card.phone ? `📱 Telefon: <code>${escapeHtml(card.phone)}</code>\n` : '') +
-          `💳 Turi: ${typeLabel}\n` +
+        `✅ <b>${t('card_created_success')}</b>\n\n` +
+          `👤 ${t('wallet_admin_owner_label')}: <b>${escapeHtml(card.owner)}</b>\n` +
+          `🔢 ${t('card_ask_number')}: <code>${cardService.formatCardNumber(card.number)}</code>\n` +
+          (card.phone ? `📱 ${t('card_ask_phone')}: <code>${escapeHtml(card.phone)}</code>\n` : '') +
+          `💳 ${t('promo_type_label')}: ${typeLabel}\n` +
           (card.bank ? `🏦 Bank: ${escapeHtml(card.bank)}\n` : ''),
         {
           reply_markup: {
             inline_keyboard: [
-              [Markup.button.callback('💳 Kartalar ro\'yxati', CALLBACK.CARD_LIST)],
-              [Markup.button.callback('➕ Yana qo\'shish', CALLBACK.CARD_ADD)],
-              [Markup.button.callback('⬅️ Admin panel', CALLBACK.ADMIN_PANEL)],
+              [Markup.button.callback(t('card_list_btn'), CALLBACK.CARD_LIST)],
+              [Markup.button.callback(t('card_add_more'), CALLBACK.CARD_ADD)],
+              [Markup.button.callback(t('admin_panel'), CALLBACK.ADMIN_PANEL)],
             ],
           },
         }
       );
     } catch (e) {
       ctx.session = { state: null, data: {} };
-      await ctx.reply(ctx.t('error_prefix') + ' ' + (e.message || 'xato'));
+      await ctx.reply(`❌ ${e.message}`);
     }
   });
 
   // ============================================================
-  // KARTANI O'CHIRISH — TASDIQLASH
+  // 9. KARTANI O'CHIRISH
   // ============================================================
   bot.action(/^card:d:(.+)$/, async (ctx) => {
     await safeAnswer(ctx);
+    const t = ctx.t;
+
     if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) return;
 
     const cardId = ctx.match[1];
     const card = await cardService.getCard(cardId);
-    if (!card) return ctx.reply(ctx.t('error_not_found'));
+    if (!card) return ctx.reply(t('card_not_found'));
 
-    // Ruxsat
     const isAdmin = ctx.state.role === ROLES.SUPER_ADMIN || ctx.state.role === ROLES.ADMIN;
     if (!isAdmin && Number(card.addedBy) !== Number(ctx.from.id)) {
-      return ctx.reply(ctx.t('error_access'));
+      return ctx.reply(`⛔ ${t('error_access')}`);
     }
 
     const text =
-      `⚠️ <b>Kartani o'chirmoqchimisiz?</b>\n\n` +
-      `👤 Egasi: <b>${escapeHtml(card.owner)}</b>\n` +
-      `🔢 Raqami: <code>${cardService.formatCardNumber(card.number)}</code>\n\n` +
+      `⚠️ <b>${t('tour_delete_confirm')}</b>\n\n` +
+      `👤 ${t('wallet_admin_owner_label')}: <b>${escapeHtml(card.owner)}</b>\n` +
+      `🔢 ${t('card_ask_number')}: <code>${cardService.formatCardNumber(card.number)}</code>\n\n` +
       `━━━━━━━━━━━━━━━━━━━━\n\n` +
-      `❗️ <i>Bu amalni qaytarib bo'lmaydi</i>`;
+      `❗️ <i>${t('tour_delete_warning')}</i>`;
 
     await safeEdit(ctx, text, cardDeleteConfirmKeyboard(ctx, cardId));
   });
 
-  // ============================================================
-  // KARTANI O'CHIRISH — BAJARISH
-  // ============================================================
   bot.action(/^card:dc:(.+)$/, async (ctx) => {
     await safeAnswer(ctx);
+    const t = ctx.t;
+
     if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) return;
 
     const cardId = ctx.match[1];
     const card = await cardService.getCard(cardId);
-    if (!card) return ctx.reply(ctx.t('error_not_found'));
+    if (!card) return ctx.reply(t('card_not_found'));
 
     const isAdmin = ctx.state.role === ROLES.SUPER_ADMIN || ctx.state.role === ROLES.ADMIN;
     if (!isAdmin && Number(card.addedBy) !== Number(ctx.from.id)) {
-      return ctx.reply(ctx.t('error_access'));
+      return ctx.reply(`⛔ ${t('error_access')}`);
     }
 
     await cardService.deleteCard(cardId);
 
     await safeEdit(
       ctx,
-      `✅ <b>Karta o'chirildi</b>\n\n` +
+      `✅ <b>${t('card_deleted_ok')}</b>\n\n` +
         `👤 ${escapeHtml(card.owner)}\n` +
         `🔢 ${cardService.formatCardNumber(card.number)}`,
       {
         reply_markup: {
           inline_keyboard: [
-            [Markup.button.callback('💳 Kartalar ro\'yxati', CALLBACK.CARD_LIST)],
-            [Markup.button.callback('⬅️ Admin panel', CALLBACK.ADMIN_PANEL)],
+            [Markup.button.callback(t('card_list_btn'), CALLBACK.CARD_LIST)],
+            [Markup.button.callback(t('admin_panel'), CALLBACK.ADMIN_PANEL)],
           ],
         },
       }
@@ -340,105 +350,98 @@ module.exports = (bot) => {
   });
 
   // ============================================================
-  // DEFAULT QILIB BELGILASH
+  // 10. DEFAULT QILISH
   // ============================================================
   bot.action(/^card:sd:(.+)$/, async (ctx) => {
     await safeAnswer(ctx);
+    const t = ctx.t;
+
     if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) return;
 
     const cardId = ctx.match[1];
     const card = await cardService.getCard(cardId);
-    if (!card) return ctx.reply(ctx.t('error_not_found'));
+    if (!card) return ctx.reply(t('card_not_found'));
 
     const isAdmin = ctx.state.role === ROLES.SUPER_ADMIN || ctx.state.role === ROLES.ADMIN;
     if (!isAdmin && Number(card.addedBy) !== Number(ctx.from.id)) {
-      return ctx.reply(ctx.t('error_access'));
+      return ctx.reply(`⛔ ${t('error_access')}`);
     }
 
     await cardService.setDefault(cardId);
 
     await safeEdit(
       ctx,
-      `⭐ <b>Default karta o'zgartirildi</b>\n\n` +
+      `⭐ <b>${t('card_default_set')}</b>\n\n` +
         `👤 ${escapeHtml(card.owner)}\n` +
         `🔢 ${cardService.formatCardNumber(card.number)}`,
       {
         reply_markup: {
-          inline_keyboard: [
-            [Markup.button.callback('💳 Kartalar ro\'yxati', CALLBACK.CARD_LIST)],
-          ],
+          inline_keyboard: [[Markup.button.callback(t('card_list_btn'), CALLBACK.CARD_LIST)]],
         },
       }
     );
   });
 
   // ============================================================
-  // FSM — KARTA QO'SHISH
+  // 11. FSM — MATN
   // ============================================================
   bot.on('text', async (ctx, next) => {
     const s = ctx.session?.state;
     if (!s) return next();
     if (!s.startsWith('card_add')) return next();
+    const t = ctx.t;
 
     if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) {
       ctx.session = { state: null, data: {} };
       return;
     }
 
-    // ---------- 1. RAQAM ----------
+    // NUMBER
     if (s === STATES.CARD_ADD_NUMBER) {
       const v = cleanText(ctx.message.text, LIMITS.MAX_CARD_NUMBER_LEN);
       if (!cardService.isValidCardNumber(v)) {
-        return ctx.reply(
-          `❗ <b>Karta raqami noto'g'ri</b>\n\n` +
-            `16 xonali raqam kiriting:\n` +
-            `<i>Masalan: 8600 1234 5678 9012</i>`
-        );
+        return ctx.reply(`❗ ${t('card_invalid_number')}\n\n${t('card_ask_number_example')}`);
       }
       ctx.session.data.number = v;
       ctx.session.state = STATES.CARD_ADD_OWNER;
 
       return ctx.reply(
-        `📍 Qadam <b>2/5</b>\n\n` +
-          `👤 <b>Karta egasining ism-familiyasini kiriting:</b>\n\n` +
-          `<i>Masalan: Ali Valiyev</i>`,
+        `📍 ${t('card_add_step')} <b>2/5</b>\n\n` +
+          `👤 <b>${t('card_ask_owner')}</b>\n\n` +
+          `<i>${t('card_ask_owner_example')}</i>`,
         {
           parse_mode: 'HTML',
           reply_markup: {
-            inline_keyboard: [
-              [Markup.button.callback('❌ Bekor qilish', CALLBACK.ADMIN_CARDS)],
-            ],
+            inline_keyboard: [[Markup.button.callback(t('btn_cancel'), CALLBACK.ADMIN_CARDS)]],
           },
         }
       );
     }
 
-    // ---------- 2. EGASI ----------
+    // OWNER
     if (s === STATES.CARD_ADD_OWNER) {
       const v = cleanText(ctx.message.text, LIMITS.MAX_CARD_OWNER_LEN);
-      if (v.length < 3) {
-        return ctx.reply('❗ Ism juda qisqa. Qayta kiriting:');
-      }
+      if (v.length < 3) return ctx.reply(`❗ ${t('card_owner_short')}`);
       ctx.session.data.owner = v;
       ctx.session.state = STATES.CARD_ADD_PHONE;
 
       return ctx.reply(
-        `📍 Qadam <b>3/5</b>\n\n` +
-          `📱 <b>Kartaga ulangan telefon raqamini kiriting:</b>\n\n` +
-          `<i>Masalan: +998 90 123 45 67</i>`,
+        `📍 ${t('card_add_step')} <b>3/5</b>\n\n` +
+          `📱 <b>${t('card_ask_phone')}</b>\n\n` +
+          `<i>${t('card_ask_phone_example')}</i>`,
         {
           parse_mode: 'HTML',
           reply_markup: {
             inline_keyboard: [
-              [Markup.button.callback('⏭ O\'tkazib yuborish', 'card:phone_skip')],
-              [Markup.button.callback('❌ Bekor qilish', CALLBACK.ADMIN_CARDS)],
+              [Markup.button.callback(t('card_skip_phone'), 'card:phone_skip')],
+              [Markup.button.callback(t('btn_cancel'), CALLBACK.ADMIN_CARDS)],
             ],
           },
         }
       );
     }
 
-    // ---------- 3. BANK ----------
+    // BANK
     if (s === STATES.CARD_ADD_BANK) {
       const v = cleanText(ctx.message.text, LIMITS.MAX_BANK_LEN);
       ctx.session.data.bank = v.toLowerCase() === '/skip' ? null : v;
@@ -449,38 +452,36 @@ module.exports = (bot) => {
   });
 
   // ============================================================
-  // TELEFONNI O'TKAZIB YUBORISH
+  // 12. FSM — TELEFON
   // ============================================================
-  bot.action('card:phone_skip', async (ctx) => {
-    await safeAnswer(ctx);
-    if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) return;
-    if (!ctx.session?.data) return;
+  bot.on('text', async (ctx, next) => {
+    if (ctx.session?.state !== STATES.CARD_ADD_PHONE) return next();
+    const t = ctx.t;
 
-    ctx.session.data.phone = null;
+    const v = cleanText(ctx.message.text, LIMITS.MAX_PHONE_LEN);
+    ctx.session.data.phone = v;
     ctx.session.state = STATES.CARD_ADD_TYPE;
 
-    await ctx.editMessageText(
-      `📍 Qadam <b>4/5</b>\n\n` +
-        `💳 <b>Karta turini tanlang:</b>`,
+    return ctx.reply(
+      `📍 ${t('card_add_step')} <b>4/5</b>\n\n` +
+        `💳 <b>${t('card_type_pick_prompt')}</b>`,
       { parse_mode: 'HTML', ...cardTypeKeyboard(ctx) }
     );
   });
-
-  // Eslatma: card type tanlash `ctype:` action orqali ishlaydi (yuqorida)
 };
 
 // ============================================================
-// YORDAMCHI: TASDIQLASHNI KO'RSATISH
+// YORDAMCHI: TASDIQLASH
 // ============================================================
 async function showCardConfirm(ctx) {
+  const t = ctx.t;
   const d = ctx.session.data;
 
   if (!d.type) {
-    // Agar tur tanlanmagan bo'lsa — tanlashga o'tamiz
     ctx.session.state = STATES.CARD_ADD_TYPE;
     return ctx.reply(
-      `📍 Qadam <b>4/5</b>\n\n` +
-        `💳 <b>Karta turini tanlang:</b>`,
+      `📍 ${t('card_add_step')} <b>4/5</b>\n\n` +
+        `💳 <b>${t('card_type_pick_prompt')}</b>`,
       { parse_mode: 'HTML', ...cardTypeKeyboard(ctx) }
     );
   }
@@ -491,13 +492,13 @@ async function showCardConfirm(ctx) {
 
   const text =
     `╔══════════════════════╗\n` +
-    `   📋 <b>TASDIQLASH</b>\n` +
+    `   📋 <b>${t('confirm_title')}</b>\n` +
     `╚══════════════════════╝\n\n` +
-    `🔢 <b>Raqami:</b>\n` +
+    `🔢 <b>${t('card_ask_number')}:</b>\n` +
     `<code>${cardService.formatCardNumber(d.number)}</code>\n\n` +
-    `👤 <b>Egasi:</b> ${escapeHtml(d.owner)}\n\n` +
-    `📱 <b>Telefon:</b> <code>${escapeHtml(d.phone || '-')}</code>\n\n` +
-    `💳 <b>Turi:</b> ${typeLabel}\n` +
+    `👤 <b>${t('wallet_admin_owner_label')}:</b> ${escapeHtml(d.owner)}\n\n` +
+    `📱 <b>${t('card_ask_phone')}:</b> <code>${escapeHtml(d.phone || '-')}</code>\n\n` +
+    `💳 <b>${t('promo_type_label')}:</b> ${typeLabel}\n` +
     (d.bank ? `🏦 <b>Bank:</b> ${escapeHtml(d.bank)}\n` : '');
 
   await ctx.reply(text, { parse_mode: 'HTML', ...cardConfirmKeyboard(ctx) });

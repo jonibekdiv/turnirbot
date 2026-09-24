@@ -1,0 +1,15 @@
+{
+  "promo_mufnchphtq2l02": {
+    "id": "promo_mufnchphtq2l02",
+    "code": "RANGER50",
+    "type": "fixed",
+    "value": 10000,
+    "maxUses": 5,
+    "usedCount": 1,
+    "tournamentId": null,
+    "active": true,
+    "createdBy": 6580878834,
+    "createdAt": "2026-09-24T14:48:06.821Z",
+    "expiresAt": null
+  }
+}

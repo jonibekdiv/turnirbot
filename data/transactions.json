@@ -1,0 +1,52 @@
+{
+  "transactions": [
+    {
+      "id": "tx_mueegr1kvud804",
+      "userId": 8811053020,
+      "type": "deposit",
+      "amount": 100000,
+      "balanceBefore": 0,
+      "balanceAfter": 100000,
+      "reason": "Admin tasdiqladi",
+      "adminId": 6580878834,
+      "relatedId": "wreq_mueegf7jw4yj7d",
+      "at": "2026-09-23T17:51:42.824Z"
+    },
+    {
+      "id": "tx_mufntywb8i97b7",
+      "userId": 6580878834,
+      "type": "deposit",
+      "amount": 9999999,
+      "balanceBefore": 0,
+      "balanceAfter": 9999999,
+      "reason": "Admin tasdiqladi",
+      "adminId": 6580878834,
+      "relatedId": "wreq_mufntwg1t7zm7v",
+      "at": "2026-09-24T15:01:42.251Z"
+    },
+    {
+      "id": "tx_mufo7vjkeciwhz",
+      "userId": 6580878834,
+      "type": "tournament_pay",
+      "amount": -50000,
+      "balanceBefore": 9999999,
+      "balanceAfter": 9949999,
+      "reason": "Turnir to'lovi: Pmgo",
+      "adminId": null,
+      "relatedId": "tour_mufnxam6eyds19",
+      "at": "2026-09-24T15:12:31.088Z"
+    },
+    {
+      "id": "tx_mufo9z7m6fsshe",
+      "userId": 6580878834,
+      "type": "withdraw",
+      "amount": -5000000,
+      "balanceBefore": 9949999,
+      "balanceAfter": 4949999,
+      "reason": "Admin to'lovni tasdiqladi",
+      "adminId": 6580878834,
+      "relatedId": "wreq_mufo9nykksxy2k",
+      "at": "2026-09-24T15:14:09.155Z"
+    }
+  ]
+}

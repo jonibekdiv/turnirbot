@@ -1,5 +1,5 @@
 // ============================================================
-// MAIN KEYBOARD — Ko'p tilli
+// MAIN KEYBOARD — Ko'p tilli (etap tizimi bilan)
 // ============================================================
 const { Markup } = require('telegraf');
 const { CALLBACK, ROLES } = require('../constants');
@@ -13,14 +13,22 @@ function mainKeyboard(role, lang = 'uz') {
     [Markup.button.callback(t('menu_team'), CALLBACK.MENU_TEAM)],
     [Markup.button.callback(t('menu_profile'), CALLBACK.MENU_PROFILE)],
     [Markup.button.callback(t('menu_search'), CALLBACK.SEARCH_START)],
+        [Markup.button.callback('👛 Hamyon', CALLBACK.WALLET_VIEW)],
+    [Markup.button.callback('💬 Yordam', CALLBACK.SUPPORT_START)],
   ];
 
   const isStaff = [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.ORGANIZER].includes(role);
   if (isStaff) {
     rows.push([Markup.button.callback(t('menu_admin'), CALLBACK.ADMIN_PANEL)]);
   }
+
+  // ============================================================
+  // HOST — Host Stage panel
+  // ============================================================
   if (role === ROLES.HOST) {
-    rows.push([Markup.button.callback(t('menu_host'), CALLBACK.HOST_TOURS)]);
+    rows.push([
+      Markup.button.callback('🎙 Host panel', CALLBACK.HOST_STAGE_TOURS),
+    ]);
   }
 
   rows.push([Markup.button.callback(t('menu_language'), CALLBACK.MENU_LANGUAGE)]);

@@ -1,19 +1,23 @@
-// Komanda qo'shimcha funksiyalari
+// ============================================================
+// TEAM EXT SERVICE — 3 tilda
+// ============================================================
 const teamService = require('./teamService');
 const userService = require('./userService');
 const tournamentService = require('./tournamentService');
 const matchService = require('./matchService');
+const pointsService = require('./pointsService');
+const langService = require('./langService');
 const { escapeHtml, displayName } = require('../utils/telegramUtils');
 
 // ============================================================
-// 14. KOMANDANI TAHRIRLASH
+// KOMANDANI TAHRIRLASH
 // ============================================================
 async function editTeam(teamId, patch) {
   return teamService.updateTeam(teamId, patch);
 }
 
 // ============================================================
-// 16. KOMANDA STATISTIKASI
+// KOMANDA STATISTIKASI
 // ============================================================
 async function getTeamStats(teamId) {
   const team = await teamService.getTeam(teamId);
@@ -37,7 +41,7 @@ async function getTeamStats(teamId) {
       totalKills += r.kills || 0;
       totalPlacement += r.placement || 0;
       if (r.placement === 1) totalWins++;
-      totalPoints += require('./pointsService').calculateTotal(r.placement, r.kills);
+      totalPoints += pointsService.calculateTotal(r.placement, r.kills);
     }
   }
 
@@ -54,7 +58,7 @@ async function getTeamStats(teamId) {
 }
 
 // ============================================================
-// 17. KOMANDA TARIXI
+// KOMANDA TARIXI
 // ============================================================
 async function getTeamHistory(teamId, limit = 15) {
   const allTours = await tournamentService.getAllTournaments();
@@ -72,7 +76,7 @@ async function getTeamHistory(teamId, limit = 15) {
       if (!r) continue;
       teamKills += r.kills || 0;
       if (r.placement === 1) teamWins++;
-      teamPoints += require('./pointsService').calculateTotal(r.placement, r.kills);
+      teamPoints += pointsService.calculateTotal(r.placement, r.kills);
     }
 
     history.push({
@@ -90,13 +94,13 @@ async function getTeamHistory(teamId, limit = 15) {
 }
 
 // ============================================================
-// 19. CAPTAIN O'ZGARTIRISH
+// CAPTAIN O'ZGARTIRISH
 // ============================================================
 async function changeCaptain(teamId, newCaptainId, byUserId) {
   const team = await teamService.getTeam(teamId);
   if (!team) throw new Error('Komanda topilmadi');
-  if (team.captainId !== byUserId) throw new Error('Faqat captain o\'zgartira oladi');
-  if (!team.members.includes(newCaptainId)) throw new Error('Bu a\'zo komandada emas');
+  if (team.captainId !== byUserId) throw new Error("Faqat captain o'zgartira oladi");
+  if (!team.members.includes(newCaptainId)) throw new Error("Bu a'zo komandada emas");
   if (newCaptainId === team.captainId) throw new Error('U allaqachon captain');
 
   await teamService.updateTeam(teamId, { captainId: newCaptainId });
@@ -104,12 +108,11 @@ async function changeCaptain(teamId, newCaptainId, byUserId) {
 }
 
 // ============================================================
-// 20. KOMANDA LOGOTIPI (Emoji + Rang)
+// LOGO (Emoji)
 // ============================================================
 const LOGO_EMOJIS = ['🔥', '⚡', '👑', '🦅', '🐉', '🦁', '🐺', '💎', '⭐', '🎯', '⚔', '🛡'];
 
 function generateTeamLogo(teamName) {
-  // Deterministik — har nom uchun bir xil
   const hash = [...teamName].reduce((a, c) => a + c.charCodeAt(0), 0);
   const emoji = LOGO_EMOJIS[hash % LOGO_EMOJIS.length];
   return {
@@ -119,17 +122,17 @@ function generateTeamLogo(teamName) {
 }
 
 // ============================================================
-// 21. KOMANDA BIO
+// BIO
 // ============================================================
 async function setTeamBio(teamId, bio, byUserId) {
   const team = await teamService.getTeam(teamId);
   if (!team) throw new Error('Komanda topilmadi');
-  if (team.captainId !== byUserId) throw new Error('Faqat captain o\'zgartira oladi');
+  if (team.captainId !== byUserId) throw new Error("Faqat captain o'zgartira oladi");
   return teamService.updateTeam(teamId, { bio: bio.slice(0, 150) });
 }
 
 // ============================================================
-// 22. KOMANDA A'ZOLARI RO'YXATI
+// A'ZOLAR RO'YXATI
 // ============================================================
 async function getTeamMembersDetailed(teamId) {
   const team = await teamService.getTeam(teamId);
@@ -150,6 +153,30 @@ async function getTeamMembersDetailed(teamId) {
   return { team, members };
 }
 
+// ============================================================
+// KICK MEMBER
+// ============================================================
+async function kickMember(teamId, memberId, byUserId) {
+  const team = await teamService.getTeam(teamId);
+  if (!team) throw new Error('Komanda topilmadi');
+  if (Number(team.captainId) !== Number(byUserId)) {
+    throw new Error("Faqat captain a'zoni chiqarib yuborishi mumkin");
+  }
+  if (Number(memberId) === Number(team.captainId)) {
+    throw new Error("Captain o'zini chiqara olmaydi");
+  }
+  if (!team.members.includes(memberId)) {
+    throw new Error("Bu a'zo komandada emas");
+  }
+
+  await teamService.updateTeam(teamId, {
+    members: team.members.filter((m) => m !== memberId),
+  });
+  await userService.setUserTeam(memberId, null);
+
+  return { ok: true, kickedId: memberId, teamName: team.name, teamTag: team.tag };
+}
+
 module.exports = {
   editTeam,
   getTeamStats,
@@ -158,5 +185,6 @@ module.exports = {
   generateTeamLogo,
   setTeamBio,
   getTeamMembersDetailed,
+  kickMember,
   LOGO_EMOJIS,
 };

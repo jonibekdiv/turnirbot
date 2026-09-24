@@ -66,5 +66,39 @@
     "submittedAt": "2026-09-22T19:34:00.031Z",
     "reviewedAt": "2026-09-22T19:34:44.453Z",
     "reviewedBy": 6580878834
+  },
+  "pay_mufns270f4dahz": {
+    "id": "pay_mufns270f4dahz",
+    "tournamentId": "tour_mufnpthpm2yb1o",
+    "teamId": "team_mu8q4593j6v9dv",
+    "captainId": 6580878834,
+    "organizerId": 6580878834,
+    "receiptFileId": "AgACAgIAAxkBAAIFS2q1Ov1cHLSxfJLWBuaNvVZ3-EHjAAKuJmsbN5moSSsfJc88Z3d3AQADAgADeQADPQQ",
+    "receiptType": "photo",
+    "receiptCaption": "",
+    "amount": 5000,
+    "currency": "UZS",
+    "status": "approved",
+    "rejectReason": null,
+    "submittedAt": "2026-09-24T15:00:13.212Z",
+    "reviewedAt": "2026-09-24T15:00:27.511Z",
+    "reviewedBy": 6580878834
+  },
+  "pay_mufo7vjtqjwyty": {
+    "id": "pay_mufo7vjtqjwyty",
+    "tournamentId": "tour_mufnxam6eyds19",
+    "teamId": "team_mu8q4593j6v9dv",
+    "captainId": 6580878834,
+    "organizerId": 6580878834,
+    "receiptFileId": null,
+    "receiptType": "wallet",
+    "receiptCaption": "Wallet orqali to'lov. Promo: yo'q",
+    "amount": 50000,
+    "currency": "UZS",
+    "status": "approved",
+    "rejectReason": null,
+    "submittedAt": "2026-09-24T15:12:31.097Z",
+    "reviewedAt": "2026-09-24T15:12:31.110Z",
+    "reviewedBy": 6580878834
   }
 }

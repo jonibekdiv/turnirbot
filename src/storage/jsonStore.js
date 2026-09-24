@@ -27,15 +27,35 @@ const DEFAULTS = {
   'cards.json': {},
   'subscriptions.json': {},
 
-  // Yangi funksiyalar uchun
+  // Qo'shimcha funksiyalar
   'waitlists.json': {},
   'reservations.json': {},
   'broadcast_stats.json': { broadcasts: {} },
   'live_scores.json': {},
   'referrals.json': {},
-  'achievements.json': {},
   'recaps.json': {},
 
+  // ============================================================
+  // YANGI FAYLLAR
+  // ============================================================
+  'promos.json': {},
+  'promo_uses.json': {},
+  'support_tickets.json': {},
+  'wallets.json': {},
+  'transactions.json': { transactions: [] },
+  'wallet_requests.json': { requests: {} },
+  // ============================================================
+  // ETAPLAR TIZIMI
+  // ============================================================
+  'stages.json': {},
+  'stageMatches.json': {},
+  'promotions.json': {},
+  'invitations.json': {},
+  'stageReminders.json': {},
+  'auditLogs.json': { logs: [] },
+  // ============================================================
+  // SOZLAMALAR
+  // ============================================================
   'settings.json': {
     allowAdminAddAdmin: false,
     minTeamMembers: 1,

@@ -1,5 +1,5 @@
 // ============================================================
-// BOT.JS — Asosiy kirish nuqtasi (to'liq)
+// BOT.JS — Asosiy kirish nuqtasi (to'liq + etap tizimi)
 // ============================================================
 const { Telegraf, session } = require('telegraf');
 const config = require('./config');
@@ -25,8 +25,15 @@ try {
   console.log('⚠️ commandsService yuklanmadi:', e.message);
 }
 
+let stageReminderService = null;
+try {
+  stageReminderService = require('./services/stageReminderService');
+} catch (e) {
+  console.log('⚠️ stageReminderService yuklanmadi:', e.message);
+}
+
 // ============================================================
-// HANDLERLAR — HAR BIRI FAQAT BIR MARTA
+// HANDLERLAR
 // ============================================================
 
 // 1. Asosiy
@@ -77,6 +84,20 @@ const organizerPaymentReviewHandler = require('./handlers/organizerPaymentReview
 // 11. Qidiruv va Inline
 const searchHandler = require('./handlers/searchHandler');
 const inlineHandler = require('./handlers/inlineHandler');
+
+// 12. PROMO + SUPPORT + WALLET
+const promoHandler = require('./handlers/promoHandler');
+const supportHandler = require('./handlers/supportHandler');
+const walletHandler = require('./handlers/walletHandler');
+const walletAdminHandler = require('./handlers/walletAdminHandler');
+
+// ============================================================
+// 13. ETAPLAR TIZIMI (YANGI)
+// ============================================================
+const stageHandler = require('./handlers/stageHandler');
+const promotionHandler = require('./handlers/promotionHandler');
+const invitationHandler = require('./handlers/invitationHandler');
+const hostStageHandler = require('./handlers/hostStageHandler');
 
 // ============================================================
 // ASOSIY FUNKSIYA
@@ -156,6 +177,20 @@ async function main() {
   searchHandler(bot);
   inlineHandler(bot);
 
+  // 12. PROMO + SUPPORT + WALLET
+  promoHandler(bot);
+  supportHandler(bot);
+  walletHandler(bot);
+  walletAdminHandler(bot);
+
+  // ============================================================
+  // 13. ETAPLAR TIZIMI (YANGI)
+  // ============================================================
+  stageHandler(bot);
+  promotionHandler(bot);
+  invitationHandler(bot);
+  hostStageHandler(bot);
+
   // ============================================================
   // XATO USHLAGICH
   // ============================================================
@@ -177,6 +212,15 @@ async function main() {
   // XIZMATLAR
   // ============================================================
   reminderService.start(bot);
+
+  // Stage Reminder (YANGI)
+  if (stageReminderService) {
+    try {
+      stageReminderService.start(bot);
+    } catch (e) {
+      console.log('⚠️ Stage Reminder xato:', e.message);
+    }
+  }
 
   if (cronService) {
     try {
@@ -221,14 +265,25 @@ async function main() {
   console.log('📚 Tarix: ✅');
   console.log('📅 Kalendar: ✅');
   console.log('📋 Shablonlar: ✅');
+  console.log('🎫 Promo kodlar: ✅');
+  console.log("❌ A'zo kick: ✅");
+  console.log('💬 Support/Forum: ✅');
+  console.log('💰 Wallet: ✅');
+  console.log('📊 ETAPLAR TIZIMI: ✅');
+  console.log('⬆️ Promotion: ✅');
+  console.log('📨 Invitation: ✅');
+  console.log('🎙 Host Stage Panel: ✅');
+  console.log('⏰ Stage Reminders: ✅');
   console.log('');
 
   process.once('SIGINT', () => {
     console.log('\n⏹ SIGINT');
+    if (stageReminderService) stageReminderService.stop();
     bot.stop('SIGINT');
   });
   process.once('SIGTERM', () => {
     console.log('\n⏹ SIGTERM');
+    if (stageReminderService) stageReminderService.stop();
     bot.stop('SIGTERM');
   });
 }

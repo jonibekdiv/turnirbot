@@ -1,1 +1,162 @@
-{}
+{
+  "tour_muei69ozggrvtv": {
+    "id": "tour_muei69ozggrvtv",
+    "title": "RANGER TOURNAMENTS",
+    "type": "free",
+    "imageFileId": "AgACAgIAAxkBAAIE3mq0KXfFzW3jAlyUlggEhnnNwWwkAALDIGsbN5mgSZJ3rhy2tnvTAQADAgADeQADPQQ",
+    "date": "2026-09-25",
+    "startTime": "20:00",
+    "timezone": "Asia/Tashkent",
+    "game": "PUBG",
+    "mode": "Squad",
+    "map": "Erangel",
+    "prize": "1.000.000",
+    "mapTag": "E/M/R/E",
+    "etapa": "Final",
+    "maxTeams": 18,
+    "description": "",
+    "registrationDeadline": "2026-09-30T21:00:00.000Z",
+    "payment": {
+      "required": false,
+      "amount": null,
+      "currency": null,
+      "cardNumber": null,
+      "cardOwner": null,
+      "instruction": null,
+      "deadline": null
+    },
+    "requiredChannels": [
+      {
+        "channelId": "-1002308128119",
+        "channelTitle": "RANGER",
+        "channelUsername": "rangerpubgmm",
+        "channelInviteLink": "https://t.me/rangerpubgmm",
+        "isRequired": true
+      }
+    ],
+    "organizerId": 6580878834,
+    "hostId": 8811053020,
+    "registeredTeams": [],
+    "roomId": null,
+    "roomPassword": null,
+    "status": "open",
+    "createdBy": 6580878834,
+    "createdByRole": "super_admin",
+    "createdAt": "2026-09-23T19:35:32.244Z",
+    "reminder10Sent": false,
+    "reminder5Sent": false,
+    "roomCredentialsSent": false,
+    "bracketConfig": {
+      "quarter_final": {
+        "numberOfDays": 3,
+        "matchesPerDay": 1,
+        "teamsPerMatch": 9,
+        "qualifiersPerMatch": 3
+      },
+      "semi_final": {
+        "numberOfDays": 3,
+        "matchesPerDay": 1,
+        "teamsPerMatch": 9,
+        "qualifiersPerMatch": 3
+      },
+      "final": {
+        "numberOfDays": 1,
+        "matchesPerDay": 1,
+        "teamsPerMatch": 9,
+        "qualifiersPerMatch": 0
+      }
+    },
+    "hasStages": true,
+    "stagesCreatedAt": "2026-09-23T19:36:02.232Z",
+    "startDate": "2026-09-25",
+    "endDate": "2026-10-03",
+    "firstStageDate": "2026-09-25",
+    "lastStageDate": "2026-10-03",
+    "totalStageDays": 7,
+    "dayReminderSent": true
+  },
+  "tour_mufnpthpm2yb1o": {
+    "id": "tour_mufnpthpm2yb1o",
+    "title": "Pmgo",
+    "type": "paid",
+    "imageFileId": null,
+    "date": "2026-09-27",
+    "startTime": "20:00",
+    "timezone": "Asia/Tashkent",
+    "game": "PUBG",
+    "mode": "Squad",
+    "map": "Erangel",
+    "prize": "10000",
+    "mapTag": "Evangelicals",
+    "etapa": "1/4",
+    "maxTeams": 18,
+    "description": "",
+    "registrationDeadline": "2026-09-27T17:00:00.000Z",
+    "payment": {
+      "required": true,
+      "amount": 5000,
+      "currency": "UZS",
+      "cardNumber": "8600123456789012",
+      "cardOwner": "Kimdir",
+      "instruction": null,
+      "deadline": null
+    },
+    "requiredChannels": [],
+    "organizerId": 6580878834,
+    "hostId": 8811053020,
+    "registeredTeams": [
+      "team_mu8q4593j6v9dv"
+    ],
+    "roomId": null,
+    "roomPassword": null,
+    "status": "cancelled",
+    "createdBy": 6580878834,
+    "createdByRole": "super_admin",
+    "createdAt": "2026-09-24T14:58:28.622Z",
+    "reminder10Sent": false,
+    "reminder5Sent": false,
+    "roomCredentialsSent": false
+  },
+  "tour_mufnxam6eyds19": {
+    "id": "tour_mufnxam6eyds19",
+    "title": "Pmgo",
+    "type": "paid",
+    "imageFileId": null,
+    "date": "2026-09-27",
+    "startTime": "20:00",
+    "timezone": "Asia/Tashkent",
+    "game": "PUBG",
+    "mode": "Squad",
+    "map": "Erangel",
+    "prize": "102000",
+    "mapTag": "Enshrined",
+    "etapa": "1/4",
+    "maxTeams": 18,
+    "description": "",
+    "registrationDeadline": null,
+    "payment": {
+      "required": true,
+      "amount": 50000,
+      "currency": "UZS",
+      "cardNumber": "8600123456789012",
+      "cardOwner": "Jshdw",
+      "instruction": null,
+      "deadline": null
+    },
+    "requiredChannels": [],
+    "organizerId": 6580878834,
+    "hostId": 8811053020,
+    "registeredTeams": [
+      "team_mu8q4593j6v9dv"
+    ],
+    "roomId": null,
+    "roomPassword": null,
+    "status": "open",
+    "createdBy": 6580878834,
+    "createdByRole": "super_admin",
+    "createdAt": "2026-09-24T15:04:17.406Z",
+    "reminder10Sent": false,
+    "reminder5Sent": false,
+    "roomCredentialsSent": false
+  }
+}

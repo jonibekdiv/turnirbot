@@ -1,5 +1,5 @@
 // ============================================================
-// CHANNEL SERVICE — Kanallar + obuna tekshiruvi + e'lon
+// CHANNEL SERVICE — Kanallar + obuna + e'lon qilish
 // ============================================================
 const store = require('../storage/jsonStore');
 const settingsService = require('./settingsService');
@@ -10,7 +10,7 @@ const config = require('../config');
 const CH_FILE = 'channels.json';
 
 // ============================================================
-// ASOSIY KANAL (Admin e'lon qiladigan)
+// ASOSIY KANAL
 // ============================================================
 async function setChannel(channelId) {
   return settingsService.updateSettings({ channelId });
@@ -26,13 +26,12 @@ async function unsetChannel() {
 }
 
 // ============================================================
-// KANALNI TEKSHIRISH (bot adminmi?)
+// KANALNI TEKSHIRISH
 // ============================================================
 async function verifyChannel(bot, channelIdOrUsername) {
   try {
     const chat = await bot.telegram.getChat(channelIdOrUsername);
 
-    // Bot admin ekanligini tekshirish
     let isBotAdmin = false;
     let botStatus = 'not_admin';
 
@@ -53,9 +52,7 @@ async function verifyChannel(bot, channelIdOrUsername) {
         title: chat.title || chat.username || chat.first_name || 'Nomsiz',
         username: chat.username || null,
         type: chat.type,
-        inviteLink: chat.username
-          ? `https://t.me/${chat.username}`
-          : null,
+        inviteLink: chat.username ? `https://t.me/${chat.username}` : null,
       },
       isBotAdmin,
       botStatus,
@@ -71,13 +68,7 @@ async function verifyChannel(bot, channelIdOrUsername) {
 // ============================================================
 // KANALNI SAQLASH
 // ============================================================
-async function saveChannel({
-  channelId,
-  title,
-  username,
-  inviteLink,
-  addedBy,
-}) {
+async function saveChannel({ channelId, title, username, inviteLink, addedBy }) {
   const id = generateId('ch');
   const channel = {
     id,
@@ -96,9 +87,6 @@ async function saveChannel({
   return channel;
 }
 
-// ============================================================
-// KANALNI OLISH
-// ============================================================
 async function getChannelById(id) {
   const data = await store.read(CH_FILE);
   return data[id] || null;
@@ -109,17 +97,11 @@ async function findByChannelId(channelId) {
   return Object.values(data).find((c) => c.channelId === String(channelId)) || null;
 }
 
-// ============================================================
-// BARCHA KANALLAR
-// ============================================================
 async function listChannels() {
   const data = await store.read(CH_FILE);
   return Object.values(data).sort((a, b) => a.title.localeCompare(b.title));
 }
 
-// ============================================================
-// KANALNI O'CHIRISH
-// ============================================================
 async function deleteChannel(id) {
   return store.update(CH_FILE, (data) => {
     delete data[id];
@@ -127,14 +109,11 @@ async function deleteChannel(id) {
 }
 
 // ============================================================
-// OBUNA HOLATINI TEKSHIRISH
+// OBUNA TEKSHIRISH
 // ============================================================
 async function checkSubscription(bot, channelIdOrUsername, userId) {
   try {
-    const member = await bot.telegram.getChatMember(
-      channelIdOrUsername,
-      userId
-    );
+    const member = await bot.telegram.getChatMember(channelIdOrUsername, userId);
     const status = member.status;
 
     if (['member', 'administrator', 'creator'].includes(status)) {
@@ -142,14 +121,10 @@ async function checkSubscription(bot, channelIdOrUsername, userId) {
     }
     return { subscribed: false, status: status || 'left' };
   } catch (e) {
-    // Foydalanuvchi topilmadi yoki kanal topilmadi
     return { subscribed: false, status: 'not_found', error: e.message };
   }
 }
 
-// ============================================================
-// TURNIR UCHUN BARCHA KANALLARGA OBUNA TEKSHIRUVI
-// ============================================================
 async function checkAllSubscriptions(bot, userId, channels) {
   const results = [];
   for (const ch of channels) {
@@ -165,35 +140,72 @@ async function checkAllSubscriptions(bot, userId, channels) {
 }
 
 // ============================================================
-// ASOSIY KANALGA E'LON
+// ⚡️ TURNIRNI KANALGA E'LON QILISH (asosiy)
 // ============================================================
 async function announceToChannel(bot, tournament) {
   const channelId = await getChannel();
-  if (!channelId) return { ok: false, reason: 'Kanal ulanmagan' };
+  if (!channelId) {
+    return { ok: false, reason: 'Kanal ulanmagan' };
+  }
 
-  const link = `https://t.me/${config.BOT_USERNAME}?start=${tournament.id}`;
+  if (!tournament) {
+    return { ok: false, reason: 'Turnir topilmadi' };
+  }
 
+  // ⚡️ Deep-link
+  const link = `https://t.me/${config.BOT_USERNAME.replace('@', '')}?start=${tournament.id}`;
+
+  // ⚡️ Turi
   const typeLabel =
     tournament.type === 'paid'
       ? `💳 Pullik (${tournament.payment?.amount || '?'} ${tournament.payment?.currency || ''})`
       : '🆓 Bepul';
 
+  // ⚡️ Sana oralig'i
+  let dateStr = tournament.date;
+  if (tournament.endDate && tournament.endDate !== tournament.date) {
+    dateStr = `${tournament.date} — ${tournament.endDate}`;
+  }
+
+  // ⚡️ Etablar
+  const stagesInfo = tournament.hasStages
+    ? `\n📊 Etaplar: <b>${tournament.totalStageDays || 7}</b> kun`
+    : '';
+
+  // ⚡️ Xabar matni
   const text =
-    `🏆 <b>YANGI TURNIR!</b>\n\n` +
+    `╔══════════════════════╗\n` +
+    `   🏆 <b>YANGI TURNIR!</b>\n` +
+    `╚══════════════════════╝\n\n` +
     `🎯 <b>${escapeHtml(tournament.title)}</b>\n` +
     `${typeLabel}\n\n` +
-    `📅 ${tournament.date} | ⏰ ${tournament.startTime}\n` +
-    `🎮 ${escapeHtml(tournament.mode)}\n` +
-    (tournament.prize ? `💲 PRIZ: <b>${escapeHtml(tournament.prize)}</b>\n` : '') +
-    (tournament.mapTag ? `♾️ MAP: <b>${escapeHtml(tournament.mapTag)}</b>\n` : '') +
-    (tournament.etapa ? `⭐️ Etap: <b>${escapeHtml(tournament.etapa)}</b>\n` : '') +
-    `👥 ${tournament.registeredTeams.length}/${tournament.maxTeams}\n\n` +
-    `👇 Ro'yxatdan o'tish uchun:`;
+    `━━━━━━━━━━━━━━━━━━━━\n\n` +
+    `📅 <b>Sana:</b> ${dateStr}${stagesInfo}\n` +
+    `⏰ <b>Vaqt:</b> ${tournament.startTime}\n` +
+    `🎮 <b>Rejim:</b> ${escapeHtml(tournament.mode)}\n` +
+    `🗺 <b>Xarita:</b> ${escapeHtml(tournament.map || 'Erangel')}\n` +
+    (tournament.prize
+      ? `💲 <b>PRIZ:</b> ${escapeHtml(tournament.prize)}\n`
+      : '') +
+    (tournament.mapTag
+      ? `♾️ <b>MAP:</b> ${escapeHtml(tournament.mapTag)}\n`
+      : '') +
+    (tournament.etapa
+      ? `⭐️ <b>Etap:</b> ${escapeHtml(tournament.etapa)}\n`
+      : '') +
+    `\n👥 <b>Komandalar:</b> ${tournament.registeredTeams.length}/${tournament.maxTeams}\n` +
+    `\n━━━━━━━━━━━━━━━━━━━━\n\n` +
+    (tournament.description
+      ? `📄 ${escapeHtml(tournament.description)}\n\n`
+      : '') +
+    `👇 <b>Ro'yxatdan o'tish uchun:</b>`;
 
+  // ⚡️ Tugma
   const kb = {
     inline_keyboard: [[{ text: '🎮 Turnirga kirish', url: link }]],
   };
 
+  // ⚡️ Yuborish
   try {
     let sent;
     if (tournament.imageFileId) {
@@ -206,10 +218,14 @@ async function announceToChannel(bot, tournament) {
       sent = await bot.telegram.sendMessage(channelId, text, {
         parse_mode: 'HTML',
         reply_markup: kb,
+        disable_web_page_preview: true,
       });
     }
+
+    console.log(`✅ Kanalga e'lon qilindi: ${tournament.title}`);
     return { ok: true, messageId: sent.message_id };
   } catch (e) {
+    console.error('❌ Kanalga e\'lon qilishda xato:', e.message);
     return {
       ok: false,
       reason: e.response?.description || e.message || 'Xatolik',
@@ -218,7 +234,7 @@ async function announceToChannel(bot, tournament) {
 }
 
 // ============================================================
-// IXTIYORIY REKLAMA
+// IXTIYORIY REKLAMA (MATN)
 // ============================================================
 async function sendCustomText(bot, text, buttonText, buttonUrl) {
   const channelId = await getChannel();
@@ -243,6 +259,9 @@ async function sendCustomText(bot, text, buttonText, buttonUrl) {
   }
 }
 
+// ============================================================
+// IXTIYORIY REKLAMA (RASM)
+// ============================================================
 async function sendCustomPhoto(bot, fileId, caption, buttonText, buttonUrl) {
   const channelId = await getChannel();
   if (!channelId) return { ok: false, reason: 'Kanal ulanmagan' };
@@ -267,6 +286,9 @@ async function sendCustomPhoto(bot, fileId, caption, buttonText, buttonUrl) {
   }
 }
 
+// ============================================================
+// TEST
+// ============================================================
 async function testChannel(bot) {
   const channelId = await getChannel();
   if (!channelId) return { ok: false, reason: 'Kanal ulanmagan' };
@@ -285,6 +307,62 @@ async function testChannel(bot) {
   }
 }
 
+// ============================================================
+// TURNIR NATIJALARINI KANALGA
+// ============================================================
+async function publishTournamentResults(bot, tournament, standings) {
+  const channelId = await getChannel();
+  if (!channelId) return { ok: false, reason: 'Kanal ulanmagan' };
+
+  const lines = [
+    `╔══════════════════════╗`,
+    `   🏆 <b>TURNIR YAKUNLANDI!</b>`,
+    `╚══════════════════════╝`,
+    '',
+    `🎯 <b>${escapeHtml(tournament.title)}</b>`,
+    `📅 ${tournament.date}`,
+    '',
+    '━━━━━━━━━━━━━━━━━━━━',
+    '',
+    `🥇 <b>TOP-3:</b>`,
+    '',
+  ];
+
+  const medals = ['🥇', '🥈', '🥉'];
+  for (let i = 0; i < Math.min(3, standings.length); i++) {
+    const s = standings[i];
+    lines.push(
+      `${medals[i]} <b>${escapeHtml(s.name || 'Team')}</b> [${escapeHtml(s.tag || '')}]`
+    );
+    lines.push(`   💯 ${s.totalPoints} | 💥 ${s.totalKills} | 🏆 ${s.wins}`);
+    lines.push('');
+  }
+
+  lines.push('━━━━━━━━━━━━━━━━━━━━');
+  lines.push('');
+  lines.push('🎉 <b>Barcha ishtirokchilarga rahmat!</b>');
+
+  try {
+    let sent;
+    if (tournament.imageFileId) {
+      sent = await bot.telegram.sendPhoto(channelId, tournament.imageFileId, {
+        caption: lines.join('\n'),
+        parse_mode: 'HTML',
+      });
+    } else {
+      sent = await bot.telegram.sendMessage(channelId, lines.join('\n'), {
+        parse_mode: 'HTML',
+      });
+    }
+    return { ok: true, messageId: sent.message_id };
+  } catch (e) {
+    return { ok: false, reason: e.message };
+  }
+}
+
+// ============================================================
+// EKSPORT
+// ============================================================
 module.exports = {
   setChannel,
   getChannel,
@@ -301,4 +379,5 @@ module.exports = {
   sendCustomText,
   sendCustomPhoto,
   testChannel,
+  publishTournamentResults,
 };

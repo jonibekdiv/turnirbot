@@ -1,6 +1,8 @@
-// Room ma'lumotlarini ro'yxatdan o'tgan o'yinchilarga tarqatish
+// ============================================================
+// ROOM NOTIFY SERVICE — 3 tilda
+// ============================================================
 const teamService = require('./teamService');
-const tournamentService = require('./tournamentService');
+const langService = require('./langService');
 const { escapeHtml } = require('../utils/telegramUtils');
 const { LIMITS } = require('../constants');
 
@@ -9,7 +11,7 @@ function sleep(ms) {
 }
 
 // ============================================================
-// ROOM MA'LUMOTLARINI YUBORISH
+// ROOM MA'LUMOTLARINI YUBORISH (3 tilda)
 // ============================================================
 async function sendRoomInfo(bot, tournament, options = {}) {
   const { isUpdate = false, notifyCaptainsOnly = false } = options;
@@ -18,7 +20,6 @@ async function sendRoomInfo(bot, tournament, options = {}) {
     return { ok: false, reason: 'incomplete', sent: 0, failed: 0 };
   }
 
-  // Barcha a'zolarni yig'amiz
   const memberIds = new Set();
   const captainIds = new Set();
 
@@ -33,43 +34,34 @@ async function sendRoomInfo(bot, tournament, options = {}) {
     }
   }
 
-  const text = buildRoomMessage(tournament, isUpdate);
-
-  // Reply keyboard inline (copy uchun qulay)
-  const keyboard = {
-    reply_markup: {
-      inline_keyboard: [
-        [
-          {
-            text: '📋 Room ID nusxalash',
-            copy_text: { text: String(tournament.roomId) },
-          },
-        ],
-        [
-          {
-            text: '📋 Parol nusxalash',
-            copy_text: { text: String(tournament.roomPassword) },
-          },
-        ],
-        [
-          {
-            text: '📋 Hammasini nusxalash',
-            copy_text: {
-              text: `Room ID: ${tournament.roomId}\nParol: ${tournament.roomPassword}`,
-            },
-          },
-        ],
-      ],
-    },
-  };
-
   let sent = 0;
   let failed = 0;
   const failedIds = [];
 
   for (const uid of memberIds) {
     try {
-      // Rasm bo'lsa rasm bilan, yo'q bo'lsa matn bilan
+      const userLang = await langService.getUserLang(uid);
+      const t = (key, vars) => langService.t(userLang, key, vars);
+
+      const text = buildRoomMessage(tournament, isUpdate, t);
+
+      const keyboard = {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: t('btn_copy_room_id'), copy_text: { text: String(tournament.roomId) } }],
+            [{ text: t('btn_copy_password'), copy_text: { text: String(tournament.roomPassword) } }],
+            [
+              {
+                text: t('btn_copy_all'),
+                copy_text: {
+                  text: `Room ID: ${tournament.roomId}\n${t('password')}: ${tournament.roomPassword}`,
+                },
+              },
+            ],
+          ],
+        },
+      };
+
       if (tournament.imageFileId && !isUpdate) {
         await bot.telegram.sendPhoto(uid, tournament.imageFileId, {
           caption: text,
@@ -101,45 +93,47 @@ async function sendRoomInfo(bot, tournament, options = {}) {
 }
 
 // ============================================================
-// XABAR MATNI
+// XABAR MATNI (3 tilda)
 // ============================================================
-function buildRoomMessage(tournament, isUpdate = false) {
+function buildRoomMessage(tournament, isUpdate, t) {
+  if (typeof t !== 'function') t = (k) => k;
+
   const header = isUpdate
-    ? '🔄 <b>Room ma\'lumotlari YANGILANDI!</b>'
-    : '🔑 <b>Room ma\'lumotlari tayyor!</b>';
+    ? `🔄 <b>${t('host_room_resend')}!</b>`
+    : `🔑 <b>${t('host_stage_room_info')}!</b>`;
 
   const lines = [];
-  lines.push(`╔══════════════════════╗`);
+  lines.push('╔══════════════════════╗');
   lines.push(`   ${header}`);
-  lines.push(`╚══════════════════════╝`);
+  lines.push('╚══════════════════════╝');
   lines.push('');
   lines.push(`🏆 <b>${escapeHtml(tournament.title)}</b>`);
   lines.push('');
-  lines.push(`━━━━━━━━━━━━━━━━━━━━`);
+  lines.push('━━━━━━━━━━━━━━━━━━━━');
   lines.push('');
-  lines.push(`📅 <b>Sana:</b> ${tournament.date}`);
-  lines.push(`⏰ <b>Vaqt:</b> ${tournament.startTime} (${tournament.timezone || 'Asia/Tashkent'})`);
-  if (tournament.mode) lines.push(`🎮 <b>Rejim:</b> ${escapeHtml(tournament.mode)}`);
-  if (tournament.etapa) lines.push(`⭐️ <b>Etap:</b> ${escapeHtml(tournament.etapa)}`);
+  lines.push(`📅 <b>${t('date')}:</b> ${tournament.date}`);
+  lines.push(`⏰ <b>${t('time')}:</b> ${tournament.startTime} (${tournament.timezone || 'Asia/Tashkent'})`);
+  if (tournament.mode) lines.push(`🎮 <b>${t('mode')}:</b> ${escapeHtml(tournament.mode)}`);
+  if (tournament.etapa) lines.push(`⭐️ <b>${t('stage')}:</b> ${escapeHtml(tournament.etapa)}`);
   lines.push('');
-  lines.push(`━━━━━━━━━━━━━━━━━━━━`);
+  lines.push('━━━━━━━━━━━━━━━━━━━━');
   lines.push('');
   lines.push(`🆔 <b>Room ID:</b>`);
   lines.push(`<code>${escapeHtml(String(tournament.roomId))}</code>`);
   lines.push('');
-  lines.push(`🔒 <b>Parol:</b>`);
+  lines.push(`🔒 <b>${t('password')}:</b>`);
   lines.push(`<code>${escapeHtml(String(tournament.roomPassword))}</code>`);
   lines.push('');
-  lines.push(`━━━━━━━━━━━━━━━━━━━━`);
+  lines.push('━━━━━━━━━━━━━━━━━━━━');
   lines.push('');
-  lines.push(`⚡️ <i>Iltimos, PUBG Mobile'ni ochib, xonaga kiring!</i>`);
-  lines.push(`🏅 <i>Omad tilaymiz!</i>`);
+  lines.push(`⚡️ <i>${t('sub_wait_room')}</i>`);
+  lines.push(`🏅 <i>${t('success')}!</i>`);
 
   return lines.join('\n');
 }
 
 // ============================================================
-// FAQAT CAPTAIN'LARGA (agar kerak bo'lsa)
+// FAQAT CAPTAIN'LARGA
 // ============================================================
 async function sendRoomInfoToCaptains(bot, tournament) {
   return sendRoomInfo(bot, tournament, { notifyCaptainsOnly: true });

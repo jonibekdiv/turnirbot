@@ -1,5 +1,5 @@
 // ============================================================
-// START HANDLER — Ko'p tilli (/start + buyruqlar)
+// START HANDLER — Ko'p tilli (3 tilda)
 // ============================================================
 const { Markup } = require('telegraf');
 const { mainKeyboard } = require('../keyboards/mainKeyboard');
@@ -15,7 +15,7 @@ const { CALLBACK } = require('../constants');
 
 module.exports = (bot) => {
   // ============================================================
-  // /start buyrug'i
+  // /start
   // ============================================================
   bot.start(async (ctx) => {
     const payload = ctx.startPayload || '';
@@ -54,41 +54,37 @@ module.exports = (bot) => {
   });
 
   // ============================================================
-  // /tournaments — Turnirlar
+  // /tournaments
   // ============================================================
   bot.command('tournaments', async (ctx) => {
-    const lang = ctx.state.lang || 'uz';
-    const t = (key) => langService.t(lang, key);
-
+    const t = ctx.t;
     await ctx.reply(t('tournaments_title'), {
       parse_mode: 'HTML',
-      ...tournamentsMenu(),
+      ...tournamentsMenu(ctx),
     });
   });
 
   // ============================================================
-  // /team — Komandam
+  // /team
   // ============================================================
   bot.command('team', async (ctx) => {
-    const lang = ctx.state.lang || 'uz';
-    const t = (key) => langService.t(lang, key);
-
-    await ctx.reply(t('team_title'), {
+    const t = ctx.t;
+    await ctx.reply(`👥 <b>${t('team_title')}</b>\n\n${t('team_subtitle')}`, {
       parse_mode: 'HTML',
-      ...teamMenu,
+      ...teamMenu(ctx),
     });
   });
 
   // ============================================================
-  // /profile — Profil
+  // /profile
   // ============================================================
   bot.command('profile', async (ctx) => {
+    const t = ctx.t;
+
     const u = await userService.getUser(ctx.from.id);
-    if (!u) return ctx.reply('❗ /start bosing');
+    if (!u) return ctx.reply(`❗ /start`);
 
     const team = u.teamId ? await teamService.getTeam(u.teamId) : null;
-    const lang = ctx.state.lang || 'uz';
-    const t = (key, vars) => langService.t(lang, key, vars);
 
     const roleKey = 'role_' + (ctx.state.role || 'player');
     const roleName = t(roleKey);
@@ -114,80 +110,77 @@ module.exports = (bot) => {
       [Markup.button.callback(t('menu_main'), CALLBACK.MENU_MAIN)],
     ]);
 
-    await ctx.reply(text, {
-      parse_mode: 'HTML',
-      ...kb,
-    });
+    await ctx.reply(text, { parse_mode: 'HTML', ...kb });
   });
 
   // ============================================================
-  // /language — Til tanlash
+  // /language
   // ============================================================
   bot.command('language', async (ctx) => {
+    const t = ctx.t;
+
     const kb = Markup.inlineKeyboard([
-      [Markup.button.callback("🇺🇿 O'zbek", 'lang:set:uz')],
-      [Markup.button.callback('🇬🇧 English', 'lang:set:en')],
-      [Markup.button.callback('🇷🇺 Русский', 'lang:set:ru')],
-      [Markup.button.callback('⬅️ ' + ctx.t('menu_main'), CALLBACK.MENU_MAIN)],
+      [Markup.button.callback(t('language_uz'), 'lang:set:uz')],
+      [Markup.button.callback(t('language_en'), 'lang:set:en')],
+      [Markup.button.callback(t('language_ru'), 'lang:set:ru')],
+      [Markup.button.callback('⬅️ ' + t('menu_main'), CALLBACK.MENU_MAIN)],
     ]);
 
     const current = ctx.state.lang || 'uz';
     const currentName = langService.getLangName(current);
 
     await ctx.reply(
-      `🌐 <b>Tilni tanlang / Select language / Выберите язык</b>\n\n` +
-        `${ctx.t('language_current', { lang: currentName })}`,
+      `${t('language_title')}\n\n` +
+        `${t('language_current', { lang: currentName })}`,
       { parse_mode: 'HTML', ...kb }
     );
   });
 
   // ============================================================
-  // /leaderboard — Reyting jadvali
+  // /leaderboard
   // ============================================================
   bot.command('leaderboard', async (ctx) => {
+    const t = ctx.t;
+
     let userExtService;
     try {
       userExtService = require('../services/userExtService');
     } catch (e) {
-      return ctx.reply('❌ Leaderboard xizmati yuklanmagan');
+      return ctx.reply(`❌ ${t('error_generic')}`);
     }
 
     const list = await userExtService.getLeaderboard(10);
     const text = userExtService.formatLeaderboard(list);
 
     const kb = Markup.inlineKeyboard([
-      [Markup.button.callback('⬅️ ' + ctx.t('menu_main'), CALLBACK.MENU_MAIN)],
+      [Markup.button.callback('⬅️ ' + t('menu_main'), CALLBACK.MENU_MAIN)],
     ]);
 
-    await ctx.reply(text, {
-      parse_mode: 'HTML',
-      ...kb,
-    });
+    await ctx.reply(text, { parse_mode: 'HTML', ...kb });
   });
 
   // ============================================================
-  // /search — Qidiruv
+  // /search
   // ============================================================
   bot.command('search', async (ctx) => {
+    const t = ctx.t;
+
     const kb = Markup.inlineKeyboard([
-      [Markup.button.callback('🏆 ' + ctx.t('menu_tournaments'), CALLBACK.SEARCH_TOUR)],
-      [Markup.button.callback('👥 ' + ctx.t('menu_team'), CALLBACK.SEARCH_TEAM)],
-      [Markup.button.callback('⬅️ ' + ctx.t('menu_main'), CALLBACK.MENU_MAIN)],
+      [Markup.button.callback('🏆 ' + t('menu_tournaments'), CALLBACK.SEARCH_TOUR)],
+      [Markup.button.callback('👥 ' + t('menu_team'), CALLBACK.SEARCH_TEAM)],
+      [Markup.button.callback('⬅️ ' + t('menu_main'), CALLBACK.MENU_MAIN)],
     ]);
 
-    await ctx.reply(`🔍 <b>${ctx.t('menu_search')}</b>`, {
-      parse_mode: 'HTML',
-      ...kb,
-    });
+    await ctx.reply(`🔍 <b>${t('menu_search')}</b>`, { parse_mode: 'HTML', ...kb });
   });
 
   // ============================================================
-  // /help — Yordam
+  // /help
   // ============================================================
   bot.command('help', async (ctx) => {
+    const t = ctx.t;
     const role = ctx.state.role || 'player';
     const lang = ctx.state.lang || 'uz';
-    const t = (key) => langService.t(lang, key);
 
     const text =
       `╔══════════════════════╗\n` +
@@ -199,35 +192,34 @@ module.exports = (bot) => {
       `${t('menu_search')}\n\n` +
       `━━━━━━━━━━━━━━━━━━━━\n\n` +
       `<b>${t('menu_language')}:</b>\n` +
-      `🇺🇿 O'zbek · 🇬🇧 English · 🇷🇺 Русский\n\n` +
+      `${t('language_uz')} · ${t('language_en')} · ${t('language_ru')}\n\n` +
       `━━━━━━━━━━━━━━━━━━━━\n\n` +
       `💬 /start · /cancel · /help`;
 
-    await ctx.reply(text, {
-      parse_mode: 'HTML',
-      ...mainKeyboard(role, lang),
-    });
+    await ctx.reply(text, { parse_mode: 'HTML', ...mainKeyboard(role, lang) });
   });
 
   // ============================================================
-  // /cancel — Jarayonni bekor qilish
+  // /cancel
   // ============================================================
   bot.command('cancel', async (ctx) => {
+    const t = ctx.t;
     ctx.session = { state: null, data: {} };
-    await ctx.reply(`❌ <b>${ctx.t('cancel')}</b>`, {
+    await ctx.reply(`❌ <b>${t('cancel')}</b>`, {
       parse_mode: 'HTML',
       ...mainKeyboard(ctx.state.role, ctx.state.lang),
     });
   });
 
   // ============================================================
-  // ASOSIY MENYU (callback)
+  // ASOSIY MENYU
   // ============================================================
   bot.action(CALLBACK.MENU_MAIN, async (ctx) => {
     await safeAnswer(ctx);
+    const t = ctx.t;
     const role = ctx.state.role || (await resolveRole(ctx.from.id));
     const lang = ctx.state.lang || langService.DEFAULT_LANG;
-    await safeEdit(ctx, `🏠 ${ctx.t('menu_main')}`, mainKeyboard(role, lang));
+    await safeEdit(ctx, `🏠 ${t('menu_main')}`, mainKeyboard(role, lang));
   });
 
   // ============================================================
@@ -235,12 +227,13 @@ module.exports = (bot) => {
   // ============================================================
   bot.action(CALLBACK.MENU_PROFILE, async (ctx) => {
     await safeAnswer(ctx);
+    const t = ctx.t;
+
     const u = ctx.state.user || (await userService.getUser(ctx.from.id));
-    if (!u) return ctx.reply('❗ /start bosing');
+    if (!u) return ctx.reply(`❗ /start`);
 
     const team = u.teamId ? await teamService.getTeam(u.teamId) : null;
     const lang = ctx.state.lang || 'uz';
-    const t = (key, vars) => langService.t(lang, key, vars);
 
     const roleKey = 'role_' + (ctx.state.role || 'player');
     const roleName = t(roleKey);
@@ -267,15 +260,9 @@ module.exports = (bot) => {
     ]);
 
     try {
-      await ctx.editMessageText(text, {
-        parse_mode: 'HTML',
-        reply_markup: kb.reply_markup,
-      });
+      await ctx.editMessageText(text, { parse_mode: 'HTML', reply_markup: kb.reply_markup });
     } catch (e) {
-      await ctx.reply(text, {
-        parse_mode: 'HTML',
-        reply_markup: kb.reply_markup,
-      });
+      await ctx.reply(text, { parse_mode: 'HTML', reply_markup: kb.reply_markup });
     }
   });
 
@@ -284,8 +271,8 @@ module.exports = (bot) => {
   // ============================================================
   bot.action(CALLBACK.MENU_HELP, async (ctx) => {
     await safeAnswer(ctx);
+    const t = ctx.t;
     const lang = ctx.state.lang || 'uz';
-    const t = (key) => langService.t(lang, key);
 
     const text =
       `╔══════════════════════╗\n` +
@@ -297,7 +284,7 @@ module.exports = (bot) => {
       `${t('menu_search')}\n\n` +
       `━━━━━━━━━━━━━━━━━━━━\n\n` +
       `<b>${t('menu_language')}:</b>\n` +
-      `🇺🇿 O'zbek · 🇬🇧 English · 🇷🇺 Русский\n\n` +
+      `${t('language_uz')} · ${t('language_en')} · ${t('language_ru')}\n\n` +
       `━━━━━━━━━━━━━━━━━━━━\n\n` +
       `💬 /start · /cancel · /help`;
 
@@ -305,12 +292,13 @@ module.exports = (bot) => {
   });
 
   // ============================================================
-  // "Bekor qilish" tugmasi
+  // BEKOR QILISH
   // ============================================================
   bot.action(CALLBACK.CANCEL, async (ctx) => {
     await safeAnswer(ctx);
+    const t = ctx.t;
     ctx.session = { state: null, data: {} };
-    await safeEdit(ctx, `❌ <b>${ctx.t('cancel')}</b>`);
+    await safeEdit(ctx, `❌ <b>${t('cancel')}</b>`);
   });
 };
 
@@ -318,67 +306,47 @@ module.exports = (bot) => {
 // DEEP-LINK: join_CODE
 // ============================================================
 async function handleJoinByCode(ctx, code, user, lang) {
+  const t = (key, vars) => require('../services/langService').t(lang, key, vars);
+
   if (user.teamId) {
     const existingTeam = await teamService.getTeam(user.teamId);
-    const messages = {
-      uz:
-        `❗ <b>Siz allaqachon komandadasiz</b>\n\n` +
-        `👥 Komanda: <b>${
+
+    return ctx.reply(
+      `❗ <b>${t('team_already_member')}</b>\n\n` +
+        `👥 ${t('admin_teams')}: <b>${
           existingTeam
             ? escapeHtml(existingTeam.name) + ' [' + escapeHtml(existingTeam.tag) + ']'
-            : "noma'lum"
+            : t('error_not_found')
         }</b>`,
-      en:
-        `❗ <b>You are already in a team</b>\n\n` +
-        `👥 Team: <b>${
-          existingTeam
-            ? escapeHtml(existingTeam.name) + ' [' + escapeHtml(existingTeam.tag) + ']'
-            : 'unknown'
-        }</b>`,
-      ru:
-        `❗ <b>Вы уже в команде</b>\n\n` +
-        `👥 Команда: <b>${
-          existingTeam
-            ? escapeHtml(existingTeam.name) + ' [' + escapeHtml(existingTeam.tag) + ']'
-            : 'неизвестно'
-        }</b>`,
-    };
-    return ctx.reply(messages[lang] || messages.uz, { parse_mode: 'HTML' });
+      { parse_mode: 'HTML' }
+    );
   }
 
   const team = await teamService.getTeamByCode(code);
   if (!team) {
-    const messages = {
-      uz: `❌ <b>Kod noto'g'ri yoki eskirgan</b>\n\nKiritilgan kod: <code>${escapeHtml(code)}</code>`,
-      en: `❌ <b>Invalid or expired code</b>\n\nEntered code: <code>${escapeHtml(code)}</code>`,
-      ru: `❌ <b>Код неверный или устарел</b>\n\nВведённый код: <code>${escapeHtml(code)}</code>`,
-    };
-    return ctx.reply(messages[lang] || messages.uz, { parse_mode: 'HTML' });
+    return ctx.reply(
+      `❌ <b>${t('team_code_invalid')}</b>\n\n${t('inv_code_label')}: <code>${escapeHtml(code)}</code>`,
+      { parse_mode: 'HTML' }
+    );
   }
 
   if (!(await teamService.canAddMember(team.id))) {
-    const messages = {
-      uz: `⚠️ <b>Komanda to'lgan</b>`,
-      en: `⚠️ <b>Team is full</b>`,
-      ru: `⚠️ <b>Команда заполнена</b>`,
-    };
-    return ctx.reply(messages[lang] || messages.uz, { parse_mode: 'HTML' });
+    return ctx.reply(`⚠️ <b>${t('team_full')}</b>`, { parse_mode: 'HTML' });
   }
 
   await teamService.addMember(team.id, user.id);
   await userService.setUserTeam(user.id, team.id);
 
-  const successMessages = {
-    uz: `✅ Siz <b>${escapeHtml(team.name)} [${escapeHtml(team.tag)}]</b> komandasiga qo'shildingiz!\n👥 A'zolar: <b>${team.members.length + 1}/8</b>`,
-    en: `✅ You joined <b>${escapeHtml(team.name)} [${escapeHtml(team.tag)}]</b>!\n👥 Members: <b>${team.members.length + 1}/8</b>`,
-    ru: `✅ Вы присоединились к <b>${escapeHtml(team.name)} [${escapeHtml(team.tag)}]</b>!\n👥 Участников: <b>${team.members.length + 1}/8</b>`,
-  };
-  await ctx.reply(successMessages[lang] || successMessages.uz, { parse_mode: 'HTML' });
+  await ctx.reply(
+    `✅ ${t('team_joined')} <b>${escapeHtml(team.name)} [${escapeHtml(team.tag)}]</b>!\n` +
+      `👥 ${t('team_members_count')}: <b>${team.members.length + 1}/8</b>`,
+    { parse_mode: 'HTML' }
+  );
 
   try {
     await ctx.telegram.sendMessage(
       team.captainId,
-      `ℹ️ <b>${escapeHtml(displayName(user))}</b>`,
+      `ℹ️ <b>${escapeHtml(displayName(user))}</b> ${t('team_new_member')}`,
       { parse_mode: 'HTML' }
     );
   } catch (e) {}
@@ -388,14 +356,14 @@ async function handleJoinByCode(ctx, code, user, lang) {
 // DEEP-LINK: tour_TOURID
 // ============================================================
 async function handleTournamentDeepLink(ctx, tournamentId, role, lang) {
+  const t = (key, vars) => require('../services/langService').t(lang, key, vars);
+
   let id = tournamentId;
   if (!id.startsWith('tour_')) id = 'tour_' + id;
 
-  const t = await tournamentService.getTournament(id);
-  const tr = (key) => langService.t(lang, key);
-
-  if (!t) {
-    return ctx.reply(tr('tour_not_found'), {
+  const tour = await tournamentService.getTournament(id);
+  if (!tour) {
+    return ctx.reply(t('tour_not_found'), {
       parse_mode: 'HTML',
       ...mainKeyboard(role, lang),
     });
@@ -403,35 +371,35 @@ async function handleTournamentDeepLink(ctx, tournamentId, role, lang) {
 
   const user = await userService.getUser(ctx.from.id);
   const team = user?.teamId ? await teamService.getTeam(user.teamId) : null;
-  const isRegistered = team && t.registeredTeams.includes(team.id);
+  const isRegistered = team && tour.registeredTeams.includes(team.id);
 
   const text =
-    `🏆 <b>${escapeHtml(t.title)}</b>\n\n` +
-    `📅 ${t.date} | ⏰ ${t.startTime}\n` +
-    `🎮 ${escapeHtml(t.mode)}\n` +
-    `👥 ${t.registeredTeams.length}/${t.maxTeams}\n` +
-    (t.prize ? `💲 ${escapeHtml(t.prize)}\n` : '');
+    `🏆 <b>${escapeHtml(tour.title)}</b>\n\n` +
+    `📅 ${tour.date} | ⏰ ${tour.startTime}\n` +
+    `🎮 ${escapeHtml(tour.mode)}\n` +
+    `👥 ${tour.registeredTeams.length}/${tour.maxTeams}\n` +
+    (tour.prize ? `💲 ${escapeHtml(tour.prize)}\n` : '');
 
   const buttons = [
-    [{ text: tr('tour_standings'), callback_data: 'tour:st:' + t.id }],
-    [{ text: tr('tour_teamlist'), callback_data: 'tour:tl:' + t.id }],
-    [{ text: tr('tour_register'), callback_data: 'tour:reg:' + t.id }],
+    [{ text: t('tour_standings'), callback_data: 'tour:st:' + tour.id }],
+    [{ text: t('tour_teamlist'), callback_data: 'tour:tl:' + tour.id }],
+    [{ text: t('tour_register'), callback_data: 'tour:reg:' + tour.id }],
   ];
 
   if (isRegistered) {
-    if (t.roomId && t.roomPassword) {
-      buttons.push([{ text: tr('tour_room_info'), callback_data: 'tour:room_info:' + t.id }]);
+    if (tour.roomId && tour.roomPassword) {
+      buttons.push([{ text: t('tour_room_info'), callback_data: 'tour:room_info:' + tour.id }]);
     } else {
-      buttons.push([{ text: tr('tour_room_waiting'), callback_data: 'tour:room_info:' + t.id }]);
+      buttons.push([{ text: t('tour_room_waiting'), callback_data: 'tour:room_info:' + tour.id }]);
     }
   }
 
-  buttons.push([{ text: tr('tour_contact_host'), callback_data: 'tour:contact_host:' + t.id }]);
-  buttons.push([{ text: tr('menu_main'), callback_data: 'menu:main' }]);
+  buttons.push([{ text: t('tour_contact_host'), callback_data: 'tour:contact_host:' + tour.id }]);
+  buttons.push([{ text: t('menu_main'), callback_data: 'menu:main' }]);
 
-  if (t.imageFileId) {
+  if (tour.imageFileId) {
     try {
-      return await ctx.replyWithPhoto(t.imageFileId, {
+      return await ctx.replyWithPhoto(tour.imageFileId, {
         caption: text,
         parse_mode: 'HTML',
         reply_markup: { inline_keyboard: buttons },

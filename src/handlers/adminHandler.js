@@ -1,5 +1,5 @@
 // ============================================================
-// ADMIN HANDLER — To'liq (ko'p tilli + turnirni o'chirish)
+// ADMIN HANDLER — 3 tilda
 // ============================================================
 const { Markup } = require('telegraf');
 const userService = require('../services/userService');
@@ -11,37 +11,25 @@ const settingsService = require('../services/settingsService');
 const adminExtService = require('../services/adminExtService');
 const { adminPanel, roleManageKeyboard } = require('../keyboards/adminKeyboard');
 const { CALLBACK, ROLES, STATES, LIMITS } = require('../constants');
-const {
-  escapeHtml,
-  displayName,
-  safeEdit,
-  safeAnswer,
-} = require('../utils/telegramUtils');
+const { escapeHtml, displayName, safeEdit, safeAnswer } = require('../utils/telegramUtils');
 const { cleanText, isPositiveInt } = require('../utils/validation');
-const {
-  hasAnyRole,
-  canManageUsers,
-  canManageAdmins,
-  canEditSettings,
-} = require('../middlewares/roleGuard');
+const { hasAnyRole, canManageUsers, canManageAdmins, canEditSettings } = require('../middlewares/roleGuard');
 const config = require('../config');
 
 module.exports = (bot) => {
   // ============================================================
-  // 1. ADMIN PANEL — BOSH MENYU
+  // 1. ADMIN PANEL
   // ============================================================
   bot.action(CALLBACK.MENU_ADMIN, async (ctx) => {
     await safeAnswer(ctx);
+    const t = ctx.t;
 
     if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) {
-      return ctx.reply(ctx.t('error_access'));
+      return ctx.reply(t('error_access'));
     }
 
-    const t = ctx.t;
     const isOrganizer = ctx.state.role === ROLES.ORGANIZER;
-    const title = isOrganizer
-      ? `🎯 <b>${t('org_panel_title')}</b>`
-      : `🛠 <b>${t('admin_title')}</b>`;
+    const title = isOrganizer ? t('org_panel_title') : t('admin_title');
 
     const text =
       `╔══════════════════════╗\n` +
@@ -51,30 +39,22 @@ module.exports = (bot) => {
       `👇 ${t('admin_panel_subtitle')}`;
 
     try {
-      await ctx.editMessageText(text, {
-        parse_mode: 'HTML',
-        ...adminPanel(ctx),
-      });
+      await ctx.editMessageText(text, { parse_mode: 'HTML', ...adminPanel(ctx) });
     } catch (e) {
-      await ctx.reply(text, {
-        parse_mode: 'HTML',
-        ...adminPanel(ctx),
-      });
+      await ctx.reply(text, { parse_mode: 'HTML', ...adminPanel(ctx) });
     }
   });
 
   bot.action(CALLBACK.ADMIN_PANEL, async (ctx) => {
     await safeAnswer(ctx);
+    const t = ctx.t;
 
     if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) {
-      return ctx.reply(ctx.t('error_access'));
+      return ctx.reply(t('error_access'));
     }
 
-    const t = ctx.t;
     const isOrganizer = ctx.state.role === ROLES.ORGANIZER;
-    const title = isOrganizer
-      ? `🎯 <b>${t('org_panel_title')}</b>`
-      : `🛠 <b>${t('admin_title')}</b>`;
+    const title = isOrganizer ? t('org_panel_title') : t('admin_title');
 
     const text =
       `╔══════════════════════╗\n` +
@@ -84,15 +64,9 @@ module.exports = (bot) => {
       `👇 ${t('admin_panel_subtitle')}`;
 
     try {
-      await ctx.editMessageText(text, {
-        parse_mode: 'HTML',
-        ...adminPanel(ctx),
-      });
+      await ctx.editMessageText(text, { parse_mode: 'HTML', ...adminPanel(ctx) });
     } catch (e) {
-      await ctx.reply(text, {
-        parse_mode: 'HTML',
-        ...adminPanel(ctx),
-      });
+      await ctx.reply(text, { parse_mode: 'HTML', ...adminPanel(ctx) });
     }
   });
 
@@ -102,7 +76,6 @@ module.exports = (bot) => {
   bot.action(CALLBACK.ADMIN_STATS, async (ctx) => {
     await safeAnswer(ctx);
     if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) return;
-
     const t = ctx.t;
 
     const users = await userService.getAllUsers();
@@ -114,8 +87,7 @@ module.exports = (bot) => {
 
     const active = users.filter((u) => u.status === 'active').length;
     const today = users.filter(
-      (u) =>
-        new Date(u.createdAt).toDateString() === new Date().toDateString()
+      (u) => new Date(u.createdAt).toDateString() === new Date().toDateString()
     ).length;
 
     const text =
@@ -126,9 +98,7 @@ module.exports = (bot) => {
       `📅 ${t('daily_new_users')}: <b>${today}</b>\n\n` +
       `👥 ${t('admin_teams')}: <b>${teams.length}</b>\n` +
       `🏆 ${t('admin_tournaments')}: <b>${tours.length}</b>\n` +
-      `🔥 ${t('admin_active_tours')}: <b>${
-        tours.filter((x) => x.status === 'open').length
-      }</b>\n\n` +
+      `🔥 ${t('admin_active_tours')}: <b>${tours.filter((x) => x.status === 'open').length}</b>\n\n` +
       `🎙 ${t('admin_hosts')}: <b>${hosts.length}</b>\n` +
       `🎯 ${t('admin_orgs')}: <b>${orgs.length}</b>\n` +
       `🛡 ${t('admin_admins')}: <b>${admins.length}</b>`;
@@ -141,25 +111,17 @@ module.exports = (bot) => {
   // ============================================================
   bot.action(CALLBACK.ADMIN_USERS, async (ctx) => {
     await safeAnswer(ctx);
-    if (!canManageUsers(ctx.state.role)) {
-      return ctx.reply(ctx.t('error_only_admin'));
-    }
-
     const t = ctx.t;
+
+    if (!canManageUsers(ctx.state.role)) return ctx.reply(t('error_only_admin'));
+
     const users = await userService.getAllUsers();
     const sliced = users.slice(0, 30);
 
     const text =
       `👤 <b>${t('admin_users')} (${users.length})</b>\n\n` +
-      sliced
-        .map(
-          (u, i) =>
-            `${i + 1}. ${escapeHtml(displayName(u))} — <code>${u.id}</code>`
-        )
-        .join('\n') +
-      (users.length > 30
-        ? `\n\n<i>... +${users.length - 30}</i>`
-        : '');
+      sliced.map((u, i) => `${i + 1}. ${escapeHtml(displayName(u))} — <code>${u.id}</code>`).join('\n') +
+      (users.length > 30 ? `\n\n<i>... +${users.length - 30}</i>` : '');
 
     await safeEdit(ctx, text, adminPanel(ctx));
   });
@@ -170,8 +132,8 @@ module.exports = (bot) => {
   bot.action(CALLBACK.ADMIN_TEAMS, async (ctx) => {
     await safeAnswer(ctx);
     if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) return;
-
     const t = ctx.t;
+
     const teams = await teamService.getAllTeams();
 
     const text =
@@ -182,9 +144,7 @@ module.exports = (bot) => {
             .slice(0, 30)
             .map(
               (tm, i) =>
-                `${i + 1}. <b>${escapeHtml(tm.name)}</b> [${escapeHtml(
-                  tm.tag
-                )}] — ${tm.members.length}`
+                `${i + 1}. <b>${escapeHtml(tm.name)}</b> [${escapeHtml(tm.tag)}] — ${tm.members.length}`
             )
             .join('\n')) +
       (teams.length > 30 ? `\n\n<i>... +${teams.length - 30}</i>` : '');
@@ -193,33 +153,24 @@ module.exports = (bot) => {
   });
 
   // ============================================================
-  // 5. TURNIRLAR — RO'YXAT + O'CHIRISH
+  // 5. TURNIRLAR RO'YXATI
   // ============================================================
   bot.action(CALLBACK.ADMIN_TOURNAMENTS, async (ctx) => {
     await safeAnswer(ctx);
     if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) return;
-
     const t = ctx.t;
-    const isOrganizer = ctx.state.role === ROLES.ORGANIZER;
-    const isAdmin =
-      ctx.state.role === ROLES.SUPER_ADMIN || ctx.state.role === ROLES.ADMIN;
 
-    // Organizer — faqat o'z turnirlari
+    const isOrganizer = ctx.state.role === ROLES.ORGANIZER;
+    const isAdmin = ctx.state.role === ROLES.SUPER_ADMIN || ctx.state.role === ROLES.ADMIN;
+
     const tours = isOrganizer
       ? await tournamentService.getOrganizerTournaments(ctx.from.id)
       : await tournamentService.getAllTournaments();
 
     if (!tours.length) {
       const rows = [
-        [
-          Markup.button.callback(
-            '➕ ' + t('tour_create_again'),
-            CALLBACK.TOUR_CREATE
-          ),
-        ],
-        [
-          Markup.button.callback(t('admin_panel'), CALLBACK.ADMIN_PANEL),
-        ],
+        [Markup.button.callback(t('tour_create_again'), CALLBACK.TOUR_CREATE)],
+        [Markup.button.callback(t('admin_panel'), CALLBACK.ADMIN_PANEL)],
       ];
       return safeEdit(
         ctx,
@@ -228,13 +179,11 @@ module.exports = (bot) => {
       );
     }
 
-    // Saralash — yangi birinchi
     tours.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     const rows = [];
     tours.slice(0, 10).forEach((tr) => {
-      const titleShort =
-        tr.title.length > 20 ? tr.title.slice(0, 17) + '...' : tr.title;
+      const titleShort = tr.title.length > 20 ? tr.title.slice(0, 17) + '...' : tr.title;
       const status =
         tr.registeredTeams.length >= tr.maxTeams
           ? '🔴'
@@ -244,38 +193,20 @@ module.exports = (bot) => {
           ? '✅'
           : '🟢';
 
-      const row = [
-        Markup.button.callback(
-          `📂 ${titleShort} ${status}`,
-          CALLBACK.TOUR_OPEN + tr.id
-        ),
-      ];
+      const row = [Markup.button.callback(`📂 ${titleShort} ${status}`, CALLBACK.TOUR_OPEN + tr.id)];
 
-      // Faqat Admin/Super Admin o'chirishi mumkin
       if (isAdmin) {
-        row.push(
-          Markup.button.callback('🗑', CALLBACK.TOUR_DELETE + tr.id)
-        );
+        row.push(Markup.button.callback('🗑', CALLBACK.TOUR_DELETE + tr.id));
       }
 
       rows.push(row);
     });
 
     if (tours.length > 10) {
-      rows.push([
-        Markup.button.callback(
-          `📋 +${tours.length - 10}`,
-          CALLBACK.ADMIN_TOURNAMENTS
-        ),
-      ]);
+      rows.push([Markup.button.callback(`📋 +${tours.length - 10}`, CALLBACK.ADMIN_TOURNAMENTS)]);
     }
 
-    rows.push([
-      Markup.button.callback(
-        '➕ ' + t('tour_create_again'),
-        CALLBACK.TOUR_CREATE
-      ),
-    ]);
+    rows.push([Markup.button.callback(t('tour_create_again'), CALLBACK.TOUR_CREATE)]);
     rows.push([Markup.button.callback(t('admin_panel'), CALLBACK.ADMIN_PANEL)]);
 
     const header = isOrganizer
@@ -293,40 +224,26 @@ module.exports = (bot) => {
   });
 
   // ============================================================
-  // 6. TURNIRNI O'CHIRISH — TASDIQLASH
+  // 6. TURNIR O'CHIRISH - TASDIQLASH
   // ============================================================
   bot.action(/^tour:del:(.+)$/, async (ctx) => {
     await safeAnswer(ctx);
-    if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN])) {
-      return ctx.reply(ctx.t('error_access'));
-    }
+    const t = ctx.t;
+
+    if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN])) return ctx.reply(t('error_access'));
 
     const tId = ctx.match[1];
     const tour = await tournamentService.getTournament(tId);
-    if (!tour) return ctx.reply(ctx.t('tour_not_found'));
+    if (!tour) return ctx.reply(t('tour_not_found'));
 
-    const t = ctx.t;
-
-    const hostInfo = tour.hostId
-      ? `🎙 ${t('host_label')}: <code>${tour.hostId}</code>\n`
-      : '';
+    const hostInfo = tour.hostId ? `🎙 ${t('host_label')}: <code>${tour.hostId}</code>\n` : '';
     const teamsInfo = tour.registeredTeams.length
       ? `👥 ${t('admin_teams')}: <b>${tour.registeredTeams.length}</b>\n`
       : '';
 
     const kb = Markup.inlineKeyboard([
-      [
-        Markup.button.callback(
-          '🗑 ' + t('btn_confirm'),
-          'tour:delc:' + tId
-        ),
-      ],
-      [
-        Markup.button.callback(
-          t('btn_cancel'),
-          CALLBACK.ADMIN_TOURNAMENTS
-        ),
-      ],
+      [Markup.button.callback('🗑 ' + t('btn_confirm'), 'tour:delc:' + tId)],
+      [Markup.button.callback(t('btn_cancel'), CALLBACK.ADMIN_TOURNAMENTS)],
     ]);
 
     await safeEdit(
@@ -347,31 +264,23 @@ module.exports = (bot) => {
     );
   });
 
-  // ============================================================
-  // 7. TURNIRNI O'CHIRISH — BAJARISH
-  // ============================================================
   bot.action(/^tour:delc:(.+)$/, async (ctx) => {
     await safeAnswer(ctx);
-    if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN])) {
-      return ctx.reply(ctx.t('error_access'));
-    }
+    const t = ctx.t;
+
+    if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN])) return ctx.reply(t('error_access'));
 
     const tId = ctx.match[1];
     const tour = await tournamentService.getTournament(tId);
-    if (!tour) {
-      return ctx.reply(ctx.t('tour_not_found'));
-    }
+    if (!tour) return ctx.reply(t('tour_not_found'));
 
-    const t = ctx.t;
     const title = tour.title;
     const hostId = tour.hostId;
     const teamCount = tour.registeredTeams.length;
 
     try {
-      // Turnirni o'chirish
       await tournamentService.deleteTournament(tId);
 
-      // Hostga xabar
       if (hostId) {
         try {
           await ctx.telegram.sendMessage(
@@ -384,21 +293,12 @@ module.exports = (bot) => {
         } catch (e) {}
       }
 
-      // Admin amali log
       try {
-        await adminExtService.logAction(ctx.from.id, 'DELETE_TOURNAMENT', {
-          target: tId,
-          title,
-        });
+        await adminExtService.logAction(ctx.from.id, 'DELETE_TOURNAMENT', { target: tId, title });
       } catch (e) {}
 
       const kb = Markup.inlineKeyboard([
-        [
-          Markup.button.callback(
-            t('admin_tournaments'),
-            CALLBACK.ADMIN_TOURNAMENTS
-          ),
-        ],
+        [Markup.button.callback(t('admin_tournaments'), CALLBACK.ADMIN_TOURNAMENTS)],
         [Markup.button.callback(t('admin_panel'), CALLBACK.ADMIN_PANEL)],
       ]);
 
@@ -408,31 +308,27 @@ module.exports = (bot) => {
           `   ✅ <b>${t('tour_deleted_title')}</b>\n` +
           `╚══════════════════════╝\n\n` +
           `🗑 <b>${escapeHtml(title)}</b>\n\n` +
-          (teamCount
-            ? `👥 ${teamCount} ${t('admin_teams')}\n`
-            : '') +
+          (teamCount ? `👥 ${teamCount} ${t('admin_teams')}\n` : '') +
           (hostId ? `🎙 ${t('host_label')} — ${t('tour_deleted_notify')}\n` : ''),
         { reply_markup: kb.reply_markup }
       );
     } catch (e) {
       console.error('tour:delc xatosi:', e.message);
-      await ctx.reply(
-        `❌ ${t('error_prefix')} ${e.message || t('error_generic')}`
-      );
+      await ctx.reply(`❌ ${t('error_prefix')} ${e.message || t('error_generic')}`);
     }
   });
 
   // ============================================================
-  // 8. HOSTLAR
+  // 7. HOSTLAR
   // ============================================================
   bot.action(CALLBACK.ADMIN_HOSTS, async (ctx) => {
     await safeAnswer(ctx);
     if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) return;
-
     const t = ctx.t;
-    const hosts = await roleService.list('host');
 
+    const hosts = await roleService.list('host');
     const hostsWithNames = [];
+
     for (const h of hosts.slice(0, 20)) {
       const u = await userService.getUser(h.id);
       const name = u ? displayName(u) : `ID: ${h.id}`;
@@ -441,11 +337,8 @@ module.exports = (bot) => {
 
     const text =
       `🎙 <b>${t('admin_hosts')} (${hosts.length})</b>\n\n` +
-      (hosts.length === 0
-        ? `<i>${t('no_data')}</i>`
-        : hostsWithNames.join('\n'));
+      (hosts.length === 0 ? `<i>${t('no_data')}</i>` : hostsWithNames.join('\n'));
 
-    // Faqat Admin hostlarni boshqarishi mumkin
     const kb =
       ctx.state.role === ROLES.ADMIN || ctx.state.role === ROLES.SUPER_ADMIN
         ? roleManageKeyboard(ctx, 'host')
@@ -457,18 +350,17 @@ module.exports = (bot) => {
   });
 
   // ============================================================
-  // 9. ADMINLAR
+  // 8. ADMINLAR
   // ============================================================
   bot.action(CALLBACK.ADMIN_ADMINS, async (ctx) => {
     await safeAnswer(ctx);
-    if (!canManageUsers(ctx.state.role)) {
-      return ctx.reply(ctx.t('error_only_admin'));
-    }
-
     const t = ctx.t;
-    const admins = await roleService.list('admin');
 
+    if (!canManageUsers(ctx.state.role)) return ctx.reply(t('error_only_admin'));
+
+    const admins = await roleService.list('admin');
     const adminsWithNames = [];
+
     for (const a of admins.slice(0, 20)) {
       const u = await userService.getUser(a.id);
       const name = u ? displayName(u) : `ID: ${a.id}`;
@@ -477,26 +369,23 @@ module.exports = (bot) => {
 
     const text =
       `🛡 <b>${t('admin_admins')} (${admins.length})</b>\n\n` +
-      (admins.length === 0
-        ? `<i>${t('admin_only_super')}</i>`
-        : adminsWithNames.join('\n'));
+      (admins.length === 0 ? `<i>${t('admin_only_super')}</i>` : adminsWithNames.join('\n'));
 
     await safeEdit(ctx, text, roleManageKeyboard(ctx, 'admin'));
   });
 
   // ============================================================
-  // 10. ORGANIZERLAR
+  // 9. ORGANIZERLAR
   // ============================================================
   bot.action(CALLBACK.ADMIN_ORGS, async (ctx) => {
     await safeAnswer(ctx);
-    if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN])) {
-      return ctx.reply(ctx.t('error_only_admin'));
-    }
-
     const t = ctx.t;
-    const orgs = await roleService.list('organizer');
 
+    if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN])) return ctx.reply(t('error_only_admin'));
+
+    const orgs = await roleService.list('organizer');
     const orgsWithNames = [];
+
     for (const o of orgs.slice(0, 20)) {
       const u = await userService.getUser(o.id);
       const name = u ? displayName(u) : `ID: ${o.id}`;
@@ -505,22 +394,19 @@ module.exports = (bot) => {
 
     const text =
       `🎯 <b>${t('admin_orgs')} (${orgs.length})</b>\n\n` +
-      (orgs.length === 0
-        ? `<i>${t('no_data')}</i>`
-        : orgsWithNames.join('\n'));
+      (orgs.length === 0 ? `<i>${t('no_data')}</i>` : orgsWithNames.join('\n'));
 
     await safeEdit(ctx, text, roleManageKeyboard(ctx, 'organizer'));
   });
 
   // ============================================================
-  // 11. ROL QO'SHISH
+  // 10. ROL QO'SHISH
   // ============================================================
   bot.action(/^admin:addrole:(admin|organizer|host)$/, async (ctx) => {
     await safeAnswer(ctx);
-    const role = ctx.match[1];
     const t = ctx.t;
+    const role = ctx.match[1];
 
-    // Ruxsat tekshiruvi
     if (role === 'admin') {
       if (!canManageAdmins(ctx.state.role)) {
         const settings = await settingsService.getSettings();
@@ -531,15 +417,11 @@ module.exports = (bot) => {
     }
 
     if (role === 'organizer') {
-      if (!canManageUsers(ctx.state.role)) {
-        return ctx.reply(`⛔ ${t('error_only_admin')}`);
-      }
+      if (!canManageUsers(ctx.state.role)) return ctx.reply(`⛔ ${t('error_only_admin')}`);
     }
 
     if (role === 'host') {
-      if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN])) {
-        return ctx.reply(`⛔ ${t('error_only_admin')}`);
-      }
+      if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN])) return ctx.reply(`⛔ ${t('error_only_admin')}`);
     }
 
     ctx.session = { state: STATES.ADMIN_ADD_USER_ID, data: { role } };
@@ -553,53 +435,40 @@ module.exports = (bot) => {
   });
 
   // ============================================================
-  // 12. ROL O'CHIRISH
+  // 11. ROL O'CHIRISH
   // ============================================================
   bot.action(/^admin:delrole:(admin|organizer|host)$/, async (ctx) => {
     await safeAnswer(ctx);
-    const role = ctx.match[1];
     const t = ctx.t;
+    const role = ctx.match[1];
 
     if (role === 'admin') {
-      if (!canManageAdmins(ctx.state.role)) {
-        return ctx.reply(`⛔ ${t('error_only_super')}`);
-      }
+      if (!canManageAdmins(ctx.state.role)) return ctx.reply(`⛔ ${t('error_only_super')}`);
     }
-
     if (role === 'organizer') {
-      if (!canManageUsers(ctx.state.role)) {
-        return ctx.reply(`⛔ ${t('error_only_admin')}`);
-      }
+      if (!canManageUsers(ctx.state.role)) return ctx.reply(`⛔ ${t('error_only_admin')}`);
     }
-
     if (role === 'host') {
-      if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN])) {
-        return ctx.reply(`⛔ ${t('error_only_admin')}`);
-      }
+      if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN])) return ctx.reply(`⛔ ${t('error_only_admin')}`);
     }
 
-    ctx.session = {
-      state: STATES.ADMIN_ADD_USER_ID,
-      data: { role, remove: true },
-    };
+    ctx.session = { state: STATES.ADMIN_ADD_USER_ID, data: { role, remove: true } };
 
     await ctx.reply(
-      `➖ <b>${t('admin_delete_role')} ${role}</b>\n\n` +
-        `${t('admin_send_id')}`,
+      `➖ <b>${t('admin_delete_role')} ${role}</b>\n\n${t('admin_send_id')}`,
       { parse_mode: 'HTML' }
     );
   });
 
   // ============================================================
-  // 13. SOZLAMALAR
+  // 12. SOZLAMALAR
   // ============================================================
   bot.action(CALLBACK.ADMIN_SETTINGS, async (ctx) => {
     await safeAnswer(ctx);
-    if (!canEditSettings(ctx.state.role)) {
-      return ctx.reply(ctx.t('error_only_super'));
-    }
-
     const t = ctx.t;
+
+    if (!canEditSettings(ctx.state.role)) return ctx.reply(t('error_only_super'));
+
     const s = await settingsService.getSettings();
 
     const kb = Markup.inlineKeyboard([
@@ -623,16 +492,15 @@ module.exports = (bot) => {
   });
 
   bot.action(/^admin:toggle:(.+)$/, async (ctx) => {
-    if (!canEditSettings(ctx.state.role)) {
-      return safeAnswer(ctx, `⛔ ${ctx.t('error_access')}`);
-    }
+    const t = ctx.t;
+
+    if (!canEditSettings(ctx.state.role)) return safeAnswer(ctx, `⛔ ${t('error_access')}`);
 
     const key = ctx.match[1];
     const s = await settingsService.getSettings();
     await settingsService.updateSettings({ [key]: !s[key] });
-    await safeAnswer(ctx, `✅ ${ctx.t('success')}`);
+    await safeAnswer(ctx, `✅ ${t('success')}`);
 
-    const t = ctx.t;
     const s2 = await settingsService.getSettings();
 
     const kb = Markup.inlineKeyboard([
@@ -656,54 +524,42 @@ module.exports = (bot) => {
   });
 
   // ============================================================
-  // 14. REKLAMA YUBORISH
+  // 13. REKLAMA
   // ============================================================
   bot.action(CALLBACK.ADMIN_BROADCAST, async (ctx) => {
     await safeAnswer(ctx);
+    const t = ctx.t;
+
     if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) return;
 
-    const t = ctx.t;
     const isOrganizer = ctx.state.role === ROLES.ORGANIZER;
-
     const tours = isOrganizer
       ? await tournamentService.getOrganizerTournaments(ctx.from.id)
       : await tournamentService.getAllTournaments();
 
     const rows = tours.slice(0, 15).map((tr) => [
-      Markup.button.callback(
-        `📢 ${tr.title.slice(0, 25)}`,
-        CALLBACK.TOUR_BROADCAST + tr.id
-      ),
+      Markup.button.callback(`📢 ${tr.title.slice(0, 25)}`, CALLBACK.TOUR_BROADCAST + tr.id),
     ]);
     rows.push([Markup.button.callback(t('admin_panel'), CALLBACK.ADMIN_PANEL)]);
 
-    const subtitle = isOrganizer
-      ? t('org_pick_your_tournament')
-      : t('ch_pick_for_reklama');
+    const subtitle = isOrganizer ? t('org_pick_your_tournament') : t('ch_pick_for_reklama');
 
-    await safeEdit(
-      ctx,
-      `📢 <b>${t('admin_broadcast')}</b>\n\n${subtitle}`,
-      { reply_markup: { inline_keyboard: rows } }
-    );
+    await safeEdit(ctx, `📢 <b>${t('admin_broadcast')}</b>\n\n${subtitle}`, {
+      reply_markup: { inline_keyboard: rows },
+    });
   });
 
-  // ============================================================
-  // 15. TURNIR REKLAMASINI YUBORISH
-  // ============================================================
   bot.action(/^tour:bc:(.+)$/, async (ctx) => {
     await safeAnswer(ctx);
+    const t = ctx.t;
+
     if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) return;
 
-    const t = ctx.t;
     const tr = await tournamentService.getTournament(ctx.match[1]);
-    if (!tr) return ctx.reply(ctx.t('tour_not_found'));
+    if (!tr) return ctx.reply(t('tour_not_found'));
 
-    // Organizer — faqat o'z turniri
     if (ctx.state.role === ROLES.ORGANIZER) {
-      if (Number(tr.organizerId) !== Number(ctx.from.id)) {
-        return ctx.reply(`⛔ ${t('org_not_owner')}`);
-      }
+      if (Number(tr.organizerId) !== Number(ctx.from.id)) return ctx.reply(`⛔ ${t('org_not_owner')}`);
     }
 
     const caption =
@@ -721,7 +577,6 @@ module.exports = (bot) => {
 
     await ctx.reply(`⏳ ${t('loading')}`);
 
-    // Broadcast statistikasini boshlash
     const broadcastStatsService = require('../services/broadcastStatsService');
 
     try {
@@ -762,32 +617,29 @@ module.exports = (bot) => {
   });
 
   // ============================================================
-  // 16. FSM — ROL QO'SHISH/O'CHIRISH
+  // 14. FSM — ROL QO'SHISH
   // ============================================================
   bot.on('text', async (ctx, next) => {
     if (ctx.session?.state !== STATES.ADMIN_ADD_USER_ID) return next();
-
     const t = ctx.t;
+
     const { role, remove } = ctx.session.data;
 
-    // Ruxsatni qayta tekshirish
     if (role === 'admin' && !canManageAdmins(ctx.state.role)) {
       ctx.session = { state: null, data: {} };
-      return ctx.reply(ctx.t('error_access'));
+      return ctx.reply(t('error_access'));
     }
     if (role === 'organizer' && !canManageUsers(ctx.state.role)) {
       ctx.session = { state: null, data: {} };
-      return ctx.reply(ctx.t('error_access'));
+      return ctx.reply(t('error_access'));
     }
     if (role === 'host' && !hasAnyRole(ctx.state.role, [ROLES.ADMIN])) {
       ctx.session = { state: null, data: {} };
-      return ctx.reply(ctx.t('error_access'));
+      return ctx.reply(t('error_access'));
     }
 
     const v = cleanText(ctx.message.text, 20);
-    if (!isPositiveInt(v)) {
-      return ctx.reply(ctx.t('error_only_digits'));
-    }
+    if (!isPositiveInt(v)) return ctx.reply(t('error_only_digits'));
 
     const targetId = Number(v);
     ctx.session = { state: null, data: {} };
@@ -795,9 +647,8 @@ module.exports = (bot) => {
     try {
       if (remove) {
         if (targetId === Number(config.SUPER_ADMIN_ID)) {
-          return ctx.reply("⛔ Super Admin'ni o'chirib bo'lmaydi.");
+          return ctx.reply(`⛔ ${t('error_only_super')}`);
         }
-
         await roleService.remove(role, targetId);
         await ctx.reply(
           `✅ <b>${role}</b> — <code>${targetId}</code> (${t('btn_delete')})`,
@@ -813,16 +664,13 @@ module.exports = (bot) => {
         try {
           await ctx.telegram.sendMessage(
             targetId,
-            `🎉 <b>${role}</b> — ${t('admin_role_granted')}\n\n` +
-              `/start`,
+            `🎉 <b>${role}</b> — ${t('admin_role_granted')}\n\n/start`,
             { parse_mode: 'HTML' }
           );
         } catch (e) {}
       }
     } catch (e) {
-      await ctx.reply(
-        `${ctx.t('error_prefix')} ${e.message || ctx.t('error_generic')}`
-      );
+      await ctx.reply(`${t('error_prefix')} ${e.message || t('error_generic')}`);
     }
   });
 };

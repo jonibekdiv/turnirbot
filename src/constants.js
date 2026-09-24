@@ -1,5 +1,5 @@
 // ============================================================
-// KONSTANTALAR — To'liq (barcha yangi funksiyalar bilan)
+// KONSTANTALAR — To'liq (barcha funksiyalar + etap tizimi)
 // ============================================================
 module.exports = {
   // ============================================================
@@ -73,6 +73,99 @@ module.exports = {
   },
 
   // ============================================================
+  // ETAPLAR TIZIMI — STAGE TYPES
+  // ============================================================
+  STAGE_TYPE: {
+    QUARTER_FINAL: 'quarter_final',
+    SEMI_FINAL: 'semi_final',
+    FINAL: 'final',
+  },
+
+  STAGE_STATUS: {
+    PLANNED: 'planned',
+    REGISTRATION_OPEN: 'registration_open',
+    IN_PROGRESS: 'in_progress',
+    WAITING_RESULTS: 'waiting_results',
+    COMPLETED: 'completed',
+    CANCELLED: 'cancelled',
+  },
+
+  STAGE_NAMES: {
+    quarter_final: '1/4 Final',
+    semi_final: '1/2 Final',
+    final: 'Final',
+  },
+
+  // ============================================================
+  // MATCH NATIJA STATUSLARI
+  // ============================================================
+  MATCH_RESULT_STATUS: {
+    PENDING: 'pending',
+    SUBMITTED: 'submitted',
+    APPROVED: 'approved',
+    REJECTED: 'rejected',
+  },
+
+  // ============================================================
+  // PROMOTION STATUSLARI
+  // ============================================================
+  PROMOTION_STATUS: {
+    QUALIFIED: 'qualified',
+    PROMOTED: 'promoted',
+    INVITATION_SENT: 'invitation_sent',
+    REGISTERED: 'registered',
+    REJECTED: 'rejected',
+    DECLINED: 'declined',
+    CANCELLED: 'cancelled',
+  },
+
+  // ============================================================
+  // INVITATION STATUSLARI
+  // ============================================================
+  INVITATION_STATUS: {
+    CREATED: 'created',
+    SENT: 'sent',
+    ACCEPTED: 'accepted',
+    DECLINED: 'declined',
+    EXPIRED: 'expired',
+  },
+
+  // ============================================================
+  // REMINDER TURLARI
+  // ============================================================
+  STAGE_REMINDER: {
+    H24: '24h',
+    H3: '3h',
+    H1: '1h',
+    M30: '30m',
+    M10: '10m',
+  },
+
+  // ============================================================
+  // DEFAULT BRACKET CONFIG
+  // ============================================================
+  DEFAULT_BRACKET: {
+    quarter_final: {
+      numberOfDays: 3,
+      matchesPerDay: 1,
+      teamsPerMatch: 9,
+      qualifiersPerMatch: 3,
+    },
+    semi_final: {
+      numberOfDays: 3,
+      matchesPerDay: 1,
+      teamsPerMatch: 9,
+      qualifiersPerMatch: 3,
+    },
+    final: {
+      numberOfDays: 1,
+      matchesPerDay: 1,
+      teamsPerMatch: 9,
+      qualifiersPerMatch: 0,
+    },
+  },
+
+  // ============================================================
   // FSM HOLATLARI
   // ============================================================
   STATES: {
@@ -140,7 +233,7 @@ module.exports = {
     HOST_EDIT_MATCH: 'host_edit_match',
     HOST_PRIZE_INPUT: 'host_prize_input',
 
-    // ---------- Live score (#23) ----------
+    // ---------- Live score ----------
     LIVE_SCORE_INPUT: 'live_score_input',
     LIVE_PLACE_INPUT: 'live_place_input',
 
@@ -173,17 +266,66 @@ module.exports = {
     CHANNEL_CUSTOM_PHOTO: 'channel_custom_photo',
     CHANNEL_CUSTOM_PHOTO_BUTTON: 'channel_custom_photo_button',
 
-    // ---------- Turnir yakunlash (#1) ----------
+    // ---------- Turnir yakunlash ----------
     TOUR_FINISH_CONFIRM: 'tour_finish_confirm',
 
-    // ---------- Kutish ro'yxati (#3) ----------
+    // ---------- Kutish ro'yxati ----------
     WAITLIST_JOIN: 'waitlist_join',
 
-    // ---------- Bron (#20) ----------
+    // ---------- Bron ----------
     RESERVE_CONFIRM: 'reserve_confirm',
 
     // ---------- Qidiruv ----------
     SEARCH_QUERY: 'search_query',
+
+    // ---------- PROMO (A) ----------
+    PROMO_CREATE_CODE: 'promo_create_code',
+    PROMO_CREATE_PERCENT: 'promo_create_percent',
+    PROMO_CREATE_AMOUNT: 'promo_create_amount',
+    PROMO_CREATE_MAX_USES: 'promo_create_max_uses',
+    PROMO_CREATE_EXPIRES: 'promo_create_expires',
+    PROMO_APPLY_INPUT: 'promo_apply_input',
+
+    // ---------- SUPPORT (J) ----------
+    SUPPORT_INPUT_TEXT: 'support_input_text',
+    SUPPORT_INPUT_ATTACH: 'support_input_attach',
+    SUPPORT_ADMIN_REPLY: 'support_admin_reply',
+
+    // ---------- WALLET (L) ----------
+    WALLET_DEPOSIT_AMOUNT: 'wallet_deposit_amount',
+    WALLET_DEPOSIT_PROOF: 'wallet_deposit_proof',
+    WALLET_WITHDRAW_AMOUNT: 'wallet_withdraw_amount',
+    WALLET_WITHDRAW_CARD: 'wallet_withdraw_card',
+    WALLET_WITHDRAW_OWNER: 'wallet_withdraw_owner',
+    WALLET_ADMIN_ADJUST_ID: 'wallet_admin_adjust_id',
+    WALLET_ADMIN_ADJUST_AMOUNT: 'wallet_admin_adjust_amount',
+    WALLET_ADMIN_ADJUST_REASON: 'wallet_admin_adjust_reason',
+
+    // ============================================================
+    // ETAPLAR TIZIMI — STATES
+    // ============================================================
+    STAGE_SELECT_TOURNAMENT: 'stage_select_tournament',
+    STAGE_BRACKET_DAYS_QF: 'stage_bracket_days_qf',
+    STAGE_BRACKET_MATCHES_QF: 'stage_bracket_matches_qf',
+    STAGE_BRACKET_TEAMS_QF: 'stage_bracket_teams_qf',
+    STAGE_BRACKET_QUALIFIERS_QF: 'stage_bracket_qualifiers_qf',
+    STAGE_BRACKET_DAYS_SF: 'stage_bracket_days_sf',
+    STAGE_BRACKET_MATCHES_SF: 'stage_bracket_matches_sf',
+    STAGE_BRACKET_TEAMS_SF: 'stage_bracket_teams_sf',
+    STAGE_BRACKET_QUALIFIERS_SF: 'stage_bracket_qualifiers_sf',
+    STAGE_BRACKET_DAYS_F: 'stage_bracket_days_f',
+    STAGE_BRACKET_MATCHES_F: 'stage_bracket_matches_f',
+    STAGE_BRACKET_TEAMS_F: 'stage_bracket_teams_f',
+
+    STAGE_TEAM_DISTRIBUTE_MODE: 'stage_team_distribute_mode',
+    STAGE_EDIT_DATE: 'stage_edit_date',
+    STAGE_EDIT_TIME: 'stage_edit_time',
+    STAGE_EDIT_NAME: 'stage_edit_name',
+    STAGE_ASSIGN_HOST_MATCH: 'stage_assign_host_match',
+    STAGE_SEND_ROOM_TO_MATCH: 'stage_send_room_to_match',
+    STAGE_MATCH_RESULT_INPUT: 'stage_match_result_input',
+    STAGE_PROMOTION_CONFIRM: 'stage_promotion_confirm',
+    STAGE_DECLINE_REASON: 'stage_decline_reason',
   },
 
   // ============================================================
@@ -382,17 +524,13 @@ module.exports = {
     LANG_SET: 'lang:set:',
     LANG_BACK: 'lang:back',
 
-    // ============================================================
-    // YANGI FUNKSIYALAR (#1, #3, #6, #10, #14, #15, #17, #19, #20, #23)
-    // ============================================================
-
-    // ---------- #1: Turnir yakunlash va e'lon ----------
+    // ---------- Turnir yakunlash ----------
     TOUR_FINISH: 'tf:finish:',
     TOUR_FINISH_YES: 'tf:yes:',
     TOUR_FINISH_NO: 'tf:no:',
     TOUR_PUBLISH_CHANNEL: 'tf:pub:',
 
-    // ---------- #3: Kutish ro'yxati ----------
+    // ---------- Kutish ro'yxati ----------
     WAITLIST_JOIN: 'wl:join:',
     WAITLIST_LEAVE: 'wl:leave:',
     WAITLIST_VIEW: 'wl:view:',
@@ -400,33 +538,33 @@ module.exports = {
     WAITLIST_DECLINE: 'wl:decline:',
     WAITLIST_OWN: 'wl:own',
 
-    // ---------- #6: Guest rejim ----------
+    // ---------- Guest ----------
     GUEST_VIEW: 'gv:view:',
     GUEST_TOUR: 'gv:tour:',
     GUEST_LIST: 'gv:list',
 
-    // ---------- #10, #15: Komanda statistikasi ----------
+    // ---------- Komanda statistikasi ----------
     TEAM_STATS_FULL: 'ts:full',
     TEAM_HISTORY_FULL: 'ts:hist',
     TEAM_LEADERBOARD: 'ts:lb',
     TEAM_RANK: 'ts:rank',
 
-    // ---------- #14: Turnir eslatma ----------
+    // ---------- Turnir eslatma ----------
     TOUR_REMINDER_VIEW: 'trm:v:',
 
-    // ---------- #17: Reklama statistikasi ----------
+    // ---------- Reklama statistikasi ----------
     ADMIN_BC_STATS: 'bcs:view',
     ADMIN_BC_STATS_LIST: 'bcs:list',
     ADMIN_BC_STATS_VIEW: 'bcs:v:',
 
-    // ---------- #20: Bron qilish ----------
+    // ---------- Bron ----------
     RESERVE_START: 'rs:start:',
     RESERVE_OK: 'rs:ok:',
     RESERVE_TIMEOUT: 'rs:timeout:',
     RESERVE_RELEASE: 'rs:release:',
     RESERVE_VIEW: 'rs:view',
 
-    // ---------- #23: Live score ----------
+    // ---------- Live score ----------
     LIVE_START: 'ls:start:',
     LIVE_ADD: 'ls:add:',
     LIVE_KILL: 'ls:add_k:',
@@ -442,6 +580,130 @@ module.exports = {
     SEARCH_TOUR: 'search:tour',
     SEARCH_TEAM: 'search:team',
     FILTER_TOUR: 'filter:tour',
+
+    // ---------- PROMO (A) ----------
+    PROMO_MENU: 'promo:menu',
+    PROMO_LIST: 'promo:list',
+    PROMO_CREATE: 'promo:create',
+    PROMO_STATS: 'promo:stats',
+    PROMO_VIEW: 'promo:v:',
+    PROMO_DELETE: 'promo:del:',
+    PROMO_DELETE_CONFIRM: 'promo:delc:',
+    PROMO_TOGGLE: 'promo:toggle:',
+    PROMO_TYPE: 'promo:t:',
+    PROMO_APPLY: 'promo:apply:',
+    PROMO_SKIP: 'promo:skip:',
+    PROMO_REMOVE: 'promo:rm:',
+
+    // ---------- KICK (B) ----------
+    TEAM_KICK_LIST: 'team:klist',
+
+    // ---------- SUPPORT (J) ----------
+    SUPPORT_START: 'sup:start',
+    SUPPORT_TYPE: 'sup:type:',
+    SUPPORT_MY: 'sup:my',
+    SUPPORT_VIEW: 'sup:v:',
+    SUPPORT_ADMIN_LIST: 'sup:alist',
+    SUPPORT_ADMIN_NEW: 'sup:anew',
+    SUPPORT_ADMIN_ACTIVE: 'sup:aact',
+    SUPPORT_ADMIN_CLOSED: 'sup:acl',
+    SUPPORT_REPLY: 'sup:reply:',
+    SUPPORT_CLOSE: 'sup:close:',
+    SUPPORT_CLOSE_CONFIRM: 'sup:cc:',
+    SUPPORT_MY_VIEW: 'sup:mv:',
+
+    // ---------- WALLET (L) ----------
+    WALLET_VIEW: 'wal:view',
+    WALLET_HISTORY: 'wal:hist',
+    WALLET_HISTORY_PAGE: 'wal:hp:',
+    WALLET_DEPOSIT: 'wal:dep',
+    WALLET_WITHDRAW: 'wal:wd',
+    WALLET_DEPOSIT_AMOUNT_BTN: 'wal:dpa:',
+    WALLET_MY_REQUESTS: 'wal:req',
+
+    WALLET_ADMIN_MENU: 'wal:am',
+    WALLET_ADMIN_DEPOSITS: 'wal:adep',
+    WALLET_ADMIN_WITHDRAWS: 'wal:awd',
+    WALLET_ADMIN_USERS: 'wal:ausr',
+    WALLET_ADMIN_USERS_PAGE: 'wal:aup:',
+    WALLET_ADMIN_VIEW_USER: 'wal:av:',
+    WALLET_ADMIN_ADJUST: 'wal:adj:',
+    WALLET_ADMIN_ADJUST_TYPE: 'wal:adjt:',
+    WALLET_ADMIN_APPROVE_DEP: 'wal:apd:',
+    WALLET_ADMIN_REJECT_DEP: 'wal:rjd:',
+    WALLET_ADMIN_APPROVE_WD: 'wal:apw:',
+    WALLET_ADMIN_REJECT_WD: 'wal:rjw:',
+    WALLET_ADMIN_VIEW_REQ: 'wal:vreq:',
+    WALLET_ADMIN_STATS: 'wal:stats',
+    WALLET_REQ_CANCEL: 'wal:rcancel:',
+
+    // ============================================================
+    // ETAPLAR TIZIMI — CALLBACK
+    // ============================================================
+    STAGE_MENU: 'stg:menu',
+    STAGE_LIST: 'stg:list:',
+    STAGE_VIEW: 'stg:view:',
+    STAGE_CREATE: 'stg:create:',
+    STAGE_BRACKET_SETUP: 'stg:setup:',
+    STAGE_BRACKET_STEP: 'stg:step:',
+    STAGE_BRACKET_CONFIRM: 'stg:confirm:',
+    STAGE_BRACKET_EDIT: 'stg:edit:',
+    STAGE_BRACKET_USE_DEFAULT: 'stg:def:',
+    STAGE_TEAMS_MENU: 'stg:tm:',
+    STAGE_TEAMS_DISTRIBUTE: 'stg:td:',
+    STAGE_TEAMS_RANDOM: 'stg:tr:',
+    STAGE_TEAMS_RATING: 'stg:trat:',
+    STAGE_TEAMS_MANUAL: 'stg:tman:',
+    STAGE_TEAMS_ADD: 'stg:ta:',
+    STAGE_TEAMS_REMOVE: 'stg:trm:',
+    STAGE_MATCHES_LIST: 'stg:ml:',
+    STAGE_MATCH_VIEW: 'stg:mv:',
+    STAGE_MATCH_EDIT: 'stg:me:',
+    STAGE_MATCH_ADD: 'stg:ma:',
+    STAGE_MATCH_DELETE: 'stg:md:',
+    STAGE_MATCH_HOST_ASSIGN: 'stg:mh:',
+    STAGE_MATCH_HOST_SET: 'stg:mhs:',
+    STAGE_MATCH_ROOM_SEND: 'stg:mrs:',
+    STAGE_MATCH_ROOM_INPUT: 'stg:mri:',
+    STAGE_MATCH_RESULTS_INPUT: 'stg:mres:',
+    STAGE_MATCH_RESULTS_VIEW: 'stg:mrv:',
+    STAGE_RESULTS_SUBMIT: 'stg:rs:',
+    STAGE_RESULTS_APPROVE: 'stg:ra:',
+    STAGE_RESULTS_REJECT: 'stg:rr:',
+    STAGE_RESULTS_REOPEN: 'stg:ro:',
+    STAGE_START: 'stg:start:',
+    STAGE_FINISH: 'stg:fin:',
+    STAGE_CANCEL: 'stg:cancel:',
+
+    // PROMOTION
+    PROMOTION_MENU: 'prm:menu',
+    PROMOTION_LIST: 'prm:list:',
+    PROMOTION_VIEW: 'prm:v:',
+    PROMOTION_APPROVE: 'prm:ap:',
+    PROMOTION_CANCEL: 'prm:cn:',
+    PROMOTION_SEND_INVITE: 'prm:si:',
+    PROMOTION_RESEND_INVITE: 'prm:ri:',
+    PROMOTION_CONFIRM_ALL: 'prm:ca:',
+
+    // INVITATION
+    INV_MY: 'inv:my',
+    INV_VIEW: 'inv:v:',
+    INV_ACCEPT: 'inv:a:',
+    INV_DECLINE: 'inv:d:',
+    INV_INFO: 'inv:i:',
+    INV_CONTACT_HOST: 'inv:h:',
+
+    // HOST STAGE
+    HOST_STAGE_TOURS: 'hst:tours',
+    HOST_STAGE_LIST: 'hst:list:',
+    HOST_STAGE_MATCH: 'hst:m:',
+    HOST_STAGE_RESULTS: 'hst:res:',
+    HOST_STAGE_ROOM: 'hst:room:',
+    HOST_STAGE_QUALIFIED: 'hst:qf:',
+
+    // REMINDER
+    REMINDER_VIEW: 'rmd:v:',
+    REMINDER_SEND_NOW: 'rmd:sn:',
   },
 
   // ============================================================
@@ -472,11 +734,43 @@ module.exports = {
     LOGS_PAGE_SIZE: 20,
     ACTIONS_PAGE_SIZE: 15,
 
-    // Yangi limitlar
     RESERVE_TIMEOUT_MIN: 5,
     WAITLIST_MAX_PER_TOUR: 30,
     REMINDER_DAY_BEFORE_MIN: 1440,
     REMINDER_HOUR_BEFORE_MIN: 60,
+
+    // Promo
+    PROMO_CODE_MIN: 3,
+    PROMO_CODE_MAX: 20,
+    PROMO_MAX_PERCENT: 100,
+    PROMO_MAX_USES_DEFAULT: 100,
+
+    // Wallet
+    WALLET_MIN_DEPOSIT: 1000,
+    WALLET_MAX_DEPOSIT: 10000000,
+    WALLET_MIN_WITHDRAW: 5000,
+    WALLET_MAX_WITHDRAW: 5000000,
+    WALLET_PAGE_SIZE: 10,
+
+    // Support
+    SUPPORT_MAX_ACTIVE: 3,
+    SUPPORT_COOLDOWN_MIN: 10,
+    SUPPORT_MAX_TEXT: 2000,
+    SUPPORT_PAGE_SIZE: 10,
+
+    // ============================================================
+    // ETAPLAR TIZIMI
+    // ============================================================
+    STAGE_MAX_TEAMS_QF: 100,
+    STAGE_MAX_DAYS: 30,
+    STAGE_MAX_MATCHES_PER_DAY: 20,
+    STAGE_MAX_TEAMS_PER_MATCH: 25,
+    STAGE_MIN_TEAMS_PER_MATCH: 2,
+    STAGE_MAX_QUALIFIERS: 20,
+    INVITATION_CODE_LENGTH: 8,
+    ROOM_PASSWORD_LENGTH: 6,
+    AUDIT_LOG_MAX: 5000,
+    PROMOTION_BATCH_SIZE: 10,
   },
 
   // ============================================================
@@ -547,7 +841,7 @@ module.exports = {
   },
 
   // ============================================================
-  // TOURNAMENT STAGES
+  // TOURNAMENT STAGES (eski nom — moslik uchun)
   // ============================================================
   STAGES: {
     SINGLE: 'single',

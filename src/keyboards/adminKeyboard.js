@@ -54,6 +54,13 @@ function adminPanel(ctx, role) {
   rows.push([Markup.button.callback(t('admin_channels'), CALLBACK.ADMIN_CHANNELS)]);
   rows.push([Markup.button.callback(t('admin_channels_add'), CALLBACK.ADMIN_CHANNELS_ADD)]);
 
+  // ============================================================
+  // YANGI: PROMO + SUPPORT + WALLET
+  // ============================================================
+  rows.push([Markup.button.callback('🎫 Promo kodlar', CALLBACK.PROMO_MENU)]);
+  rows.push([Markup.button.callback('💰 Wallet admin', CALLBACK.WALLET_ADMIN_MENU)]);
+  rows.push([Markup.button.callback('💬 Murojaatlar', CALLBACK.SUPPORT_ADMIN_LIST)]);
+
   if (role === ROLES.SUPER_ADMIN || role === ROLES.ADMIN) {
     rows.push([Markup.button.callback(t('admin_ban'), CALLBACK.ADMIN_BAN)]);
   }

@@ -1,13 +1,12 @@
 // ============================================================
-// IMAGE SERVICE — Standings jadvalini PNG formatda yaratish
+// IMAGE SERVICE — PNG standings generator
+// (PNG matnlari inglizcha — universal)
 // ============================================================
 const { createCanvas, GlobalFonts } = require('@napi-rs/canvas');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
-
-// Vaqtinchalik fayllar papkasi
 const TMP_DIR = path.join(os.tmpdir(), 'pubg-bot-images');
 
 function ensureTmpDir() {
@@ -16,9 +15,6 @@ function ensureTmpDir() {
   }
 }
 
-// ============================================================
-// RANGLAR PALITRASI (rasmdagidek dark theme)
-// ============================================================
 const COLORS = {
   bgDark: '#1a1d24',
   bgCard: '#252932',
@@ -39,12 +35,11 @@ const COLORS = {
 };
 
 // ============================================================
-// ASOSIY FUNKSIYA — Standings PNG yaratish
+// ASOSIY GENERATOR
 // ============================================================
 async function generateStandingsImage(tournament, standings) {
   ensureTmpDir();
 
-  // O'lchamlar
   const width = 1000;
   const rowHeight = 60;
   const headerHeight = 80;
@@ -57,13 +52,9 @@ async function generateStandingsImage(tournament, standings) {
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext('2d');
 
-  // ---------- Fon ----------
   drawBackground(ctx, width, height);
-
-  // ---------- Sarlavha ----------
   drawTitle(ctx, width, tournament, titleBlockHeight);
 
-  // ---------- Jadval ----------
   const tableX = padding + 20;
   const tableY = titleBlockHeight;
   const tableWidth = width - (padding + 20) * 2;
@@ -78,16 +69,13 @@ async function generateStandingsImage(tournament, standings) {
     standings,
   });
 
-  // ---------- Footer ----------
   drawFooter(ctx, width, height, footerHeight);
 
-  // ---------- Faylni saqlash ----------
   const fileName = `standings_${tournament.id}_${Date.now()}.png`;
   const filePath = path.join(TMP_DIR, fileName);
   const buffer = canvas.toBuffer('image/png');
   fs.writeFileSync(filePath, buffer);
 
-  // 10 daqiqadan keyin avtomatik o'chirish
   setTimeout(() => {
     try { fs.unlinkSync(filePath); } catch (e) {}
   }, 10 * 60 * 1000);
@@ -96,10 +84,9 @@ async function generateStandingsImage(tournament, standings) {
 }
 
 // ============================================================
-// FON RASMI
+// FON
 // ============================================================
 function drawBackground(ctx, width, height) {
-  // Asosiy gradient
   const gradient = ctx.createLinearGradient(0, 0, width, height);
   gradient.addColorStop(0, '#1a1d24');
   gradient.addColorStop(0.5, '#1f242d');
@@ -107,7 +94,6 @@ function drawBackground(ctx, width, height) {
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, width, height);
 
-  // Diagonal chiziqlar (dekorativ)
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.015)';
   ctx.lineWidth = 1;
   for (let i = -width; i < height + width; i += 40) {
@@ -117,7 +103,6 @@ function drawBackground(ctx, width, height) {
     ctx.stroke();
   }
 
-  // Yuqori o'ng burchak accent
   const accent = ctx.createRadialGradient(width - 100, 100, 0, width - 100, 100, 400);
   accent.addColorStop(0, 'rgba(0, 212, 255, 0.08)');
   accent.addColorStop(1, 'rgba(0, 212, 255, 0)');
@@ -132,18 +117,15 @@ function drawTitle(ctx, width, tournament, blockHeight) {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
-  // Asosiy sarlavha
   const title = (tournament.title || 'TOURNAMENT').toUpperCase();
   ctx.font = 'bold 52px Arial, sans-serif';
   ctx.fillStyle = COLORS.textPrimary;
   ctx.fillText(title.slice(0, 30), width / 2, 100);
 
-  // "OVERALL STANDINGS" subtitle
   ctx.font = 'bold 18px Arial, sans-serif';
   ctx.fillStyle = COLORS.textSecondary;
   ctx.fillText('O V E R A L L   S T A N D I N G S', width / 2, 160);
 
-  // Accent chiziq
   ctx.strokeStyle = COLORS.accent;
   ctx.lineWidth = 3;
   ctx.beginPath();
@@ -151,7 +133,6 @@ function drawTitle(ctx, width, tournament, blockHeight) {
   ctx.lineTo(width / 2 + 50, 190);
   ctx.stroke();
 
-  // Etap / sana (agar mavjud bo'lsa)
   if (tournament.etapa || tournament.date) {
     ctx.font = '14px Arial, sans-serif';
     ctx.fillStyle = COLORS.textMuted;
@@ -169,7 +150,6 @@ function drawTitle(ctx, width, tournament, blockHeight) {
 function drawTable(ctx, opts) {
   const { x, y, width, headerHeight, rowHeight, maxRows, standings } = opts;
 
-  // Ustun kengliklari (foizda)
   const columns = [
     { key: 'pos', label: 'POS', width: 0.08, align: 'center' },
     { key: 'name', label: 'TEAM NAME', width: 0.40, align: 'left' },
@@ -180,7 +160,6 @@ function drawTable(ctx, opts) {
     { key: 'tt', label: 'TT', width: 0.12, align: 'center' },
   ];
 
-  // Ustun koordinatalarini hisoblash
   let accX = x;
   columns.forEach((c) => {
     c.x = accX;
@@ -188,12 +167,10 @@ function drawTable(ctx, opts) {
     accX += c.absWidth;
   });
 
-  // ---------- Header fon ----------
   ctx.fillStyle = COLORS.bgHeader;
   roundRect(ctx, x, y, width, headerHeight, 12);
   ctx.fill();
 
-  // ---------- Header text ----------
   ctx.font = 'bold 18px Arial, sans-serif';
   ctx.fillStyle = COLORS.textSecondary;
   ctx.textBaseline = 'middle';
@@ -208,13 +185,11 @@ function drawTable(ctx, opts) {
     }
   });
 
-  // ---------- Rows ----------
   let rowY = y + headerHeight;
 
   for (let i = 0; i < maxRows; i++) {
     const s = standings[i];
 
-    // Fon rangi
     let bgColor = i % 2 === 0 ? COLORS.bgRow : COLORS.bgRowAlt;
     if (i === 0) bgColor = COLORS.top1Bg;
     else if (i === 1) bgColor = COLORS.top2Bg;
@@ -223,7 +198,6 @@ function drawTable(ctx, opts) {
     ctx.fillStyle = bgColor;
     ctx.fillRect(x, rowY, width, rowHeight);
 
-    // Ajratuvchi chiziq
     ctx.strokeStyle = COLORS.divider;
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -231,7 +205,6 @@ function drawTable(ctx, opts) {
     ctx.lineTo(x + width, rowY + rowHeight);
     ctx.stroke();
 
-    // Ma'lumot yo'q — bo'sh qator
     if (!s) {
       ctx.fillStyle = COLORS.textMuted;
       ctx.font = '14px Arial, sans-serif';
@@ -241,12 +214,10 @@ function drawTable(ctx, opts) {
       continue;
     }
 
-    // ---------- POS ----------
     const posStr = String(i + 1).padStart(2, '0');
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // POS rangi (top 3 uchun)
     if (i === 0) ctx.fillStyle = COLORS.accentGold;
     else if (i === 1) ctx.fillStyle = COLORS.accentSilver;
     else if (i === 2) ctx.fillStyle = COLORS.accentBronze;
@@ -255,40 +226,33 @@ function drawTable(ctx, opts) {
     ctx.font = 'bold 22px Arial, sans-serif';
     ctx.fillText(posStr, columns[0].x + columns[0].absWidth / 2, rowY + rowHeight / 2);
 
-    // ---------- TEAM NAME ----------
     ctx.textAlign = 'left';
     ctx.fillStyle = COLORS.textPrimary;
     ctx.font = 'bold 18px Arial, sans-serif';
 
-    // Nomni qisqartirish
     let name = s.name || 'Unknown';
     if (name.length > 22) name = name.slice(0, 21) + '…';
 
     ctx.fillText(name, columns[1].x + 25, rowY + rowHeight / 2);
 
-    // ---------- MP (Matches Played) ----------
     ctx.textAlign = 'center';
     ctx.fillStyle = COLORS.textSecondary;
     ctx.font = '16px Arial, sans-serif';
     const mp = String(s.matches || 0).padStart(2, '0');
     ctx.fillText(mp, columns[2].x + columns[2].absWidth / 2, rowY + rowHeight / 2);
 
-    // ---------- CD (Chicken Dinners = wins) ----------
     ctx.fillStyle = s.wins > 0 ? COLORS.accentGold : COLORS.textSecondary;
     const cd = s.wins > 0 ? `x${s.wins}` : String(s.wins || 0).padStart(2, '0');
     ctx.fillText(cd, columns[3].x + columns[3].absWidth / 2, rowY + rowHeight / 2);
 
-    // ---------- PP (Placement Points) ----------
     ctx.fillStyle = COLORS.textSecondary;
     const pp = String(s.totalPlacementPoints || 0).padStart(2, '0');
     ctx.fillText(pp, columns[4].x + columns[4].absWidth / 2, rowY + rowHeight / 2);
 
-    // ---------- KP (Kill Points) ----------
     ctx.fillStyle = COLORS.textSecondary;
     const kp = String(s.totalKills || 0).padStart(2, '0');
     ctx.fillText(kp, columns[5].x + columns[5].absWidth / 2, rowY + rowHeight / 2);
 
-    // ---------- TT (Total) ----------
     ctx.fillStyle = COLORS.accent;
     ctx.font = 'bold 20px Arial, sans-serif';
     const tt = String(s.totalPoints || 0).padStart(2, '0');
@@ -297,7 +261,6 @@ function drawTable(ctx, opts) {
     rowY += rowHeight;
   }
 
-  // ---------- Jadval tashqi ramkasi ----------
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
   ctx.lineWidth = 1;
   roundRect(ctx, x, y, width, headerHeight + maxRows * rowHeight, 12);
@@ -313,7 +276,6 @@ function drawFooter(ctx, width, height, footerHeight) {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
-  // Divider
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
   ctx.lineWidth = 1;
   ctx.beginPath();
@@ -321,12 +283,10 @@ function drawFooter(ctx, width, height, footerHeight) {
   ctx.lineTo(width - 60, y - 15);
   ctx.stroke();
 
-  // "PRESENTED BY"
   ctx.font = 'bold 12px Arial, sans-serif';
   ctx.fillStyle = COLORS.textMuted;
   ctx.fillText('P R E S E N T E D   B Y', width / 2, y + 10);
 
-  // Bot username
   ctx.font = 'bold 24px Arial, sans-serif';
   ctx.fillStyle = COLORS.textPrimary;
   const config = require('../config');
@@ -334,7 +294,7 @@ function drawFooter(ctx, width, height, footerHeight) {
 }
 
 // ============================================================
-// YORDAMCHI: RoundRectangle
+// ROUND RECT
 // ============================================================
 function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
@@ -351,7 +311,7 @@ function roundRect(ctx, x, y, w, h, r) {
 }
 
 // ============================================================
-// YORDAMCHI: Vaqtinchalik fayllarni tozalash
+// TOZALASH
 // ============================================================
 function cleanupOldImages() {
   try {

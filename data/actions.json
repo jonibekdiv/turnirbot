@@ -44,6 +44,15 @@
         "title": "ranger turnaments"
       },
       "at": "2026-09-22T20:18:30.551Z"
+    },
+    {
+      "adminId": 6580878834,
+      "action": "DELETE_TOURNAMENT",
+      "details": {
+        "target": "tour_muefizaibpckfa",
+        "title": "Pmgo"
+      },
+      "at": "2026-09-23T19:31:58.424Z"
     }
   ]
 }

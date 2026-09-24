@@ -1,5 +1,5 @@
 // ============================================================
-// CHANNEL ADMIN HANDLER — Kanallarni boshqarish (Admin panel)
+// CHANNEL ADMIN HANDLER — 3 tilda
 // ============================================================
 const { Markup } = require('telegraf');
 const channelService = require('../services/channelService');
@@ -10,37 +10,38 @@ const { hasAnyRole } = require('../middlewares/roleGuard');
 
 module.exports = (bot) => {
   // ============================================================
-  // KANALLAR MENYUSI
+  // 1. KANALLAR MENYUSI
   // ============================================================
   bot.action(CALLBACK.ADMIN_CHANNELS, async (ctx) => {
     await safeAnswer(ctx);
+    const t = ctx.t;
+
     if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) return;
 
     const channels = await channelService.listChannels();
 
     const lines = [];
-    lines.push(`📢 <b>Kanallar (${channels.length})</b>`);
+    lines.push(`📢 <b>${t('ch_list_title')} (${channels.length})</b>`);
     lines.push('');
     lines.push('━━━━━━━━━━━━━━━━━━━━');
     lines.push('');
 
     if (!channels.length) {
-      lines.push("<i>Hozircha kanallar yo'q</i>");
+      lines.push(`<i>${t('no_data')}</i>`);
     } else {
       channels.forEach((ch, i) => {
         lines.push(`${i + 1}. <b>${escapeHtml(ch.title)}</b>`);
         if (ch.username) lines.push(`   ${escapeHtml(ch.username)}`);
-        lines.push(`   ✅ Tasdiqlangan`);
+        lines.push(`   ✅ ${t('success')}`);
         lines.push('');
       });
     }
 
     const rows = [];
-    rows.push([Markup.button.callback('➕ Kanal qo\'shish', CALLBACK.ADMIN_CHANNELS_ADD)]);
-    rows.push([Markup.button.callback('🔄 Yangilash', CALLBACK.ADMIN_CHANNELS)]);
-    rows.push([Markup.button.callback('⬅️ Admin panel', CALLBACK.ADMIN_PANEL)]);
+    rows.push([Markup.button.callback(t('ch_add_btn'), CALLBACK.ADMIN_CHANNELS_ADD)]);
+    rows.push([Markup.button.callback(t('btn_refresh'), CALLBACK.ADMIN_CHANNELS)]);
+    rows.push([Markup.button.callback(t('admin_panel'), CALLBACK.ADMIN_PANEL)]);
 
-    // O'chirish tugmalari (faqat Admin)
     if (ctx.state.role === ROLES.SUPER_ADMIN || ctx.state.role === ROLES.ADMIN) {
       channels.slice(0, 5).forEach((ch) => {
         rows.unshift([
@@ -58,34 +59,32 @@ module.exports = (bot) => {
         reply_markup: { inline_keyboard: rows },
       });
     } catch (e) {
-      await ctx.reply(lines.join('\n'), {
-        parse_mode: 'HTML',
-        reply_markup: { inline_keyboard: rows },
-      });
+      await ctx.reply(lines.join('\n'), { parse_mode: 'HTML', reply_markup: { inline_keyboard: rows } });
     }
   });
 
   // ============================================================
-  // KANAL QO'SHISH — BOSHLASH
+  // 2. KANAL QO'SHISH
   // ============================================================
   bot.action(CALLBACK.ADMIN_CHANNELS_ADD, async (ctx) => {
     await safeAnswer(ctx);
+    const t = ctx.t;
+
     if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) return;
 
     ctx.session = { state: STATES.CHANNEL_ADD_INPUT, data: {} };
 
     await ctx.reply(
-      `📢 <b>Kanal qo'shish</b>\n\n` +
-        `Kanal ID yoki @username kiriting:\n\n` +
-        `📌 Formatlar:\n` +
+      `📢 <b>${t('channel_add_prompt')}</b>\n\n` +
+        `${t('stage_room_format')}:\n` +
         `• <code>@kanal_uz</code>\n` +
         `• <code>-1001234567890</code>\n\n` +
-        `⚠️ <b>Muhim:</b> Bot kanalda <b>admin</b> bo'lishi shart!`,
+        `⚠️ <b>${t('channel_not_admin').slice(0, 30)}</b>`,
       {
         parse_mode: 'HTML',
         reply_markup: {
           inline_keyboard: [
-            [{ text: '⬅️ Bekor qilish', callback_data: CALLBACK.ADMIN_CHANNELS }],
+            [{ text: t('btn_cancel'), callback_data: CALLBACK.ADMIN_CHANNELS }],
           ],
         },
       }
@@ -93,32 +92,33 @@ module.exports = (bot) => {
   });
 
   // ============================================================
-  // KANALNI O'CHIRISH
+  // 3. KANALNI O'CHIRISH
   // ============================================================
   bot.action(/^admin:ch_del:(.+)$/, async (ctx) => {
     await safeAnswer(ctx);
+    const t = ctx.t;
+
     if (ctx.state.role !== ROLES.SUPER_ADMIN && ctx.state.role !== ROLES.ADMIN) {
-      return ctx.reply("⛔ Faqat Admin.");
+      return ctx.reply(`⛔ ${t('error_only_admin')}`);
     }
 
     const chId = ctx.match[1];
     await channelService.deleteChannel(chId);
 
-    await ctx.reply("✅ Kanal o'chirildi.", {
+    await ctx.reply(`✅ ${t('success')}`, {
       reply_markup: {
-        inline_keyboard: [
-          [{ text: '⬅️ Kanallar', callback_data: CALLBACK.ADMIN_CHANNELS }],
-        ],
+        inline_keyboard: [[{ text: t('btn_back'), callback_data: CALLBACK.ADMIN_CHANNELS }]],
       },
     });
   });
 
   // ============================================================
-  // FSM — KANAL KIRITISH
+  // 4. FSM — KANAL KIRITISH
   // ============================================================
   bot.on('text', async (ctx, next) => {
     const s = ctx.session?.state;
     if (s !== STATES.CHANNEL_ADD_INPUT) return next();
+    const t = ctx.t;
 
     if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) {
       ctx.session = { state: null, data: {} };
@@ -126,27 +126,22 @@ module.exports = (bot) => {
     }
 
     const v = cleanText(ctx.message.text, 100);
-    if (!v) return ctx.reply("❗ Kanal ID yoki @username kiriting:");
+    if (!v) return ctx.reply(`❗ ${t('channel_add_prompt')}:`);
 
-    await ctx.reply('⏳ Kanal tekshirilmoqda...');
+    await ctx.reply(`⏳ ${t('sub_checking')}`);
 
     const result = await channelService.verifyChannel(bot, v);
 
     if (!result.ok) {
       ctx.session = { state: null, data: {} };
       return ctx.reply(
-        `❌ <b>Kanalga ulanib bo'lmadi</b>\n\n` +
-          `Sabab: <code>${escapeHtml(result.reason)}</code>\n\n` +
-          `💡 <b>Tekshiring:</b>\n` +
-          `• Kanal ID to'g'rimi?\n` +
-          `• Kanal ochiqmi?\n` +
-          `• @username to'g'rimi?`,
+        `❌ <b>${t('tour_announce_fail')}</b>\n\n` +
+          `${t('tour_announce_reason')}: <code>${escapeHtml(result.reason)}</code>\n\n` +
+          `💡 <b>${t('tour_announce_check')}</b>`,
         {
           parse_mode: 'HTML',
           reply_markup: {
-            inline_keyboard: [
-              [{ text: '⬅️ Kanallar', callback_data: CALLBACK.ADMIN_CHANNELS }],
-            ],
+            inline_keyboard: [[{ text: t('btn_back'), callback_data: CALLBACK.ADMIN_CHANNELS }]],
           },
         }
       );
@@ -155,40 +150,29 @@ module.exports = (bot) => {
     if (!result.isBotAdmin) {
       ctx.session = { state: null, data: {} };
       return ctx.reply(
-        `❌ <b>Bot bu kanalda admin emas!</b>\n\n` +
-          `Kanal: <b>${escapeHtml(result.chat.title)}</b>\n\n` +
+        `❌ <b>${t('channel_not_admin')}</b>\n\n` +
+          `${t('name')}: <b>${escapeHtml(result.chat.title)}</b>\n\n` +
           `━━━━━━━━━━━━━━━━━━━━\n\n` +
-          `💡 <b>Nima qilish kerak:</b>\n\n` +
-          `1. Kanalga o'ting\n` +
-          `2. Sozlamalar → Administratorlar\n` +
-          `3. Botni qo'shing (@${require('../config').BOT_USERNAME})\n` +
-          `4. Unga <b>"Post messages"</b> huquqini bering\n` +
-          `5. Qaytadan urinib ko'ring`,
+          `💡 <b>${t('tour_announce_check')}</b>`,
         {
           parse_mode: 'HTML',
           reply_markup: {
-            inline_keyboard: [
-              [{ text: '⬅️ Kanallar', callback_data: CALLBACK.ADMIN_CHANNELS }],
-            ],
+            inline_keyboard: [[{ text: t('btn_back'), callback_data: CALLBACK.ADMIN_CHANNELS }]],
           },
         }
       );
     }
 
-    // Kanalni saqlash
     try {
       const existing = await channelService.findByChannelId(result.chat.id);
       if (existing) {
         ctx.session = { state: null, data: {} };
         return ctx.reply(
-          `ℹ️ <b>Bu kanal allaqachon qo'shilgan</b>\n\n` +
-            `<b>${escapeHtml(existing.title)}</b>`,
+          `ℹ️ <b>${t('promo_already_used')}</b>\n\n<b>${escapeHtml(existing.title)}</b>`,
           {
             parse_mode: 'HTML',
             reply_markup: {
-              inline_keyboard: [
-                [{ text: '⬅️ Kanallar', callback_data: CALLBACK.ADMIN_CHANNELS }],
-              ],
+              inline_keyboard: [[{ text: t('btn_back'), callback_data: CALLBACK.ADMIN_CHANNELS }]],
             },
           }
         );
@@ -205,24 +189,22 @@ module.exports = (bot) => {
       ctx.session = { state: null, data: {} };
 
       await ctx.reply(
-        `✅ <b>Kanal qo'shildi!</b>\n\n` +
-          `📛 Nomi: <b>${escapeHtml(result.chat.title)}</b>\n` +
+        `✅ <b>${t('channel_added')}</b>\n\n` +
+          `📛 ${t('name')}: <b>${escapeHtml(result.chat.title)}</b>\n` +
           (result.chat.username ? `🔗 Username: @${escapeHtml(result.chat.username)}\n` : '') +
           `🆔 ID: <code>${result.chat.id}</code>\n` +
-          `🤖 Bot admin: ✅\n\n` +
-          `<i>Endi bu kanalni bepul turnirlarga majburiy qilib qo'shishingiz mumkin.</i>`,
+          `🤖 Bot: ✅\n\n` +
+          `<i>${t('ch_announce_btn')}</i>`,
         {
           parse_mode: 'HTML',
           reply_markup: {
-            inline_keyboard: [
-              [{ text: '⬅️ Kanallar', callback_data: CALLBACK.ADMIN_CHANNELS }],
-            ],
+            inline_keyboard: [[{ text: t('btn_back'), callback_data: CALLBACK.ADMIN_CHANNELS }]],
           },
         }
       );
     } catch (e) {
       ctx.session = { state: null, data: {} };
-      await ctx.reply('❌ Xatolik: ' + (e.message || 'xato'));
+      await ctx.reply(`❌ ${t('error_prefix')} ${e.message || t('error_generic')}`);
     }
   });
 };

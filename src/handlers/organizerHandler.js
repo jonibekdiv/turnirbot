@@ -1,5 +1,5 @@
 // ============================================================
-// ORGANIZER HANDLER — Organizer uchun maxsus
+// ORGANIZER HANDLER — 3 tilda
 // ============================================================
 const { Markup } = require('telegraf');
 const tournamentService = require('../services/tournamentService');
@@ -12,28 +12,27 @@ const { hasAnyRole } = require('../middlewares/roleGuard');
 
 module.exports = (bot) => {
   // ============================================================
-  // MENING TURNIRLARIM (faqat Organizer o'zi yaratgan)
+  // 1. MENING TURNIRLARIM
   // ============================================================
   bot.action(CALLBACK.ORG_MY_TOURNAMENTS, async (ctx) => {
     await safeAnswer(ctx);
+    const t = ctx.t;
 
     if (!hasAnyRole(ctx.state.role, [ROLES.ORGANIZER])) {
-      return ctx.reply(ctx.t('error_access'));
+      return ctx.reply(t('error_access'));
     }
 
-    // Faqat o'zi yaratgan turnirlar
     const tours = await tournamentService.getOrganizerTournaments(ctx.from.id);
 
     if (!tours.length) {
       return safeEdit(
         ctx,
-        `📭 <b>Siz hali turnir yaratmagansiz</b>\n\n` +
-          `Yangi turnir yaratish uchun pastdagi tugmani bosing:`,
+        `📭 <b>${t('org_no_tournaments')}</b>\n\n${t('org_pick_your_tournament')}`,
         {
           reply_markup: {
             inline_keyboard: [
-              [Markup.button.callback('➕ Yangi turnir', CALLBACK.TOUR_CREATE)],
-              [Markup.button.callback('⬅️ Organizer panel', CALLBACK.ADMIN_PANEL)],
+              [Markup.button.callback(t('tour_create_again'), CALLBACK.TOUR_CREATE)],
+              [Markup.button.callback(t('admin_panel'), CALLBACK.ADMIN_PANEL)],
             ],
           },
         }
@@ -41,7 +40,7 @@ module.exports = (bot) => {
     }
 
     const lines = [
-      `🏆 <b>Mening turnirlarim (${tours.length})</b>`,
+      `🏆 <b>${t('org_my_tournaments')} (${tours.length})</b>`,
       '',
       '━━━━━━━━━━━━━━━━━━━━',
       '',
@@ -49,36 +48,29 @@ module.exports = (bot) => {
 
     const buttons = [];
 
-    tours.slice(0, 15).forEach((t, i) => {
+    tours.slice(0, 15).forEach((tour, i) => {
       const status =
-        t.registeredTeams.length >= t.maxTeams
+        tour.registeredTeams.length >= tour.maxTeams
           ? '🔴'
-          : t.status === 'cancelled'
+          : tour.status === 'cancelled'
           ? '🚫'
           : '🟢';
 
-      const typeEmoji = t.type === 'paid' ? '💳' : '🆓';
+      const typeEmoji = tour.type === 'paid' ? '💳' : '🆓';
 
       lines.push(
-        `<b>${i + 1}. ${escapeHtml(t.title)}</b> ${typeEmoji}\n` +
-          `   📅 ${t.date} | ⏰ ${t.startTime}\n` +
-          `   👥 ${t.registeredTeams.length}/${t.maxTeams} ${status}`
+        `<b>${i + 1}. ${escapeHtml(tour.title)}</b> ${typeEmoji}\n` +
+          `   📅 ${tour.date} | ⏰ ${tour.startTime}\n` +
+          `   👥 ${tour.registeredTeams.length}/${tour.maxTeams} ${status}`
       );
       lines.push('');
 
-      const titleShort =
-        t.title.length > 30 ? t.title.slice(0, 27) + '...' : t.title;
-      buttons.push([
-        Markup.button.callback(`📂 ${titleShort}`, CALLBACK.TOUR_OPEN + t.id),
-      ]);
+      const titleShort = tour.title.length > 30 ? tour.title.slice(0, 27) + '...' : tour.title;
+      buttons.push([Markup.button.callback(`📂 ${titleShort}`, CALLBACK.TOUR_OPEN + tour.id)]);
     });
 
-    buttons.push([
-      Markup.button.callback('➕ Yangi turnir', CALLBACK.TOUR_CREATE),
-    ]);
-    buttons.push([
-      Markup.button.callback('⬅️ Organizer panel', CALLBACK.ADMIN_PANEL),
-    ]);
+    buttons.push([Markup.button.callback(t('tour_create_again'), CALLBACK.TOUR_CREATE)]);
+    buttons.push([Markup.button.callback(t('admin_panel'), CALLBACK.ADMIN_PANEL)]);
 
     try {
       await ctx.editMessageText(lines.join('\n'), {
@@ -86,74 +78,49 @@ module.exports = (bot) => {
         reply_markup: { inline_keyboard: buttons },
       });
     } catch (e) {
-      await ctx.reply(lines.join('\n'), {
-        parse_mode: 'HTML',
-        reply_markup: { inline_keyboard: buttons },
-      });
+      await ctx.reply(lines.join('\n'), { parse_mode: 'HTML', reply_markup: { inline_keyboard: buttons } });
     }
   });
 
   // ============================================================
-  // MENING TO'LOVLARIM (faqat o'z turnirlari)
+  // 2. MENING TO'LOVLARIM
   // ============================================================
   bot.action(CALLBACK.ORG_MY_PAYMENTS, async (ctx) => {
     await safeAnswer(ctx);
+    const t = ctx.t;
 
-    if (!hasAnyRole(ctx.state.role, [ROLES.ORGANIZER])) {
-      return ctx.reply(ctx.t('error_access'));
-    }
+    if (!hasAnyRole(ctx.state.role, [ROLES.ORGANIZER])) return ctx.reply(t('error_access'));
 
     const payments = await paymentService.getOrganizerPayments(ctx.from.id);
 
     if (!payments.length) {
-      return safeEdit(ctx, `📭 <b>Sizda to'lovlar yo'q</b>`, {
+      return safeEdit(ctx, `📭 <b>${t('org_no_payments')}</b>`, {
         reply_markup: {
-          inline_keyboard: [
-            [Markup.button.callback('⬅️ Organizer panel', CALLBACK.ADMIN_PANEL)],
-          ],
+          inline_keyboard: [[Markup.button.callback(t('admin_panel'), CALLBACK.ADMIN_PANEL)]],
         },
       });
     }
 
-    const lines = [
-      `💳 <b>Mening to'lovlarim (${payments.length})</b>`,
-      '',
-      '━━━━━━━━━━━━━━━━━━━━',
-      '',
-    ];
+    const lines = [`💳 <b>${t('org_my_payments')} (${payments.length})</b>`, '', '━━━━━━━━━━━━━━━━━━━━', ''];
 
-    const statusEmoji = {
-      pending: '⏳',
-      approved: '✅',
-      rejected: '❌',
-      cancelled: '🚫',
-      expired: '⌛',
-    };
-
-    const statusText = {
-      pending: 'Tekshirilmoqda',
-      approved: 'Tasdiqlangan',
-      rejected: 'Rad etilgan',
-      cancelled: 'Bekor qilingan',
-      expired: "Muddati o'tgan",
+    const statusEmoji = { pending: '⏳', approved: '✅', rejected: '❌', cancelled: '🚫', expired: '⌛' };
+    const statusKey = {
+      pending: 'wallet_pending',
+      approved: 'wallet_approved',
+      rejected: 'wallet_rejected',
+      cancelled: 'wallet_cancelled',
+      expired: 'payment_status_expired',
     };
 
     for (const p of payments.slice(0, 15)) {
-      const t = await tournamentService.getTournament(p.tournamentId);
+      const tour = await tournamentService.getTournament(p.tournamentId);
       const team = await teamService.getTeam(p.teamId);
-      const captain = await userService.getUser(p.captainId);
 
-      lines.push(
-        `${statusEmoji[p.status] || '•'} <b>${escapeHtml(
-          t?.title || p.tournamentId
-        )}</b>`
-      );
+      lines.push(`${statusEmoji[p.status] || '•'} <b>${escapeHtml(tour?.title || p.tournamentId)}</b>`);
       lines.push(`   👥 ${escapeHtml(team?.name || '-')}`);
       lines.push(`   💰 ${p.amount} ${p.currency}`);
-      lines.push(
-        `   📅 ${new Date(p.submittedAt).toLocaleString('uz-UZ')}`
-      );
-      lines.push(`   📌 ${statusText[p.status] || p.status}`);
+      lines.push(`   📅 ${new Date(p.submittedAt).toLocaleString('uz-UZ')}`);
+      lines.push(`   📌 ${t(statusKey[p.status] || 'wallet_pending')}`);
       if (p.rejectReason) {
         lines.push(`   ❗ ${escapeHtml(p.rejectReason)}`);
       }
@@ -162,162 +129,114 @@ module.exports = (bot) => {
 
     const rows = [];
 
-    // Faqat pending to'lovlar uchun "ko'rish" tugmasi
-    const pending = payments.filter(
-      (p) => p.status === PAYMENT_STATUS.PENDING
-    );
+    const pending = payments.filter((p) => p.status === PAYMENT_STATUS.PENDING);
     pending.slice(0, 5).forEach((p) => {
-      rows.push([
-        Markup.button.callback(
-          `⏳ Ko'rish: ${p.id.slice(0, 12)}`,
-          'pay:view:' + p.id
-        ),
-      ]);
+      rows.push([Markup.button.callback(`⏳ ${t('org_view')}: ${p.id.slice(0, 12)}`, 'pay:view:' + p.id)]);
     });
 
-    rows.push([Markup.button.callback('⬅️ Organizer panel', CALLBACK.ADMIN_PANEL)]);
+    rows.push([Markup.button.callback(t('admin_panel'), CALLBACK.ADMIN_PANEL)]);
 
     try {
-      await ctx.editMessageText(lines.join('\n'), {
-        parse_mode: 'HTML',
-        reply_markup: { inline_keyboard: rows },
-      });
+      await ctx.editMessageText(lines.join('\n'), { parse_mode: 'HTML', reply_markup: { inline_keyboard: rows } });
     } catch (e) {
-      await ctx.reply(lines.join('\n'), {
-        parse_mode: 'HTML',
-        reply_markup: { inline_keyboard: rows },
-      });
+      await ctx.reply(lines.join('\n'), { parse_mode: 'HTML', reply_markup: { inline_keyboard: rows } });
     }
   });
 
   // ============================================================
-  // KUTILAYOTGAN CHEKLAR (faqat organizer'ning o'z turnirlari)
+  // 3. KUTILAYOTGAN CHEKLAR
   // ============================================================
   bot.action(CALLBACK.ORG_PENDING_PAYMENTS, async (ctx) => {
     await safeAnswer(ctx);
+    const t = ctx.t;
 
-    const isAdmin =
-      ctx.state.role === ROLES.SUPER_ADMIN || ctx.state.role === ROLES.ADMIN;
+    const isAdmin = ctx.state.role === ROLES.SUPER_ADMIN || ctx.state.role === ROLES.ADMIN;
     const isOrganizer = ctx.state.role === ROLES.ORGANIZER;
 
-    if (!isAdmin && !isOrganizer) {
-      return ctx.reply(ctx.t('error_access'));
-    }
+    if (!isAdmin && !isOrganizer) return ctx.reply(t('error_access'));
 
-    // Filter: admin uchun hammasi, organizer uchun faqat o'zi
     let pending;
     if (isOrganizer) {
-      // Faqat organizer'ning o'z turnirlariga tegishli
-      const allPending = await paymentService.getAllPayments(
-        PAYMENT_STATUS.PENDING
-      );
-      pending = allPending.filter(
-        (p) => Number(p.organizerId) === Number(ctx.from.id)
-      );
+      const allPending = await paymentService.getAllPayments(PAYMENT_STATUS.PENDING);
+      pending = allPending.filter((p) => Number(p.organizerId) === Number(ctx.from.id));
     } else {
       pending = await paymentService.getAllPayments(PAYMENT_STATUS.PENDING);
     }
 
     if (!pending.length) {
-      return safeEdit(ctx, `📭 <b>Kutilayotgan cheklar yo'q</b>`, {
+      return safeEdit(ctx, `📭 <b>${t('org_no_pending')}</b>`, {
         reply_markup: {
-          inline_keyboard: [
-            [Markup.button.callback('⬅️ Orqaga', CALLBACK.ADMIN_PANEL)],
-          ],
+          inline_keyboard: [[Markup.button.callback(t('admin_panel'), CALLBACK.ADMIN_PANEL)]],
         },
       });
     }
 
-    const lines = [
-      `⏳ <b>Kutilayotgan cheklar (${pending.length})</b>`,
-      '',
-      '━━━━━━━━━━━━━━━━━━━━',
-      '',
-    ];
-
+    const lines = [`⏳ <b>${t('org_pending_title')} (${pending.length})</b>`, '', '━━━━━━━━━━━━━━━━━━━━', ''];
     const rows = [];
 
     for (const p of pending.slice(0, 10)) {
-      const t = await tournamentService.getTournament(p.tournamentId);
+      const tour = await tournamentService.getTournament(p.tournamentId);
       const team = await teamService.getTeam(p.teamId);
       const captain = await userService.getUser(p.captainId);
 
-      const dt = new Date(p.submittedAt);
-      const dateStr = dt.toLocaleString('uz-UZ');
-
       lines.push(
-        `🏆 <b>${escapeHtml(t?.title || '-')}</b>\n` +
+        `🏆 <b>${escapeHtml(tour?.title || '-')}</b>\n` +
           `   👥 ${escapeHtml(team?.name || '-')}\n` +
           `   👤 ${captain?.username ? '@' + captain.username : 'ID:' + p.captainId}\n` +
           `   💰 ${p.amount} ${p.currency}\n` +
-          `   📅 ${dateStr}`
+          `   📅 ${new Date(p.submittedAt).toLocaleString('uz-UZ')}`
       );
       lines.push('');
 
       rows.push([
         Markup.button.callback(
-          `👁 Ko'rish — ${team?.name?.slice(0, 20) || p.id.slice(0, 8)}`,
+          `👁 ${t('org_view')} — ${team?.name?.slice(0, 20) || p.id.slice(0, 8)}`,
           'pay:view:' + p.id
         ),
       ]);
     }
 
-    rows.push([Markup.button.callback('⬅️ Orqaga', CALLBACK.ADMIN_PANEL)]);
+    rows.push([Markup.button.callback(t('admin_panel'), CALLBACK.ADMIN_PANEL)]);
 
     try {
-      await ctx.editMessageText(lines.join('\n'), {
-        parse_mode: 'HTML',
-        reply_markup: { inline_keyboard: rows },
-      });
+      await ctx.editMessageText(lines.join('\n'), { parse_mode: 'HTML', reply_markup: { inline_keyboard: rows } });
     } catch (e) {
-      await ctx.reply(lines.join('\n'), {
-        parse_mode: 'HTML',
-        reply_markup: { inline_keyboard: rows },
-      });
+      await ctx.reply(lines.join('\n'), { parse_mode: 'HTML', reply_markup: { inline_keyboard: rows } });
     }
   });
 
   // ============================================================
-  // TO'LOVNI KO'RISH (chek bilan)
+  // 4. TO'LOVNI KO'RISH
   // ============================================================
   bot.action(/^pay:view:(.+)$/, async (ctx) => {
     await safeAnswer(ctx);
+    const t = ctx.t;
+
     const payId = ctx.match[1];
-
     const payment = await paymentService.getPayment(payId);
-    if (!payment) return ctx.reply(ctx.t('error_not_found'));
+    if (!payment) return ctx.reply(t('error_not_found'));
 
-    // Ruxsat tekshirish
-    const isAdmin =
-      ctx.state.role === ROLES.SUPER_ADMIN || ctx.state.role === ROLES.ADMIN;
-    const isOwner =
-      ctx.state.role === ROLES.ORGANIZER &&
-      Number(payment.organizerId) === Number(ctx.from.id);
+    const isAdmin = ctx.state.role === ROLES.SUPER_ADMIN || ctx.state.role === ROLES.ADMIN;
+    const isOwner = ctx.state.role === ROLES.ORGANIZER && Number(payment.organizerId) === Number(ctx.from.id);
 
-    if (!isAdmin && !isOwner) {
-      return ctx.reply("⛔ Bu to'lovni ko'rishga ruxsatingiz yo'q.");
-    }
+    if (!isAdmin && !isOwner) return ctx.reply(`⛔ ${t('error_access')}`);
 
-    const t = await tournamentService.getTournament(payment.tournamentId);
+    const tour = await tournamentService.getTournament(payment.tournamentId);
     const team = await teamService.getTeam(payment.teamId);
     const captain = await userService.getUser(payment.captainId);
 
     const header =
       `╔══════════════════════╗\n` +
-      `   💳 <b>TO'LOV MA'LUMOTLARI</b>\n` +
+      `   💳 <b>${t('pay_view_title')}</b>\n` +
       `╚══════════════════════╝\n\n` +
-      `🏆 <b>Turnir:</b> ${escapeHtml(t?.title || '-')}\n` +
-      `👥 <b>Komanda:</b> ${escapeHtml(team?.name || '-')}\n` +
-      `🏷 <b>Teg:</b> ${escapeHtml(team?.tag || '-')}\n\n` +
-      `👤 <b>Captain:</b> ${
-        captain?.username ? '@' + captain.username : 'ID:' + payment.captainId
-      }\n` +
-      `💰 <b>Summa:</b> ${payment.amount} ${payment.currency}\n` +
-      `📅 <b>Yuborilgan:</b> ${new Date(payment.submittedAt).toLocaleString(
-        'uz-UZ'
-      )}\n` +
-      `🆔 <b>To'lov ID:</b> <code>${payment.id}</code>\n` +
-      `📌 <b>Holat:</b> ${payment.status}`;
+      `🏆 <b>${t('admin_tournaments')}:</b> ${escapeHtml(tour?.title || '-')}\n` +
+      `👥 <b>${t('admin_teams')}:</b> ${escapeHtml(team?.name || '-')}\n` +
+      `🏷 <b>${t('team_tag_label')}:</b> ${escapeHtml(team?.tag || '-')}\n\n` +
+      `👤 <b>${t('team_captain')}:</b> ${captain?.username ? '@' + captain.username : 'ID:' + payment.captainId}\n` +
+      `💰 <b>${t('promotion_total')}:</b> ${payment.amount} ${payment.currency}\n` +
+      `📅 <b>${t('pay_submitted_at')}:</b> ${new Date(payment.submittedAt).toLocaleString('uz-UZ')}\n` +
+      `🆔 <b>ID:</b> <code>${payment.id}</code>\n` +
+      `📌 <b>${t('pay_status_label')}:</b> ${payment.status}`;
 
     const { paymentReviewKeyboard } = require('../keyboards/paymentKeyboard');
     const kb = paymentReviewKeyboard(payment.id, payment.tournamentId);
@@ -332,16 +251,13 @@ module.exports = (bot) => {
       } else {
         await ctx.reply(header, { parse_mode: 'HTML' });
         await ctx.replyWithDocument(payment.receiptFileId, {
-          caption: `📄 Chek — ${payment.amount} ${payment.currency}`,
+          caption: `📄 ${t('payment_new_receipt')} — ${payment.amount} ${payment.currency}`,
           ...kb,
         });
       }
     } catch (e) {
       console.error('pay:view xatosi:', e.message);
-      await ctx.reply(
-        `❌ Chekni ko'rsatib bo'lmadi.\n\n${header}`,
-        { parse_mode: 'HTML' }
-      );
+      await ctx.reply(`❌ ${t('pay_view_cannot')}\n\n${header}`, { parse_mode: 'HTML' });
     }
   });
 };

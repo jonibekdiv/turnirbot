@@ -1,5 +1,6 @@
-// Telegram Inline rejim handleri
-// Foydalanuvchi @EsportArenaBot <so'rov> yozganda ishlaydi
+// ============================================================
+// INLINE HANDLER — 3 tilda
+// ============================================================
 const { Markup } = require('telegraf');
 const tournamentService = require('../services/tournamentService');
 const teamService = require('../services/teamService');
@@ -9,17 +10,19 @@ const config = require('../config');
 
 module.exports = (bot) => {
   // ============================================================
-  // INLINE QUERY HANDLER
+  // INLINE QUERY
   // ============================================================
   bot.on('inline_query', async (ctx) => {
+    const t = ctx.t || ((key) => key);
+
     try {
       const query = (ctx.inlineQuery.query || '').trim();
-      const results = await buildResults(query);
+      const results = await buildResults(query, t);
 
       if (results.length === 0) {
         return ctx.answerInlineQuery([], {
           cache_time: 3,
-          switch_pm_text: '🎮 Botni ochish',
+          switch_pm_text: `🏆 ${t('menu_tournaments')}`,
           switch_pm_parameter: 'inline_empty',
         });
       }
@@ -38,39 +41,38 @@ module.exports = (bot) => {
 };
 
 // ============================================================
-// NATIJALARNI TAYYORLASH
+// NATIJALAR
 // ============================================================
-async function buildResults(query) {
+async function buildResults(query, t) {
   const all = await tournamentService.getAllTournaments();
   const now = new Date();
 
-  // ---------- 1. Turnir ID si bo'yicha (tour_xxx) ----------
+  // 1. Turnir ID
   if (/^tour_[a-z0-9]+$/i.test(query)) {
-    const t = all.find((x) => x.id === query);
-    if (t) return [buildTournamentResult(t, true)];
-    return [buildNotFound(query)];
+    const tour = all.find((x) => x.id === query);
+    if (tour) return [buildTournamentResult(tour, true, t)];
+    return [buildNotFound(query, t)];
   }
 
-  // ---------- 2. Komanda qidirish (team TAG) ----------
+  // 2. Komanda
   if (query.toLowerCase().startsWith('team ')) {
     const tag = query.slice(5).trim().toUpperCase();
     if (!tag) return [];
     const teams = await teamService.getAllTeams();
     const found = teams
       .filter(
-        (t) =>
-          t.tag.toUpperCase().includes(tag) ||
-          t.name.toUpperCase().includes(tag)
+        (tm) =>
+          tm.tag.toUpperCase().includes(tag) || tm.name.toUpperCase().includes(tag)
       )
       .slice(0, 20);
-    return found.map(buildTeamResult);
+    return found.map((tm) => buildTeamResult(tm, t));
   }
 
-  // ---------- 3. Bo'sh query — kelajakdagi turnirlar ----------
+  // 3. Bo'sh query
   if (!query) {
     const upcoming = all
-      .filter((t) => {
-        const d = parseDateTime(t.date, t.startTime);
+      .filter((tour) => {
+        const d = parseDateTime(tour.date, tour.startTime);
         return d && d > now;
       })
       .sort((a, b) => {
@@ -80,20 +82,18 @@ async function buildResults(query) {
       })
       .slice(0, 20);
 
-    if (upcoming.length === 0) {
-      return [buildEmptyResult()];
-    }
-    return upcoming.map((t) => buildTournamentResult(t, false));
+    if (upcoming.length === 0) return [buildEmptyResult(t)];
+    return upcoming.map((tour) => buildTournamentResult(tour, false, t));
   }
 
-  // ---------- 4. Matn bo'yicha qidirish ----------
+  // 4. Matn
   const q = query.toLowerCase();
   const found = all
     .filter(
-      (t) =>
-        (t.title || '').toLowerCase().includes(q) ||
-        (t.mode || '').toLowerCase().includes(q) ||
-        (t.map || '').toLowerCase().includes(q)
+      (tour) =>
+        (tour.title || '').toLowerCase().includes(q) ||
+        (tour.mode || '').toLowerCase().includes(q) ||
+        (tour.map || '').toLowerCase().includes(q)
     )
     .sort((a, b) => {
       const da = parseDateTime(a.date, a.startTime);
@@ -102,86 +102,81 @@ async function buildResults(query) {
     })
     .slice(0, 20);
 
-  return found.map((t) => buildTournamentResult(t, false));
+  return found.map((tour) => buildTournamentResult(tour, false, t));
 }
 
 // ============================================================
-// TURNIR NATIJASI
+// TURNIR RESULT
 // ============================================================
-function buildTournamentResult(t, detailed) {
+function buildTournamentResult(tour, detailed, t) {
   const regStatus =
-    t.registeredTeams.length >= t.maxTeams
-      ? '🔴 To\'lgan'
-      : (t.registrationDeadline && new Date(t.registrationDeadline) < new Date()
-          ? '🔴 Yopilgan'
-          : '🟢 Ochiq');
+    tour.registeredTeams.length >= tour.maxTeams
+      ? `🔴 ${t('error_tournament_full')}`
+      : tour.registrationDeadline && new Date(tour.registrationDeadline) < new Date()
+      ? `🔴 ${t('error_registration_closed')}`
+      : `🟢 ${t('success')}`;
 
   const text =
-    `🏆 <b>${escapeHtml(t.title)}</b>\n\n` +
-    `📅 Sana: <b>${t.date}</b>\n` +
-    `⏰ Vaqt: <b>${t.startTime}</b> (${t.timezone})\n` +
-    `🎮 Rejim: <b>${escapeHtml(t.mode)}</b>\n` +
-    `🗺 Xarita: <b>${escapeHtml(t.map || 'Erangel')}</b>\n` +
-    `👥 Komandalar: <b>${t.registeredTeams.length}/${t.maxTeams}</b>\n` +
-    `📝 Ro'yxat: <b>${regStatus}</b>\n` +
-    `🎙 Host: <b>${t.hostId ? 'bor ✅' : 'yo\'q'}</b>\n` +
-    (detailed ? `\n🆔 ID: <code>${t.id}</code>\n` : '') +
-    (detailed && t.description ? `\n📄 ${escapeHtml(t.description)}` : '');
+    `🏆 <b>${escapeHtml(tour.title)}</b>\n\n` +
+    `📅 ${t('date')}: <b>${tour.date}</b>\n` +
+    `⏰ ${t('time')}: <b>${tour.startTime}</b> (${tour.timezone})\n` +
+    `🎮 ${t('mode')}: <b>${escapeHtml(tour.mode)}</b>\n` +
+    `🗺 ${t('stage_match_map')}: <b>${escapeHtml(tour.map || 'Erangel')}</b>\n` +
+    `👥 ${t('admin_teams')}: <b>${tour.registeredTeams.length}/${tour.maxTeams}</b>\n` +
+    `📝 ${t('success')}: <b>${regStatus}</b>\n` +
+    `🎙 ${t('host_label')}: <b>${tour.hostId ? '✅' : '❌'}</b>\n` +
+    (detailed ? `\n🆔 ID: <code>${tour.id}</code>\n` : '') +
+    (detailed && tour.description ? `\n📄 ${escapeHtml(tour.description)}` : '');
 
   const keyboard = {
     inline_keyboard: [
       [
         Markup.button.url(
-          '🎮 Turnirga kirish',
-          `https://t.me/${config.BOT_USERNAME}?start=tour_${t.id}`
+          '🎮 ' + t('tour_open'),
+          `https://t.me/${config.BOT_USERNAME}?start=tour_${tour.id}`
         ),
       ],
     ],
   };
 
-  // Rasm mavjud bo'lsa — photo result
-  if (t.imageFileId) {
+  if (tour.imageFileId) {
     return {
       type: 'photo',
-      id: `tour_${t.id}`,
-      photo_file_id: t.imageFileId,
-      title: `🏆 ${t.title}`,
-      description: `${t.date} • ${t.startTime} • ${t.mode} • ${t.registeredTeams.length}/${t.maxTeams}`,
+      id: `tour_${tour.id}`,
+      photo_file_id: tour.imageFileId,
+      title: `🏆 ${tour.title}`,
+      description: `${tour.date} • ${tour.startTime} • ${tour.mode} • ${tour.registeredTeams.length}/${tour.maxTeams}`,
       caption: text,
       parse_mode: 'HTML',
       reply_markup: keyboard,
     };
   }
 
-  // Rasm yo'q — article result
   return {
     type: 'article',
-    id: `tour_${t.id}`,
-    title: `🏆 ${t.title}`,
-    description: `${t.date} • ${t.startTime} • ${t.mode} • ${t.registeredTeams.length}/${t.maxTeams}`,
-    input_message_content: {
-      message_text: text,
-      parse_mode: 'HTML',
-    },
+    id: `tour_${tour.id}`,
+    title: `🏆 ${tour.title}`,
+    description: `${tour.date} • ${tour.startTime} • ${tour.mode} • ${tour.registeredTeams.length}/${tour.maxTeams}`,
+    input_message_content: { message_text: text, parse_mode: 'HTML' },
     reply_markup: keyboard,
   };
 }
 
 // ============================================================
-// KOMANDA NATIJASI
+// KOMANDA RESULT
 // ============================================================
-function buildTeamResult(team) {
+function buildTeamResult(team, t) {
   const text =
     `👥 <b>${escapeHtml(team.name)} [${escapeHtml(team.tag)}]</b>\n\n` +
-    `👑 Captain ID: <code>${team.captainId}</code>\n` +
-    `👥 A'zolar: <b>${team.members.length}/8</b>\n` +
-    `🔑 Qo'shilish kodi: <code>${team.joinCode}</code>`;
+    `👑 ${t('team_captain')} ID: <code>${team.captainId}</code>\n` +
+    `👥 ${t('team_members_count')}: <b>${team.members.length}/8</b>\n` +
+    `🔑 ${t('team_join_code')}: <code>${team.joinCode}</code>`;
 
   const keyboard = {
     inline_keyboard: [
       [
         Markup.button.url(
-          '🔑 Komandaga qo\'shilish',
+          '🔑 ' + t('team_join'),
           `https://t.me/${config.BOT_USERNAME}?start=join_${team.joinCode}`
         ),
       ],
@@ -194,7 +189,7 @@ function buildTeamResult(team) {
       id: `team_${team.id}`,
       photo_file_id: team.avatarFileId,
       title: `👥 ${team.name} [${team.tag}]`,
-      description: `👥 ${team.members.length}/8 a'zo`,
+      description: `👥 ${team.members.length}/8`,
       caption: text,
       parse_mode: 'HTML',
       reply_markup: keyboard,
@@ -205,54 +200,49 @@ function buildTeamResult(team) {
     type: 'article',
     id: `team_${team.id}`,
     title: `👥 ${team.name} [${team.tag}]`,
-    description: `👥 ${team.members.length}/8 a'zo`,
-    input_message_content: {
-      message_text: text,
-      parse_mode: 'HTML',
-    },
+    description: `👥 ${team.members.length}/8`,
+    input_message_content: { message_text: text, parse_mode: 'HTML' },
     reply_markup: keyboard,
   };
 }
 
 // ============================================================
-// TURNIR TOPILMADI
+// TOPILMADI
 // ============================================================
-function buildNotFound(query) {
+function buildNotFound(query, t) {
   return {
     type: 'article',
     id: 'not_found',
-    title: '❌ Turnir topilmadi',
-    description: `"${query}" bo'yicha natija yo'q`,
+    title: `❗ ${t('tour_not_found')}`,
+    description: `"${query}" — ${t('no_data')}`,
     input_message_content: {
       message_text:
-        `❌ <b>Turnir topilmadi</b>\n\n` +
-        `Qidirilgan ID: <code>${escapeHtml(query)}</code>\n\n` +
-        `💡 <i>ID to'g'ri kiritilganini tekshiring.</i>`,
+        `❗ <b>${t('tour_not_found')}</b>\n\n` +
+        `${t('tour_id_sent')}: <code>${escapeHtml(query)}</code>\n\n` +
+        `<i>${t('tour_announce_check_id')}</i>`,
       parse_mode: 'HTML',
     },
   };
 }
 
 // ============================================================
-// BO'SH NATIJA
+// BO'SH
 // ============================================================
-function buildEmptyResult() {
+function buildEmptyResult(t) {
   return {
     type: 'article',
     id: 'empty',
-    title: '📭 Hozircha turnirlar yo\'q',
-    description: 'Yangi turnirlar tez orada qo\'shiladi',
+    title: `📭 ${t('tour_empty')}`,
+    description: t('tour_announce_check_id'),
     input_message_content: {
-      message_text:
-        `📭 <b>Hozircha faol turnirlar yo'q</b>\n\n` +
-        `💡 <i>Yangi turnirlar haqida xabar olish uchun botni kuzatib turing.</i>`,
+      message_text: `📭 <b>${t('tour_empty')}</b>\n\n<i>${t('tour_empty')}</i>`,
       parse_mode: 'HTML',
     },
     reply_markup: {
       inline_keyboard: [
         [
           Markup.button.url(
-            '🎮 Botni ochish',
+            '🎮 ' + t('menu_tournaments'),
             `https://t.me/${config.BOT_USERNAME}`
           ),
         ],

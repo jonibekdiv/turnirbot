@@ -1,0 +1,128 @@
+{
+  "mt_muehbmpyti4k7j": {
+    "matchId": "mt_muehbmpyti4k7j",
+    "stageId": "stage_muehbmpbepq3h6",
+    "tournamentId": "tour_muefizaibpckfa",
+    "reminders": {
+      "24h": false,
+      "3h": false,
+      "1h": false,
+      "30m": false,
+      "10m": true
+    },
+    "createdAt": "2026-09-24T14:44:12.637Z",
+    "updatedAt": "2026-09-24T14:44:12.659Z"
+  },
+  "mt_muehbmqgc81eiz": {
+    "matchId": "mt_muehbmqgc81eiz",
+    "stageId": "stage_muehbmpbepq3h6",
+    "tournamentId": "tour_muefizaibpckfa",
+    "reminders": {
+      "24h": false,
+      "3h": false,
+      "1h": false,
+      "30m": false,
+      "10m": true
+    },
+    "createdAt": "2026-09-24T14:44:12.711Z",
+    "updatedAt": "2026-09-24T14:44:12.720Z"
+  },
+  "mt_muehbmqxxfodqd": {
+    "matchId": "mt_muehbmqxxfodqd",
+    "stageId": "stage_muehbmpbepq3h6",
+    "tournamentId": "tour_muefizaibpckfa",
+    "reminders": {
+      "24h": false,
+      "3h": false,
+      "1h": false,
+      "30m": false,
+      "10m": true
+    },
+    "createdAt": "2026-09-24T14:44:12.894Z",
+    "updatedAt": "2026-09-24T14:44:12.940Z"
+  },
+  "mt_muehbmre9ax9d1": {
+    "matchId": "mt_muehbmre9ax9d1",
+    "stageId": "stage_muehbmpbepq3h6",
+    "tournamentId": "tour_muefizaibpckfa",
+    "reminders": {
+      "24h": false,
+      "3h": false,
+      "1h": false,
+      "30m": false,
+      "10m": true
+    },
+    "createdAt": "2026-09-24T14:44:13.044Z",
+    "updatedAt": "2026-09-24T14:44:13.063Z"
+  },
+  "mt_muehbmruh50vhl": {
+    "matchId": "mt_muehbmruh50vhl",
+    "stageId": "stage_muehbmpbepq3h6",
+    "tournamentId": "tour_muefizaibpckfa",
+    "reminders": {
+      "24h": true,
+      "3h": false,
+      "1h": false,
+      "30m": false,
+      "10m": false
+    },
+    "createdAt": "2026-09-24T14:54:12.458Z",
+    "updatedAt": "2026-09-24T14:54:12.476Z"
+  },
+  "mt_muehbmsbzssaeq": {
+    "matchId": "mt_muehbmsbzssaeq",
+    "stageId": "stage_muehbmpbepq3h6",
+    "tournamentId": "tour_muefizaibpckfa",
+    "reminders": {
+      "24h": true,
+      "3h": false,
+      "1h": false,
+      "30m": false,
+      "10m": false
+    },
+    "createdAt": "2026-09-24T14:54:12.504Z",
+    "updatedAt": "2026-09-24T14:54:12.513Z"
+  },
+  "mt_muehbmstvr521h": {
+    "matchId": "mt_muehbmstvr521h",
+    "stageId": "stage_muehbmpbepq3h6",
+    "tournamentId": "tour_muefizaibpckfa",
+    "reminders": {
+      "24h": true,
+      "3h": false,
+      "1h": false,
+      "30m": false,
+      "10m": false
+    },
+    "createdAt": "2026-09-24T14:54:12.540Z",
+    "updatedAt": "2026-09-24T14:54:12.553Z"
+  },
+  "mt_muehbmtcm7pyh6": {
+    "matchId": "mt_muehbmtcm7pyh6",
+    "stageId": "stage_muehbmpbepq3h6",
+    "tournamentId": "tour_muefizaibpckfa",
+    "reminders": {
+      "24h": true,
+      "3h": false,
+      "1h": false,
+      "30m": false,
+      "10m": false
+    },
+    "createdAt": "2026-09-24T14:54:12.576Z",
+    "updatedAt": "2026-09-24T14:54:12.586Z"
+  },
+  "mt_muei6ws7wv4snx": {
+    "matchId": "mt_muei6ws7wv4snx",
+    "stageId": "stage_muei6ws0aiwc7e",
+    "tournamentId": "tour_muei69ozggrvtv",
+    "reminders": {
+      "24h": true,
+      "3h": false,
+      "1h": false,
+      "30m": false,
+      "10m": false
+    },
+    "createdAt": "2026-09-24T14:54:12.613Z",
+    "updatedAt": "2026-09-24T14:54:12.628Z"
+  }
+}
