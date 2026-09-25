@@ -134,7 +134,7 @@ async function setHost(tournamentId, hostId) {
   return store.update(FILE, (data) => {
     const t = data[tournamentId];
     if (!t) return null;
-    t.hostId = hostId;
+    t.hostId = String(hostId);
     return t;
   });
 }

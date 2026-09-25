@@ -2,7 +2,7 @@
   "team_mu8q4593j6v9dv": {
     "id": "team_mu8q4593j6v9dv",
     "name": "ranger",
-    "tag": "QQ",
+    "tag": "VM",
     "avatarFileId": "AgACAgIAAxkBAAMfaq7U4Twb8b-mGDgTauY9fZmk6ysAAoMdaxtiAXhJd3kQxBpDHJwBAAMCAAN5AAM9BA",
     "managerUsername": "rangerbek",
     "captainId": 6580878834,
@@ -11,19 +11,6 @@
     ],
     "joinCode": "LNAMZ8AXRX",
     "createdAt": "2026-09-19T18:31:13.048Z"
-  },
-  "team_mubkwu5zphpwve": {
-    "id": "team_mubkwu5zphpwve",
-    "name": "Yahshi inson",
-    "tag": "HA",
-    "avatarFileId": "AgACAgIAAxkBAAIC9mqxd1gbhLX1e0zrPIMVudr0IyJ2AAIaN2sbJmGQSeSKk7ccdtZ1AQADAgADeQADPQQ",
-    "managerUsername": "rangerbekk",
-    "captainId": 8619608677,
-    "members": [
-      8619608677
-    ],
-    "joinCode": "BYCW3XBEDH",
-    "createdAt": "2026-09-21T18:28:52.535Z"
   },
   "team_mud18m1y0ilfw4": {
     "id": "team_mud18m1y0ilfw4",
@@ -37,5 +24,18 @@
     ],
     "joinCode": "A3FFSXGC9Z",
     "createdAt": "2026-09-22T18:53:41.926Z"
+  },
+  "team_muh4htn1u7pquj": {
+    "id": "team_muh4htn1u7pquj",
+    "name": "Ranger team",
+    "tag": "RR",
+    "avatarFileId": "AgACAgIAAxkBAAIF3Gq2lKUEGFWcAtHlj7mSzKgWXfJGAAL_IWsbvp24SS64Ofv-C_bDAQADAgADeQADPQQ",
+    "managerUsername": "rangerbek",
+    "captainId": 8619608677,
+    "members": [
+      8619608677
+    ],
+    "joinCode": "U6E3P8YW2B",
+    "createdAt": "2026-09-25T15:35:55.213Z"
   }
 }

@@ -1,5 +1,5 @@
 // ============================================================
-// BOT.JS — Asosiy kirish nuqtasi (to'liq + etap tizimi)
+// BOT.JS — Asosiy kirish nuqtasi (OCR integratsiyasi bilan)
 // ============================================================
 const { Telegraf, session } = require('telegraf');
 const config = require('./config');
@@ -65,6 +65,7 @@ const liveScoreHandler = require('./handlers/liveScoreHandler');
 
 // 7. Host
 const hostHandler = require('./handlers/hostHandler');
+const hostResultOCRHandler = require('./handlers/hostResultOCRHandler');
 const hostExtHandler = require('./handlers/hostExtHandler');
 const mediaHandler = require('./handlers/mediaHandler');
 
@@ -92,7 +93,7 @@ const walletHandler = require('./handlers/walletHandler');
 const walletAdminHandler = require('./handlers/walletAdminHandler');
 
 // ============================================================
-// 13. ETAPLAR TIZIMI (YANGI)
+// 13. ETAPLAR TIZIMI
 // ============================================================
 const stageHandler = require('./handlers/stageHandler');
 const promotionHandler = require('./handlers/promotionHandler');
@@ -155,14 +156,16 @@ async function main() {
   broadcastStatsHandler(bot);
   liveScoreHandler(bot);
 
-  // 7. Host
+  // 7. Host (OCR handler hostHandler'dan keyin)
   hostHandler(bot);
-  hostExtHandler(bot);
+  hostResultOCRHandler(bot);
+  // hostExtHandler(bot);  // ⚠️ hostHandler bilan dublikat
   mediaHandler(bot);
 
   // 8. Admin
   adminHandler(bot);
   adminExtHandler(bot);
+  organizerPaymentReviewHandler(bot);  // ← pay:view:, ORG_PENDING_PAYMENTS
   organizerHandler(bot);
 
   // 9. Channel
@@ -171,7 +174,6 @@ async function main() {
 
   // 10. To'lov review
   paymentHandler(bot);
-  organizerPaymentReviewHandler(bot);
 
   // 11. Qidiruv va Inline
   searchHandler(bot);
@@ -184,7 +186,7 @@ async function main() {
   walletAdminHandler(bot);
 
   // ============================================================
-  // 13. ETAPLAR TIZIMI (YANGI)
+  // 13. ETAPLAR TIZIMI
   // ============================================================
   stageHandler(bot);
   promotionHandler(bot);
@@ -213,7 +215,6 @@ async function main() {
   // ============================================================
   reminderService.start(bot);
 
-  // Stage Reminder (YANGI)
   if (stageReminderService) {
     try {
       stageReminderService.start(bot);
@@ -230,7 +231,6 @@ async function main() {
     }
   }
 
-  // Buyruqlar menyusi
   if (commandsService) {
     try {
       await commandsService.setupAll(bot);
@@ -273,6 +273,7 @@ async function main() {
   console.log('⬆️ Promotion: ✅');
   console.log('📨 Invitation: ✅');
   console.log('🎙 Host Stage Panel: ✅');
+    console.log('📸 OCR (Tesseract): ✅');// ← YANGI
   console.log('⏰ Stage Reminders: ✅');
   console.log('');
 

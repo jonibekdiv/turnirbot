@@ -18,7 +18,6 @@ const {
   safeEdit,
   safeAnswer,
 } = require('../utils/telegramUtils');
-const langService = require('../services/langService');
 const config = require('../config');
 
 module.exports = (bot) => {

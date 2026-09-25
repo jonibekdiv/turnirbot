@@ -334,6 +334,23 @@ module.exports = (bot) => {
       );
     }
 
+        // PROMO TYPE TANLASH (tugma kutilmoqda)
+    if (s === 'promo_pick_type') {
+      return ctx.reply(
+        `❗ Iltimos, quyidagi tugmalardan birini tanlang:`,
+        {
+          parse_mode: 'HTML',
+          reply_markup: {
+            inline_keyboard: [
+              [Markup.button.callback(t('promo_type_percent'), 'promo:t:percent')],
+              [Markup.button.callback(t('promo_type_fixed'), 'promo:t:fixed')],
+              [Markup.button.callback(t('promo_type_free'), 'promo:t:free')],
+              [Markup.button.callback(t('btn_cancel'), CALLBACK.PROMO_MENU)],
+            ],
+          },
+        }
+      );
+    }
     // PERCENT
     if (s === STATES.PROMO_CREATE_PERCENT) {
       const v = cleanText(ctx.message.text, 5);

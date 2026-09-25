@@ -61,13 +61,13 @@
     "tournamentId": "tour_muefizaibpckfa",
     "reminders": {
       "24h": true,
-      "3h": false,
-      "1h": false,
-      "30m": false,
-      "10m": false
+      "3h": true,
+      "1h": true,
+      "30m": true,
+      "10m": true
     },
     "createdAt": "2026-09-24T14:54:12.458Z",
-    "updatedAt": "2026-09-24T14:54:12.476Z"
+    "updatedAt": "2026-09-25T14:44:51.788Z"
   },
   "mt_muehbmsbzssaeq": {
     "matchId": "mt_muehbmsbzssaeq",
@@ -75,13 +75,13 @@
     "tournamentId": "tour_muefizaibpckfa",
     "reminders": {
       "24h": true,
-      "3h": false,
-      "1h": false,
-      "30m": false,
-      "10m": false
+      "3h": true,
+      "1h": true,
+      "30m": true,
+      "10m": true
     },
     "createdAt": "2026-09-24T14:54:12.504Z",
-    "updatedAt": "2026-09-24T14:54:12.513Z"
+    "updatedAt": "2026-09-25T14:44:51.817Z"
   },
   "mt_muehbmstvr521h": {
     "matchId": "mt_muehbmstvr521h",
@@ -89,16 +89,44 @@
     "tournamentId": "tour_muefizaibpckfa",
     "reminders": {
       "24h": true,
-      "3h": false,
-      "1h": false,
-      "30m": false,
-      "10m": false
+      "3h": true,
+      "1h": true,
+      "30m": true,
+      "10m": true
     },
     "createdAt": "2026-09-24T14:54:12.540Z",
-    "updatedAt": "2026-09-24T14:54:12.553Z"
+    "updatedAt": "2026-09-25T14:44:51.848Z"
   },
   "mt_muehbmtcm7pyh6": {
     "matchId": "mt_muehbmtcm7pyh6",
+    "stageId": "stage_muehbmpbepq3h6",
+    "tournamentId": "tour_muefizaibpckfa",
+    "reminders": {
+      "24h": true,
+      "3h": true,
+      "1h": true,
+      "30m": true,
+      "10m": true
+    },
+    "createdAt": "2026-09-24T14:54:12.576Z",
+    "updatedAt": "2026-09-25T14:44:51.878Z"
+  },
+  "mt_muei6ws7wv4snx": {
+    "matchId": "mt_muei6ws7wv4snx",
+    "stageId": "stage_muei6ws0aiwc7e",
+    "tournamentId": "tour_muei69ozggrvtv",
+    "reminders": {
+      "24h": true,
+      "3h": true,
+      "1h": true,
+      "30m": true,
+      "10m": true
+    },
+    "createdAt": "2026-09-24T14:54:12.613Z",
+    "updatedAt": "2026-09-25T14:44:51.936Z"
+  },
+  "mt_muehbmtx4li9zz": {
+    "matchId": "mt_muehbmtx4li9zz",
     "stageId": "stage_muehbmpbepq3h6",
     "tournamentId": "tour_muefizaibpckfa",
     "reminders": {
@@ -108,11 +136,53 @@
       "30m": false,
       "10m": false
     },
-    "createdAt": "2026-09-24T14:54:12.576Z",
-    "updatedAt": "2026-09-24T14:54:12.586Z"
+    "createdAt": "2026-09-25T14:54:51.812Z",
+    "updatedAt": "2026-09-25T14:54:51.822Z"
   },
-  "mt_muei6ws7wv4snx": {
-    "matchId": "mt_muei6ws7wv4snx",
+  "mt_muehbmugfpn26e": {
+    "matchId": "mt_muehbmugfpn26e",
+    "stageId": "stage_muehbmpbepq3h6",
+    "tournamentId": "tour_muefizaibpckfa",
+    "reminders": {
+      "24h": true,
+      "3h": false,
+      "1h": false,
+      "30m": false,
+      "10m": false
+    },
+    "createdAt": "2026-09-25T14:54:51.845Z",
+    "updatedAt": "2026-09-25T14:54:51.855Z"
+  },
+  "mt_muehbmv0np8hs2": {
+    "matchId": "mt_muehbmv0np8hs2",
+    "stageId": "stage_muehbmpbepq3h6",
+    "tournamentId": "tour_muefizaibpckfa",
+    "reminders": {
+      "24h": true,
+      "3h": false,
+      "1h": false,
+      "30m": false,
+      "10m": false
+    },
+    "createdAt": "2026-09-25T14:54:51.876Z",
+    "updatedAt": "2026-09-25T14:54:51.885Z"
+  },
+  "mt_muehbmvj9n4mpk": {
+    "matchId": "mt_muehbmvj9n4mpk",
+    "stageId": "stage_muehbmpbepq3h6",
+    "tournamentId": "tour_muefizaibpckfa",
+    "reminders": {
+      "24h": true,
+      "3h": false,
+      "1h": false,
+      "30m": false,
+      "10m": false
+    },
+    "createdAt": "2026-09-25T14:54:51.907Z",
+    "updatedAt": "2026-09-25T14:54:51.918Z"
+  },
+  "mt_muei6wsg1hqlpo": {
+    "matchId": "mt_muei6wsg1hqlpo",
     "stageId": "stage_muei6ws0aiwc7e",
     "tournamentId": "tour_muei69ozggrvtv",
     "reminders": {
@@ -122,7 +192,7 @@
       "30m": false,
       "10m": false
     },
-    "createdAt": "2026-09-24T14:54:12.613Z",
-    "updatedAt": "2026-09-24T14:54:12.628Z"
+    "createdAt": "2026-09-25T14:54:51.948Z",
+    "updatedAt": "2026-09-25T14:54:51.958Z"
   }
 }

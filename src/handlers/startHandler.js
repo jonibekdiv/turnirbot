@@ -268,29 +268,138 @@ module.exports = (bot) => {
 
   // ============================================================
   // YORDAM (callback)
+    // ============================================================
+  // YORDAM (callback) — 4 ta rol uchun
   // ============================================================
   bot.action(CALLBACK.MENU_HELP, async (ctx) => {
     await safeAnswer(ctx);
     const t = ctx.t;
-    const lang = ctx.state.lang || 'uz';
 
     const text =
       `╔══════════════════════╗\n` +
-      `         ℹ️ <b>${t('menu_help')}</b>\n` +
+      `   ℹ️ <b>${t('help_title')}</b>\n` +
       `╚══════════════════════╝\n\n` +
-      `${t('menu_tournaments')}\n` +
-      `${t('menu_team')}\n` +
-      `${t('menu_profile')}\n` +
-      `${t('menu_search')}\n\n` +
+      `${t('help_pick_role')}\n\n` +
       `━━━━━━━━━━━━━━━━━━━━\n\n` +
-      `<b>${t('menu_language')}:</b>\n` +
-      `${t('language_uz')} · ${t('language_en')} · ${t('language_ru')}\n\n` +
-      `━━━━━━━━━━━━━━━━━━━━\n\n` +
-      `💬 /start · /cancel · /help`;
+      `🎮 <b>${t('help_btn_player')}</b>\n` +
+      `   <i>${t('help_btn_player_desc')}</i>\n\n` +
+      `🎙 <b>${t('help_btn_host')}</b>\n` +
+      `   <i>${t('help_btn_host_desc')}</i>\n\n` +
+      `🎯 <b>${t('help_btn_organizer')}</b>\n` +
+      `   <i>${t('help_btn_organizer_desc')}</i>\n\n` +
+      `🛡 <b>${t('help_btn_admin')}</b>\n` +
+      `   <i>${t('help_btn_admin_desc')}</i>`;
 
-    await safeEdit(ctx, text, mainKeyboard(ctx.state.role, lang));
+    const kb = Markup.inlineKeyboard([
+      [Markup.button.callback(t('help_btn_player'), CALLBACK.HELP_PLAYER)],
+      [Markup.button.callback(t('help_btn_host'), CALLBACK.HELP_HOST)],
+      [Markup.button.callback(t('help_btn_organizer'), CALLBACK.HELP_ORGANIZER)],
+      [Markup.button.callback(t('help_btn_admin'), CALLBACK.HELP_ADMIN)],
+      [Markup.button.callback(t('btn_back'), CALLBACK.MENU_MAIN)],
+    ]);
+
+    await safeEdit(ctx, text, { reply_markup: kb.reply_markup });
   });
 
+  // ============================================================
+  // YORDAM — PLAYER
+  // ============================================================
+  bot.action(CALLBACK.HELP_PLAYER, async (ctx) => {
+    await safeAnswer(ctx);
+    const t = ctx.t;
+
+    const text =
+      `╔══════════════════════╗\n` +
+      `   🎮 <b>${t('help_player_title')}</b>\n` +
+      `╚══════════════════════╝\n\n` +
+      `${t('help_player_body')}`;
+
+    const kb = Markup.inlineKeyboard([
+      [Markup.button.callback(t('btn_back'), CALLBACK.MENU_HELP)],
+      [Markup.button.callback(t('menu_main'), CALLBACK.MENU_MAIN)],
+    ]);
+
+    try {
+      await ctx.editMessageText(text, { parse_mode: 'HTML', reply_markup: kb.reply_markup });
+    } catch (e) {
+      await ctx.reply(text, { parse_mode: 'HTML', reply_markup: kb.reply_markup });
+    }
+  });
+
+  // ============================================================
+  // YORDAM — HOST
+  // ============================================================
+  bot.action(CALLBACK.HELP_HOST, async (ctx) => {
+    await safeAnswer(ctx);
+    const t = ctx.t;
+
+    const text =
+      `╔══════════════════════╗\n` +
+      `   🎙 <b>${t('help_host_title')}</b>\n` +
+      `╚══════════════════════╝\n\n` +
+      `${t('help_host_body')}`;
+
+    const kb = Markup.inlineKeyboard([
+      [Markup.button.callback(t('btn_back'), CALLBACK.MENU_HELP)],
+      [Markup.button.callback(t('menu_main'), CALLBACK.MENU_MAIN)],
+    ]);
+
+    try {
+      await ctx.editMessageText(text, { parse_mode: 'HTML', reply_markup: kb.reply_markup });
+    } catch (e) {
+      await ctx.reply(text, { parse_mode: 'HTML', reply_markup: kb.reply_markup });
+    }
+  });
+
+  // ============================================================
+  // YORDAM — ORGANIZER
+  // ============================================================
+  bot.action(CALLBACK.HELP_ORGANIZER, async (ctx) => {
+    await safeAnswer(ctx);
+    const t = ctx.t;
+
+    const text =
+      `╔══════════════════════╗\n` +
+      `   🎯 <b>${t('help_organizer_title')}</b>\n` +
+      `╚══════════════════════╝\n\n` +
+      `${t('help_organizer_body')}`;
+
+    const kb = Markup.inlineKeyboard([
+      [Markup.button.callback(t('btn_back'), CALLBACK.MENU_HELP)],
+      [Markup.button.callback(t('menu_main'), CALLBACK.MENU_MAIN)],
+    ]);
+
+    try {
+      await ctx.editMessageText(text, { parse_mode: 'HTML', reply_markup: kb.reply_markup });
+    } catch (e) {
+      await ctx.reply(text, { parse_mode: 'HTML', reply_markup: kb.reply_markup });
+    }
+  });
+
+  // ============================================================
+  // YORDAM — ADMIN
+  // ============================================================
+  bot.action(CALLBACK.HELP_ADMIN, async (ctx) => {
+    await safeAnswer(ctx);
+    const t = ctx.t;
+
+    const text =
+      `╔══════════════════════╗\n` +
+      `   🛡 <b>${t('help_admin_title')}</b>\n` +
+      `╚══════════════════════╝\n\n` +
+      `${t('help_admin_body')}`;
+
+    const kb = Markup.inlineKeyboard([
+      [Markup.button.callback(t('btn_back'), CALLBACK.MENU_HELP)],
+      [Markup.button.callback(t('menu_main'), CALLBACK.MENU_MAIN)],
+    ]);
+
+    try {
+      await ctx.editMessageText(text, { parse_mode: 'HTML', reply_markup: kb.reply_markup });
+    } catch (e) {
+      await ctx.reply(text, { parse_mode: 'HTML', reply_markup: kb.reply_markup });
+    }
+  });
   // ============================================================
   // BEKOR QILISH
   // ============================================================

@@ -8,7 +8,7 @@
     "teamId": "team_mu8q4593j6v9dv",
     "status": "active",
     "createdAt": "2026-09-19T18:07:20.279Z",
-    "updatedAt": "2026-09-24T15:11:26.766Z"
+    "updatedAt": "2026-09-25T19:24:53.766Z"
   },
   "8811053020": {
     "id": 8811053020,
@@ -19,7 +19,7 @@
     "teamId": null,
     "status": "active",
     "createdAt": "2026-09-19T18:42:49.464Z",
-    "updatedAt": "2026-09-24T16:26:44.283Z"
+    "updatedAt": "2026-09-25T17:56:25.326Z"
   },
   "6441840191": {
     "id": 6441840191,
@@ -37,12 +37,11 @@
     "username": "diyorbek_1306",
     "firstName": "Diyorbek",
     "lastName": "",
-    "languageCode": "uz",
+    "languageCode": "en",
     "teamId": null,
     "status": "active",
     "createdAt": "2026-09-19T20:44:09.172Z",
-    "updatedAt": "2026-09-20T10:21:01.778Z",
-    "pubgId": "51345852655"
+    "updatedAt": "2026-09-25T15:50:30.314Z"
   },
   "8619608677": {
     "id": 8619608677,
@@ -50,10 +49,10 @@
     "firstName": "Жонибек",
     "lastName": "",
     "languageCode": "uz",
-    "teamId": "team_mubkwu5zphpwve",
+    "teamId": "team_muh4htn1u7pquj",
     "status": "active",
     "createdAt": "2026-09-19T20:48:26.226Z",
-    "updatedAt": "2026-09-21T18:28:57.002Z"
+    "updatedAt": "2026-09-25T16:24:08.426Z"
   },
   "7924137337": {
     "id": 7924137337,
@@ -131,5 +130,16 @@
     "status": "active",
     "createdAt": "2026-09-23T19:43:56.870Z",
     "updatedAt": "2026-09-23T19:43:56.870Z"
+  },
+  "5370654481": {
+    "id": 5370654481,
+    "username": "MIKKIY1",
+    "firstName": "MIKKIY",
+    "lastName": "",
+    "languageCode": "ru",
+    "teamId": null,
+    "status": "active",
+    "createdAt": "2026-09-24T17:42:25.056Z",
+    "updatedAt": "2026-09-24T17:42:25.058Z"
   }
 }

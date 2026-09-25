@@ -1,13 +1,13 @@
 // ============================================================
-// ADMIN EXT HANDLER — Ban, log, kanal, sozlamalar (3 tilda)
+// ADMIN EXT HANDLER — Ban, log, sozlamalar (3 tilda)
+// KANAL handlerlari channelHandler.js da (konflikt oldini olish)
 // ============================================================
 const { Markup } = require('telegraf');
 const adminExtService = require('../services/adminExtService');
-const channelService = require('../services/channelService');
 const { CALLBACK, ROLES, STATES } = require('../constants');
 const { escapeHtml, safeEdit, safeAnswer } = require('../utils/telegramUtils');
 const { cleanText, isPositiveInt } = require('../utils/validation');
-const { hasAnyRole, canBan, canManageChannel, canManageUsers } = require('../middlewares/roleGuard');
+const { hasAnyRole, canBan, canManageUsers } = require('../middlewares/roleGuard');
 
 module.exports = (bot) => {
   // ============================================================
@@ -74,6 +74,7 @@ module.exports = (bot) => {
   // ============================================================
   bot.action(CALLBACK.ADMIN_ACTIONS, async (ctx) => {
     await safeAnswer(ctx);
+    const t = ctx.t;
     if (!hasAnyRole(ctx.state.role, [ROLES.ADMIN, ROLES.ORGANIZER])) return;
 
     const { total, actions } = await adminExtService.getActions(15);
@@ -105,64 +106,7 @@ module.exports = (bot) => {
   });
 
   // ============================================================
-  // 4. KANAL SOZLAMALARI
-  // ============================================================
-  bot.action(CALLBACK.ADMIN_CHANNEL, async (ctx) => {
-    await safeAnswer(ctx);
-    const t = ctx.t;
-
-    if (!canManageChannel(ctx.state.role)) return ctx.reply(`⛔ ${t('error_access')}`);
-
-    const channelId = await channelService.getChannel();
-
-    const kb = Markup.inlineKeyboard([
-      [Markup.button.callback('✏️ ' + t('channel_add_prompt').slice(0, 20), 'admin:ch:set')],
-      ...(channelId ? [[Markup.button.callback('🗑 ' + t('btn_delete'), 'admin:ch:del')]] : []),
-      [Markup.button.callback(t('admin_panel'), CALLBACK.ADMIN_PANEL)],
-    ]);
-
-    await safeEdit(
-      ctx,
-      `📢 <b>${t('admin_channel')}</b>\n\n` +
-        `${t('admin_active')}: <code>${escapeHtml(channelId || '-')}</code>\n\n` +
-        `💡 <i>${t('ch_announce_btn')}</i>`,
-      { reply_markup: kb.reply_markup }
-    );
-  });
-
-  bot.action('admin:ch:set', async (ctx) => {
-    await safeAnswer(ctx);
-    const t = ctx.t;
-
-    if (!canManageChannel(ctx.state.role)) return ctx.reply(`⛔ ${t('error_access')}`);
-
-    ctx.session = { state: STATES.ADMIN_CHANNEL_INPUT, data: {} };
-    await ctx.reply(
-      `📢 <b>${t('channel_add_prompt')}</b>\n\n` +
-        `📌 <b>Format:</b>\n` +
-        `• <code>@my_channel</code>\n` +
-        `• <code>-1001234567890</code>\n\n` +
-        `⚠️ <b>${t('channel_not_admin').slice(0, 30)}</b>`,
-      { parse_mode: 'HTML' }
-    );
-  });
-
-  bot.action('admin:ch:del', async (ctx) => {
-    await safeAnswer(ctx);
-    const t = ctx.t;
-
-    if (!canManageChannel(ctx.state.role)) return ctx.reply(`⛔ ${t('error_access')}`);
-
-    await channelService.unsetChannel();
-    await ctx.reply(`✅ ${t('ch_list_title')} - ${t('btn_delete')}`, {
-      reply_markup: {
-        inline_keyboard: [[Markup.button.callback(t('admin_panel'), CALLBACK.ADMIN_PANEL)]],
-      },
-    });
-  });
-
-  // ============================================================
-  // 5. DM USER
+  // 4. DM USER
   // ============================================================
   bot.action(CALLBACK.ADMIN_DM, async (ctx) => {
     await safeAnswer(ctx);
@@ -175,7 +119,7 @@ module.exports = (bot) => {
   });
 
   // ============================================================
-  // 6. FSM — MATN
+  // 5. FSM — MATN
   // ============================================================
   bot.on('text', async (ctx, next) => {
     const s = ctx.session?.state;
@@ -228,25 +172,6 @@ module.exports = (bot) => {
       await adminExtService.logAction(ctx.from.id, 'UNBAN_USER', { target: targetId });
 
       await ctx.reply(`✅ <code>${targetId}</code> - ${t('success')}`, { parse_mode: 'HTML' });
-      return;
-    }
-
-    // KANAL
-    if (s === STATES.ADMIN_CHANNEL_INPUT) {
-      if (!canManageChannel(ctx.state.role)) {
-        ctx.session = { state: null, data: {} };
-        return ctx.reply(`⛔ ${t('error_access')}`);
-      }
-
-      const v = cleanText(ctx.message.text, 100);
-      ctx.session = { state: null, data: {} };
-
-      try {
-        await channelService.setChannel(v);
-        await ctx.reply(`✅ <code>${escapeHtml(v)}</code>`, { parse_mode: 'HTML' });
-      } catch (e) {
-        await ctx.reply(`❌ ${e.message || t('error_generic')}`);
-      }
       return;
     }
 

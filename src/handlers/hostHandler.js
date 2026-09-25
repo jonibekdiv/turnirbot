@@ -1,5 +1,6 @@
 // ============================================================
-// HOST HANDLER — 3 tilda
+// HOST HANDLER — 3 tilda (OCR integratsiyasi bilan)
+// Ruxsat: HOST, SUPER_ADMIN, ADMIN
 // ============================================================
 const { Markup } = require('telegraf');
 const tournamentService = require('../services/tournamentService');
@@ -14,7 +15,22 @@ const { CALLBACK, STATES, ROLES, LIMITS } = require('../constants');
 const { escapeHtml, displayName, safeEdit, safeAnswer } = require('../utils/telegramUtils');
 const { cleanText } = require('../utils/validation');
 const { mainKeyboard } = require('../keyboards/mainKeyboard');
+const { hasAnyRole } = require('../middlewares/roleGuard');
 
+// ============================================================
+// RUXSAT
+// ============================================================
+function canAccessHostPanel(role) {
+  return hasAnyRole(role, [ROLES.HOST, ROLES.ADMIN]);
+}
+
+function isTopAdmin(role) {
+  return role === ROLES.SUPER_ADMIN || role === ROLES.ADMIN;
+}
+
+// ============================================================
+// ORQAGA TUGMALARI
+// ============================================================
 function backToHostTours(t) {
   return Markup.inlineKeyboard([
     [Markup.button.callback(t('host_title'), CALLBACK.HOST_TOURS)],
@@ -29,13 +45,6 @@ function backToHostOpen(t, tid) {
   ]);
 }
 
-function backToResults(t, tid) {
-  return Markup.inlineKeyboard([
-    [Markup.button.callback(t('host_results'), CALLBACK.HOST_RESULTS + tid)],
-    [Markup.button.callback(t('menu_main'), CALLBACK.MENU_MAIN)],
-  ]);
-}
-
 module.exports = (bot) => {
   // ============================================================
   // 1. HOST PANEL
@@ -44,25 +53,38 @@ module.exports = (bot) => {
     await safeAnswer(ctx);
     const t = ctx.t;
 
-    if (ctx.state.role !== ROLES.HOST) {
+    if (!canAccessHostPanel(ctx.state.role)) {
       return ctx.reply(`⛔ ${t('error_access')}`, backToHostTours(t));
     }
 
+    const topAdmin = isTopAdmin(ctx.state.role);
     const all = await tournamentService.getAllTournaments();
-    const mine = all.filter((tour) => Number(tour.hostId) === Number(ctx.from.id));
+
+    const mine = topAdmin
+      ? all
+      : all.filter((tour) => String(tour.hostId) === String(ctx.from.id));
 
     if (!mine.length) {
-      return safeEdit(ctx, `📭 ${t('host_no_tours')}`, mainKeyboard(ctx.state.role, ctx.state.lang));
+      return safeEdit(
+        ctx,
+        `📭 ${t('host_no_tours')}`,
+        mainKeyboard(ctx.state.role, ctx.state.lang)
+      );
     }
 
-    const rows = mine.map((tour) => [
-      Markup.button.callback(`🎯 ${tour.title.slice(0, 30)}`, CALLBACK.HOST_OPEN + tour.id),
+    const rows = mine.slice(0, 15).map((tour) => [
+      Markup.button.callback(
+        `🎯 ${tour.title.slice(0, 30)}`,
+        CALLBACK.HOST_OPEN + tour.id
+      ),
     ]);
     rows.push([Markup.button.callback(t('menu_main'), CALLBACK.MENU_MAIN)]);
 
-    await safeEdit(ctx, `🎙 <b>${t('host_title')}</b>\n\n${t('support_choose_type')}`, {
-      reply_markup: { inline_keyboard: rows },
-    });
+    await safeEdit(
+      ctx,
+      `🎙 <b>${t('host_title')}</b>\n\n${t('support_choose_type')}`,
+      { reply_markup: { inline_keyboard: rows } }
+    );
   });
 
   // ============================================================
@@ -72,8 +94,17 @@ module.exports = (bot) => {
     await safeAnswer(ctx);
     const t = ctx.t;
 
+    if (!canAccessHostPanel(ctx.state.role)) {
+      return ctx.reply(`⛔ ${t('error_access')}`, backToHostTours(t));
+    }
+
+    const topAdmin = isTopAdmin(ctx.state.role);
     const tour = await tournamentService.getTournament(ctx.match[1]);
-    if (!tour || Number(tour.hostId) !== Number(ctx.from.id)) {
+    if (!tour) {
+      return ctx.reply(`❗ ${t('tour_not_found')}`, backToHostTours(t));
+    }
+
+    if (!topAdmin && String(tour.hostId) !== String(ctx.from.id)) {
       return ctx.reply(`⛔ ${t('error_access')}`, backToHostTours(t));
     }
 
@@ -118,9 +149,17 @@ module.exports = (bot) => {
     await safeAnswer(ctx);
     const t = ctx.t;
 
+    if (!canAccessHostPanel(ctx.state.role)) return;
+
     const tId = ctx.match[1];
     const tour = await tournamentService.getTournament(tId);
-    if (!tour || Number(tour.hostId) !== Number(ctx.from.id)) return ctx.reply(`⛔ ${t('error_access')}`);
+    if (!tour) return;
+
+    const topAdmin = isTopAdmin(ctx.state.role);
+
+    if (!topAdmin && String(tour.hostId) !== String(ctx.from.id)) {
+      return ctx.reply(`⛔ ${t('error_access')}`);
+    }
 
     if (!tour.roomId || !tour.roomPassword) {
       return ctx.reply(`❗ ${t('host_no_tours')}`, backToHostOpen(t, tId));
@@ -163,26 +202,34 @@ module.exports = (bot) => {
     await safeAnswer(ctx);
     const t = ctx.t;
 
+    if (!canAccessHostPanel(ctx.state.role)) return;
+
     const kind = ctx.match[1];
     const tId = ctx.match[2];
     const tour = await tournamentService.getTournament(tId);
-    if (!tour || Number(tour.hostId) !== Number(ctx.from.id)) return ctx.reply(`⛔ ${t('error_access')}`);
+    if (!tour) return;
+
+    const topAdmin = isTopAdmin(ctx.state.role);
+
+    if (!topAdmin && String(tour.hostId) !== String(ctx.from.id)) {
+      return ctx.reply(`⛔ ${t('error_access')}`);
+    }
 
     const backKb = backToHostOpen(t, tId).reply_markup;
 
     if (kind === 'rid') {
       ctx.session = { state: STATES.HOST_SEND_ROOM_ID, data: { tid: tId } };
-      return ctx.reply(`🆔 <b>${t('host_room_id')}:</b>\n\n<i>${t('wallet_admin_adjust_example')}: 8734521</i>`, {
-        parse_mode: 'HTML',
-        reply_markup: backKb,
-      });
+      return ctx.reply(
+        `🆔 <b>${t('host_room_id')}:</b>\n\n<i>${t('wallet_admin_adjust_example')}: 8734521</i>`,
+        { parse_mode: 'HTML', reply_markup: backKb }
+      );
     }
     if (kind === 'rpass') {
       ctx.session = { state: STATES.HOST_SEND_ROOM_PASS, data: { tid: tId } };
-      return ctx.reply(`🔒 <b>${t('host_room_pass')}:</b>\n\n<i>${t('wallet_admin_adjust_example')}: pubg2025</i>`, {
-        parse_mode: 'HTML',
-        reply_markup: backKb,
-      });
+      return ctx.reply(
+        `🔒 <b>${t('host_room_pass')}:</b>\n\n<i>${t('wallet_admin_adjust_example')}: pubg2025</i>`,
+        { parse_mode: 'HTML', reply_markup: backKb }
+      );
     }
     ctx.session = { state: STATES.HOST_SEND_ROOM_BOTH, data: { tid: tId } };
     return ctx.reply(
@@ -192,18 +239,34 @@ module.exports = (bot) => {
   });
 
   // ============================================================
-  // 5. NATIJALAR MENYUSI
+  // 5. NATIJALAR MENYUSI — OCR tugmasi bilan
   // ============================================================
   bot.action(/^host:res:(.+)$/, async (ctx) => {
     await safeAnswer(ctx);
     const t = ctx.t;
 
-    const tour = await tournamentService.getTournament(ctx.match[1]);
-    if (!tour || Number(tour.hostId) !== Number(ctx.from.id)) return ctx.reply(`⛔ ${t('error_access')}`);
+    if (!canAccessHostPanel(ctx.state.role)) return;
+
+    const tId = ctx.match[1];
+    const tour = await tournamentService.getTournament(tId);
+    if (!tour) return;
+
+    const topAdmin = isTopAdmin(ctx.state.role);
+
+    if (!topAdmin && String(tour.hostId) !== String(ctx.from.id)) {
+      return ctx.reply(`⛔ ${t('error_access')}`);
+    }
 
     const matchData = await matchService.getTournamentMatches(tour.id);
 
     const kb = Markup.inlineKeyboard([
+      // ✅ OCR tugmasi
+      [
+        Markup.button.callback(
+          '📸 Skrinshot yuborish',
+          'host:ocr_start:' + tour.id
+        ),
+      ],
       [Markup.button.callback(t('promotion_create'), CALLBACK.HOST_MATCH_NEW + tour.id)],
       [
         Markup.button.callback(
@@ -227,15 +290,134 @@ module.exports = (bot) => {
   });
 
   // ============================================================
+  // 5.1 HOST_MATCH_NEW (qo'lda kiritish)
+  // ============================================================
+  bot.action(/^host:mn:(.+)$/, async (ctx) => {
+    await safeAnswer(ctx);
+    const t = ctx.t;
+
+    if (!canAccessHostPanel(ctx.state.role)) return;
+
+    const tId = ctx.match[1];
+    const tour = await tournamentService.getTournament(tId);
+    if (!tour) return;
+
+    ctx.session = {
+      state: STATES.HOST_MATCH_INPUT,
+      data: { tid: tId },
+    };
+
+    await ctx.reply(
+      `📊 <b>${t('host_results')}</b>\n\n` +
+        `━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `<b>Format:</b> <code>TAG - KILL</code>\n\n` +
+        `<i>Tartib = o'rin (1-chi qator = 1-o'rin)</i>\n\n` +
+        `Misol:\n<code>UP - 5\nN1 - 3\nS7 - 2</code>`,
+      {
+        parse_mode: 'HTML',
+        reply_markup: backToHostOpen(t, tId).reply_markup,
+      }
+    );
+  });
+
+  // ============================================================
+  // 5.2 HOST_MATCH_LIST
+  // ============================================================
+  bot.action(/^host:ml:(.+)$/, async (ctx) => {
+    await safeAnswer(ctx);
+    const t = ctx.t;
+
+    if (!canAccessHostPanel(ctx.state.role)) return;
+
+    const tId = ctx.match[1];
+    const tour = await tournamentService.getTournament(tId);
+    if (!tour) return;
+
+    const matchData = await matchService.getTournamentMatches(tId);
+
+    if (!matchData.matches.length) {
+      return ctx.reply(`📭 ${t('no_data')}`, backToHostOpen(t, tId));
+    }
+
+    const lines = [
+      `🎮 <b>${t('stage_matches_menu')}</b>`,
+      `📊 ${t('promotion_total')}: <b>${matchData.matches.length}</b>`,
+      '',
+      '━━━━━━━━━━━━━━━━━━━━',
+      '',
+    ];
+
+    const teamsMap = {};
+    for (const tid of tour.registeredTeams) {
+      const team = await teamService.getTeam(tid);
+      if (team) teamsMap[tid] = team;
+    }
+
+    matchData.matches.forEach((m, i) => {
+      lines.push(`<b>№${i + 1}</b>`);
+      lines.push(
+        pointsService
+          .formatMatchCard(m, teamsMap)
+          .split('\n')
+          .slice(2)
+          .join('\n')
+      );
+      lines.push('');
+    });
+
+    await ctx.reply(lines.join('\n'), {
+      parse_mode: 'HTML',
+      reply_markup: backToHostOpen(t, tId).reply_markup,
+    });
+  });
+
+  // ============================================================
+  // 5.3 HOST_STANDINGS
+  // ============================================================
+  bot.action(/^host:st:(.+)$/, async (ctx) => {
+    await safeAnswer(ctx);
+    const t = ctx.t;
+
+    if (!canAccessHostPanel(ctx.state.role)) return;
+
+    const tId = ctx.match[1];
+    const tour = await tournamentService.getTournament(tId);
+    if (!tour) return;
+
+    const matchData = await matchService.getTournamentMatches(tId);
+    const teamsMap = {};
+    for (const tid of tour.registeredTeams) {
+      const team = await teamService.getTeam(tid);
+      if (team) teamsMap[tid] = team;
+    }
+
+    const standings = pointsService.calculateStandings(tour, matchData, teamsMap);
+    const text = pointsService.formatStandings(standings, tour);
+
+    await ctx.reply(text, {
+      parse_mode: 'HTML',
+      reply_markup: backToHostOpen(t, tId).reply_markup,
+    });
+  });
+
+  // ============================================================
   // 6. XABAR TARQATISH
   // ============================================================
   bot.action(/^host:msg:(.+)$/, async (ctx) => {
     await safeAnswer(ctx);
     const t = ctx.t;
 
+    if (!canAccessHostPanel(ctx.state.role)) return;
+
     const tId = ctx.match[1];
     const tour = await tournamentService.getTournament(tId);
-    if (!tour || Number(tour.hostId) !== Number(ctx.from.id)) return ctx.reply(`⛔ ${t('error_access')}`);
+    if (!tour) return;
+
+    const topAdmin = isTopAdmin(ctx.state.role);
+
+    if (!topAdmin && String(tour.hostId) !== String(ctx.from.id)) {
+      return ctx.reply(`⛔ ${t('error_access')}`);
+    }
 
     ctx.session = { state: STATES.HOST_SEND_BROADCAST, data: { tid: tId } };
     await ctx.reply(
@@ -253,9 +435,21 @@ module.exports = (bot) => {
     if (!s.startsWith('host_')) return next();
     const t = ctx.t;
 
+    if (!canAccessHostPanel(ctx.state.role)) {
+      ctx.session = { state: null, data: {} };
+      return next();
+    }
+
     const tid = ctx.session.data.tid;
     const tour = await tournamentService.getTournament(tid);
-    if (!tour || Number(tour.hostId) !== Number(ctx.from.id)) {
+    if (!tour) {
+      ctx.session = { state: null, data: {} };
+      return ctx.reply(`❗ ${t('tour_not_found')}`, backToHostTours(t));
+    }
+
+    const topAdmin = isTopAdmin(ctx.state.role);
+
+    if (!topAdmin && String(tour.hostId) !== String(ctx.from.id)) {
       ctx.session = { state: null, data: {} };
       return ctx.reply(`⛔ ${t('error_access')}`, backToHostTours(t));
     }
@@ -269,7 +463,9 @@ module.exports = (bot) => {
       const updated = await tournamentService.getTournament(tid);
       ctx.session = { state: null, data: {} };
 
-      if (updated.roomPassword) return await autoSendRoomInfo(ctx, bot, updated, t('success'));
+      if (updated.roomPassword) {
+        return await autoSendRoomInfo(ctx, bot, updated, t('success'));
+      }
 
       return ctx.reply(
         `✅ <b>${t('host_room_id')}</b>\n\n` +
@@ -288,7 +484,9 @@ module.exports = (bot) => {
       const updated = await tournamentService.getTournament(tid);
       ctx.session = { state: null, data: {} };
 
-      if (updated.roomId) return await autoSendRoomInfo(ctx, bot, updated, t('success'));
+      if (updated.roomId) {
+        return await autoSendRoomInfo(ctx, bot, updated, t('success'));
+      }
 
       return ctx.reply(
         `✅ <b>${t('host_room_pass')}</b>\n\n` +
@@ -338,6 +536,50 @@ module.exports = (bot) => {
       );
     }
 
+    // HOST_MATCH_INPUT (qo'lda natija)
+    if (s === STATES.HOST_MATCH_INPUT) {
+      const text = ctx.message.text;
+      const lines = text
+        .split('\n')
+        .map((l) => l.trim())
+        .filter(Boolean);
+
+      const teamsMap = {};
+      for (const tid of tour.registeredTeams) {
+        const tm = await teamService.getTeam(tid);
+        if (tm) teamsMap[tm.tag.toUpperCase()] = tm;
+      }
+
+      const results = [];
+      for (let i = 0; i < lines.length; i++) {
+        const m = lines[i].match(/^([A-Za-z0-9_]+)\s*[-|:]\s*(\d+)$/);
+        if (!m) {
+          return ctx.reply(
+            `❌ ${i + 1}-qator noto'g'ri: <code>${escapeHtml(lines[i])}</code>`,
+            { parse_mode: 'HTML' }
+          );
+        }
+        const tag = m[1].toUpperCase();
+        const team = teamsMap[tag];
+        if (!team) return ctx.reply(`❌ "${tag}" topilmadi`);
+        results.push({
+          teamId: team.id,
+          teamName: team.name,
+          place: i + 1,
+          kills: parseInt(m[2], 10),
+          penalty: 0,
+        });
+      }
+
+      await matchService.addMatch(tid, results, ctx.from.id);
+      ctx.session = { state: null, data: {} };
+
+      return ctx.reply(
+        `✅ <b>${t('stage_result_saved')}</b>\n\n👥 ${results.length} komanda`,
+        { parse_mode: 'HTML', reply_markup: backToHostOpen(t, tid).reply_markup }
+      );
+    }
+
     return next();
   });
 
@@ -349,15 +591,29 @@ module.exports = (bot) => {
     if (s !== STATES.HOST_SEND_BROADCAST) return next();
     const t = ctx.t;
 
+    if (!canAccessHostPanel(ctx.state.role)) {
+      ctx.session = { state: null, data: {} };
+      return next();
+    }
+
     const tid = ctx.session.data.tid;
     const tour = await tournamentService.getTournament(tid);
-    if (!tour || Number(tour.hostId) !== Number(ctx.from.id)) {
+    if (!tour) {
+      ctx.session = { state: null, data: {} };
+      return;
+    }
+
+    const topAdmin = isTopAdmin(ctx.state.role);
+
+    if (!topAdmin && String(tour.hostId) !== String(ctx.from.id)) {
       ctx.session = { state: null, data: {} };
       return;
     }
 
     const fileId = ctx.message.photo[ctx.message.photo.length - 1].file_id;
-    const caption = ctx.message.caption ? cleanText(ctx.message.caption, LIMITS.MAX_CAPTION_LEN) : '';
+    const caption = ctx.message.caption
+      ? cleanText(ctx.message.caption, LIMITS.MAX_CAPTION_LEN)
+      : '';
 
     ctx.session = { state: null, data: {} };
 

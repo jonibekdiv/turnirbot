@@ -8,10 +8,15 @@
   "menu_help": "ℹ️ Help",
   "menu_admin": "🛠 Admin Panel",
   "menu_host": "🎙 Host Panel",
+  "menu_wallet": "👛 Wallet",
+  "menu_support": "💬 Support",
   "menu_search": "🔍 Search",
   "menu_language": "🌐 Language",
   "menu_main": "🏠 Main Menu",
   "menu_back": "⬅️ Back",
+
+  "host_panel_btn": "🎙 Host Panel",
+  "host_stage_btn": "📊 Stage Panel",
 
   "profile_title": "👤 MY PROFILE",
   "profile_id": "🆔 Telegram ID",
@@ -948,6 +953,8 @@
   "host_stage_title": "HOST PANEL",
   "host_stage_menu": "🎙 Host panel",
   "host_stage_no_matches": "No matches assigned yet.",
+  "host_stage_tours_total": "Tournaments",
+  "host_stage_wait_matches": "Wait for matches to be assigned",
   "host_stage_matches": "MATCHES",
   "host_stage_match": "MATCH",
   "host_stage_match_of": "Match",
@@ -1123,5 +1130,26 @@
   "sub_wait_room": "Room info will be sent automatically when ready",
   "sub_you_are_captain": "You are captain",
   "sub_you_are_member": "You are member",
-  "sub_all_verified": "All verified"
+  "sub_all_verified": "All verified",
+    "help_title": "HELP",
+  "help_pick_role": "Which role needs a guide?",
+  "help_btn_player": "🎮 For Player",
+  "help_btn_player_desc": "How to join tournaments",
+  "help_btn_host": "🎙 For Host",
+  "help_btn_host_desc": "Managing tournament rooms",
+  "help_btn_organizer": "🎯 For Organizer",
+  "help_btn_organizer_desc": "Creating tournaments",
+  "help_btn_admin": "🛡 For Admin",
+  "help_btn_admin_desc": "Managing the bot",
+
+  "help_player_title": "PLAYER GUIDE",
+  "help_player_body": "<b>1. PROFILE</b>\n👤 Profile → 🎯 Enter PUBG ID\n\n<b>2. TEAM</b>\n👥 My Team → ➕ Create\nEnter name, tag, avatar, manager\nGet a code (share with friends)\n\n<b>3. TOURNAMENT</b>\n🏆 Tournaments → Pick one\n📝 Register → start\n\n<b>4. PAID TOURNAMENT</b>\n💳 Payment → Wallet or card\nIf card — send receipt\n\n<b>5. ROOM</b>\n🔑 Room info → copy\nJoin room in PUBG Mobile\n\n<b>6. RESULT</b>\n📊 Standings → winners\n\n<b>❓ QUESTIONS</b>\n💬 Support → write to admin",
+
+  "help_host_title": "HOST GUIDE",
+    "help_host_body": "<b>1. PANEL SELECTION</b>\n🎙 Host panel — regular tournament\n📊 Stage panel — stage tournament\n\n<b>2. REGULAR — ROOM</b>\nOpen tournament →\n🆔 Send Room ID\n🔒 Send password\n📨 Or both together:\n<code>ID: 123456 PASS: abc123</code>\n\n<b>3. STAGE TOURNAMENT — ROOM</b>\nStage panel → Pick match\nSend separate Room for each match\n\n<b>4. RESULT — SCREENSHOT (RECOMMENDED)</b>\n📊 Results → 📸 Send screenshot\n\n📌 Requirements:\n• Screenshot must be CLEAR and CLEAN\n• Each tag AT LEAST 2 TIMES\n• Format: <code>#place  TAG  kill</code>\n\nBot automatically:\n✅ Picks tags appearing 2+ times\n✅ Sums up kills\n✅ Calculates places\n\n<b>5. LEFTOVER TAGS</b>\nRare tags go to host:\n✏️ Fill manually\nFormat: <code>TAG - KILL</code>\nExample:\n<code>UP - 5\nN1 - 3\nS7 - 2</code>\n\n<b>6. PENALTY</b>\nAsked per team\nEnter number (e.g. 5)\nOr ⏭ Skip\n\nResult:\nPlace + Kill − Penalty = Total\n\n<b>7. RESULT — MANUAL</b>\n📊 Results → ✏️ Manual input\n\n<b>8. VIEW RESULTS</b>\n📊 Results → 📋 Matches\n\n<b>9. SEND MESSAGE</b>\n💬 Message participants → text\n\n<b>💡 TIP</b>\nSend Room info 10 minutes before\nTake clean and clear screenshots",
+  "help_organizer_title": "ORGANIZER GUIDE",
+  "help_organizer_body": "<b>1. PANEL</b>\n🛠 Admin panel → Organizer panel\n\n<b>2. CREATE TOURNAMENT</b>\n➕ New tournament\nName → type (free/paid) → price → card\nImage → date → time → mode\nPRIZE → MAP → Stage → max teams → desc → host\n✅ Confirm\n\n<b>3. STAGES</b>\nOpen tournament → 📊 Stages\n⚡️ Default or ✏️ Manual\n1/4 → 1/2 → Final\n\n<b>4. HOST</b>\nMatch → 🎙 Assign Host\n\n<b>5. PAYMENT</b>\n⏳ Pending receipts → ✅ Approve\n\n<b>6. ANNOUNCE</b>\nOpen tournament → 📢 Announce to channel\n\n<b>7. FINISH</b>\nOpen tournament → ✅ Finish",
+
+  "help_admin_title": "ADMIN GUIDE",
+  "help_admin_body": "<b>1. PANEL</b>\n🛠 Admin panel\n\n<b>2. ASSIGN ROLES</b>\n🛡 Admins / 🎯 Organizers / 🎙 Hosts\n➕ Add → Telegram ID\n\n<b>3. BAN</b>\n🚫 Ban system → ➕ / ➖\n\n<b>4. TOURNAMENT</b>\n➕ New tournament or edit\n📢 Announce to channel\n\n<b>5. PAYMENTS</b>\n💳 Payments → ⏳/✅/❌\n\n<b>6. CHANNEL</b>\n📢 Channel settings → ➕\n\n<b>7. CARD</b>\n💳 Cards → ➕\n⭐ Set default\n\n<b>8. PROMO</b>\n🎫 Promo codes → ➕\nType: Percent / Fixed / Free\n\n<b>9. WALLET</b>\n💰 Wallet admin\nApprove Deposit/Withdraw\n➕➖ Adjust balance\n\n<b>10. BROADCAST</b>\n📢 Broadcast\n\n<b>11. STATS</b>\n📊 Statistics\n\n<b>12. SETTINGS</b>\n⚙️ Settings (Super Admin)"
 }

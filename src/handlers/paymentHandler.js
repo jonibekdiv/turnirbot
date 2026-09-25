@@ -1142,6 +1142,7 @@ module.exports = (bot) => {
 
   // ============================================================
   // 10. CHEK QABUL QILISH (PDF)
+  // ✅ TUZATILDI: noto'g'ri xato xabari almashtirildi
   // ============================================================
   bot.on('document', async (ctx, next) => {
     if (ctx.session?.state !== STATES.PAYMENT_RECEIPT) return next();
@@ -1156,8 +1157,12 @@ module.exports = (bot) => {
         mime === 'application/pdf' ||
         (doc.file_name || '').toLowerCase().endsWith('.pdf');
 
+      // ✅ TUZATILDI: "error_only_admin" o'rniga aniq xabar
       if (!isPdf) {
-        return await safeReply(ctx, `❗ ${t('error_only_admin')}`);
+        return await safeReply(
+          ctx,
+          `❗ Faqat PDF yoki rasm yuboring.`
+        );
       }
 
       const { tid, resendPaymentId, promoId, promoCode, discount, finalAmount } =

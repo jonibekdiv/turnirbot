@@ -70,6 +70,48 @@
       },
       "result": "success",
       "at": "2026-09-24T15:12:31.130Z"
+    },
+    {
+      "id": "log_muh4zjig60durr",
+      "action": "ANNOUNCE_TOURNAMENT",
+      "actorId": 8619608677,
+      "tournamentId": "tour_muh4zb8rhtqtta",
+      "stageId": null,
+      "matchId": null,
+      "teamId": null,
+      "details": {
+        "messageId": 91
+      },
+      "result": "success",
+      "at": "2026-09-25T15:49:41.896Z"
+    },
+    {
+      "id": "log_muh57jdi8vuk76",
+      "action": "ANNOUNCE_TOURNAMENT",
+      "actorId": 8619608677,
+      "tournamentId": "tour_muh4zb8rhtqtta",
+      "stageId": null,
+      "matchId": null,
+      "teamId": null,
+      "details": {
+        "messageId": 92
+      },
+      "result": "success",
+      "at": "2026-09-25T15:55:54.966Z"
+    },
+    {
+      "id": "log_muh57y5feqr5xd",
+      "action": "ANNOUNCE_TOURNAMENT",
+      "actorId": 8619608677,
+      "tournamentId": "tour_muh4zb8rhtqtta",
+      "stageId": null,
+      "matchId": null,
+      "teamId": null,
+      "details": {
+        "messageId": 93
+      },
+      "result": "success",
+      "at": "2026-09-25T15:56:14.115Z"
     }
   ]
 }

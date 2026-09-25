@@ -341,6 +341,12 @@ module.exports = {
     MENU_BACK: 'menu:back',
     MENU_MAIN: 'menu:main',
     MENU_LANGUAGE: 'menu:language',
+        // ---------- YORDAM (HELP) ----------
+    HELP_PLAYER: 'help:player',
+    HELP_HOST: 'help:host',
+    HELP_ORGANIZER: 'help:organizer',
+    HELP_ADMIN: 'help:admin',
+    HELP_BACK: 'help:back',
 
     // ---------- Komanda ----------
     TEAM_CREATE: 'team:create',

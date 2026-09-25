@@ -1,5 +1,6 @@
 // ============================================================
 // ORGANIZER HANDLER — 3 tilda
+// ORG_PENDING_PAYMENTS va pay:view: — organizerPaymentReviewHandler.js da
 // ============================================================
 const { Markup } = require('telegraf');
 const tournamentService = require('../services/tournamentService');
@@ -144,120 +145,7 @@ module.exports = (bot) => {
   });
 
   // ============================================================
-  // 3. KUTILAYOTGAN CHEKLAR
+  // ⚠️ ORG_PENDING_PAYMENTS va pay:view: — bu fayldan olib tashlandi
+  // Ular organizerPaymentReviewHandler.js da
   // ============================================================
-  bot.action(CALLBACK.ORG_PENDING_PAYMENTS, async (ctx) => {
-    await safeAnswer(ctx);
-    const t = ctx.t;
-
-    const isAdmin = ctx.state.role === ROLES.SUPER_ADMIN || ctx.state.role === ROLES.ADMIN;
-    const isOrganizer = ctx.state.role === ROLES.ORGANIZER;
-
-    if (!isAdmin && !isOrganizer) return ctx.reply(t('error_access'));
-
-    let pending;
-    if (isOrganizer) {
-      const allPending = await paymentService.getAllPayments(PAYMENT_STATUS.PENDING);
-      pending = allPending.filter((p) => Number(p.organizerId) === Number(ctx.from.id));
-    } else {
-      pending = await paymentService.getAllPayments(PAYMENT_STATUS.PENDING);
-    }
-
-    if (!pending.length) {
-      return safeEdit(ctx, `📭 <b>${t('org_no_pending')}</b>`, {
-        reply_markup: {
-          inline_keyboard: [[Markup.button.callback(t('admin_panel'), CALLBACK.ADMIN_PANEL)]],
-        },
-      });
-    }
-
-    const lines = [`⏳ <b>${t('org_pending_title')} (${pending.length})</b>`, '', '━━━━━━━━━━━━━━━━━━━━', ''];
-    const rows = [];
-
-    for (const p of pending.slice(0, 10)) {
-      const tour = await tournamentService.getTournament(p.tournamentId);
-      const team = await teamService.getTeam(p.teamId);
-      const captain = await userService.getUser(p.captainId);
-
-      lines.push(
-        `🏆 <b>${escapeHtml(tour?.title || '-')}</b>\n` +
-          `   👥 ${escapeHtml(team?.name || '-')}\n` +
-          `   👤 ${captain?.username ? '@' + captain.username : 'ID:' + p.captainId}\n` +
-          `   💰 ${p.amount} ${p.currency}\n` +
-          `   📅 ${new Date(p.submittedAt).toLocaleString('uz-UZ')}`
-      );
-      lines.push('');
-
-      rows.push([
-        Markup.button.callback(
-          `👁 ${t('org_view')} — ${team?.name?.slice(0, 20) || p.id.slice(0, 8)}`,
-          'pay:view:' + p.id
-        ),
-      ]);
-    }
-
-    rows.push([Markup.button.callback(t('admin_panel'), CALLBACK.ADMIN_PANEL)]);
-
-    try {
-      await ctx.editMessageText(lines.join('\n'), { parse_mode: 'HTML', reply_markup: { inline_keyboard: rows } });
-    } catch (e) {
-      await ctx.reply(lines.join('\n'), { parse_mode: 'HTML', reply_markup: { inline_keyboard: rows } });
-    }
-  });
-
-  // ============================================================
-  // 4. TO'LOVNI KO'RISH
-  // ============================================================
-  bot.action(/^pay:view:(.+)$/, async (ctx) => {
-    await safeAnswer(ctx);
-    const t = ctx.t;
-
-    const payId = ctx.match[1];
-    const payment = await paymentService.getPayment(payId);
-    if (!payment) return ctx.reply(t('error_not_found'));
-
-    const isAdmin = ctx.state.role === ROLES.SUPER_ADMIN || ctx.state.role === ROLES.ADMIN;
-    const isOwner = ctx.state.role === ROLES.ORGANIZER && Number(payment.organizerId) === Number(ctx.from.id);
-
-    if (!isAdmin && !isOwner) return ctx.reply(`⛔ ${t('error_access')}`);
-
-    const tour = await tournamentService.getTournament(payment.tournamentId);
-    const team = await teamService.getTeam(payment.teamId);
-    const captain = await userService.getUser(payment.captainId);
-
-    const header =
-      `╔══════════════════════╗\n` +
-      `   💳 <b>${t('pay_view_title')}</b>\n` +
-      `╚══════════════════════╝\n\n` +
-      `🏆 <b>${t('admin_tournaments')}:</b> ${escapeHtml(tour?.title || '-')}\n` +
-      `👥 <b>${t('admin_teams')}:</b> ${escapeHtml(team?.name || '-')}\n` +
-      `🏷 <b>${t('team_tag_label')}:</b> ${escapeHtml(team?.tag || '-')}\n\n` +
-      `👤 <b>${t('team_captain')}:</b> ${captain?.username ? '@' + captain.username : 'ID:' + payment.captainId}\n` +
-      `💰 <b>${t('promotion_total')}:</b> ${payment.amount} ${payment.currency}\n` +
-      `📅 <b>${t('pay_submitted_at')}:</b> ${new Date(payment.submittedAt).toLocaleString('uz-UZ')}\n` +
-      `🆔 <b>ID:</b> <code>${payment.id}</code>\n` +
-      `📌 <b>${t('pay_status_label')}:</b> ${payment.status}`;
-
-    const { paymentReviewKeyboard } = require('../keyboards/paymentKeyboard');
-    const kb = paymentReviewKeyboard(payment.id, payment.tournamentId);
-
-    try {
-      if (payment.receiptType === 'photo') {
-        await ctx.replyWithPhoto(payment.receiptFileId, {
-          caption: header,
-          parse_mode: 'HTML',
-          ...kb,
-        });
-      } else {
-        await ctx.reply(header, { parse_mode: 'HTML' });
-        await ctx.replyWithDocument(payment.receiptFileId, {
-          caption: `📄 ${t('payment_new_receipt')} — ${payment.amount} ${payment.currency}`,
-          ...kb,
-        });
-      }
-    } catch (e) {
-      console.error('pay:view xatosi:', e.message);
-      await ctx.reply(`❌ ${t('pay_view_cannot')}\n\n${header}`, { parse_mode: 'HTML' });
-    }
-  });
 };

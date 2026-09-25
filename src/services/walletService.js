@@ -78,7 +78,7 @@ async function addTransaction({
 // BALANSNI O'ZGARTIRISH
 // ============================================================
 async function adjustBalance(userId, amount, type, reason, adminId, relatedId) {
-  return store.update(WALLET_FILE, async (data) => {
+  const result = await store.update(WALLET_FILE, (data) => {
     const key = String(userId);
     if (!data[key]) {
       data[key] = {
@@ -101,21 +101,21 @@ async function adjustBalance(userId, amount, type, reason, adminId, relatedId) {
     else data[key].totalOut += Math.abs(Number(amount));
     data[key].updatedAt = new Date().toISOString();
 
-    setImmediate(() => {
-      addTransaction({
-        userId,
-        type,
-        amount,
-        balanceBefore: before,
-        balanceAfter: after,
-        reason,
-        adminId,
-        relatedId,
-      }).catch(() => {});
-    });
-
-    return data[key];
+    return { wallet: data[key], before, after };
   });
+
+  await addTransaction({
+    userId,
+    type,
+    amount,
+    balanceBefore: result.before,
+    balanceAfter: result.after,
+    reason,
+    adminId,
+    relatedId,
+  });
+
+  return result.wallet;
 }
 
 // ============================================================

@@ -22,8 +22,11 @@ function getKillPoints(kills) {
 // ============================================================
 // BITTA KARTA UCHUN JAMI BALL
 // ============================================================
-function calculateTotal(placement, kills) {
-  return getPlacementPoints(placement) + getKillPoints(kills);
+function calculateTotal(placement, kills, penalty = 0) {
+  const placePts = getPlacementPoints(placement);
+  const killPts = getKillPoints(kills);
+  const pen = parseInt(penalty, 10) || 0;
+  return Math.max(0, placePts + killPts - pen);
 }
 
 // ============================================================

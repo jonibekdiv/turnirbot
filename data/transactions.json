@@ -47,6 +47,18 @@
       "adminId": 6580878834,
       "relatedId": "wreq_mufo9nykksxy2k",
       "at": "2026-09-24T15:14:09.155Z"
+    },
+    {
+      "id": "tx_muh4gv44ebavf4",
+      "userId": 8619608677,
+      "type": "deposit",
+      "amount": 40000,
+      "balanceBefore": 0,
+      "balanceAfter": 40000,
+      "reason": "Admin tasdiqladi",
+      "adminId": 6580878834,
+      "relatedId": "wreq_muh4golm70hoz3",
+      "at": "2026-09-25T15:35:10.468Z"
     }
   ]
 }

@@ -8,10 +8,15 @@
   "menu_help": "ℹ️ Yordam",
   "menu_admin": "🛠 Admin panel",
   "menu_host": "🎙 Host panel",
+  "menu_wallet": "👛 Hamyon",
+  "menu_support": "💬 Yordam",
   "menu_search": "🔍 Qidiruv",
   "menu_language": "🌐 Til",
   "menu_main": "🏠 Asosiy menyu",
   "menu_back": "⬅️ Orqaga",
+
+  "host_panel_btn": "🎙 Host panel",
+  "host_stage_btn": "📊 Stage panel",
 
   "profile_title": "👤 MENING PROFILIM",
   "profile_id": "🆔 Telegram ID",
@@ -871,7 +876,7 @@
   "promotion_btn": "⬆️ Promotion",
   "promotion_not_found": "Promotion topilmadi",
   "promotion_no_promotions": "Hozircha promotion yaratilmagan",
-  "promotion_create": "➕ Promotion yaratish",
+  "promotion_create": "➕ Yangi match yaratish",
   "promotion_create_top": "Promotion yaratish (Top {n})",
   "promotion_pick_top": "Nechta komanda keyingi etapga o'tadi?",
   "promotion_top3": "🥇 Top 3",
@@ -948,6 +953,8 @@
   "host_stage_title": "HOST PANEL",
   "host_stage_menu": "🎙 Host panel",
   "host_stage_no_matches": "Sizga hali match biriktirilmagan.",
+  "host_stage_tours_total": "Turnirlar",
+  "host_stage_wait_matches": "Matchlar tayinlanishini kuting",
   "host_stage_matches": "MATCHLAR",
   "host_stage_match": "MATCH",
   "host_stage_match_of": "Match",
@@ -1123,5 +1130,26 @@
   "sub_wait_room": "Xona ma'lumotlari tayyor bo'lganda avtomatik yuboriladi",
   "sub_you_are_captain": "Siz captainsiz",
   "sub_you_are_member": "Siz a'zosiz",
-  "sub_all_verified": "Barcha tekshirildi"
+  "sub_all_verified": "Barcha tekshirildi",
+    "help_title": "YORDAM",
+  "help_pick_role": "Qaysi rol uchun qo'llanma kerak?",
+  "help_btn_player": "🎮 O'yinchi uchun",
+  "help_btn_player_desc": "Turnirda qanday qatnashish",
+  "help_btn_host": "🎙 Host uchun",
+  "help_btn_host_desc": "Turnir xonasini boshqarish",
+  "help_btn_organizer": "🎯 Organizer uchun",
+  "help_btn_organizer_desc": "Turnir tashkil qilish",
+  "help_btn_admin": "🛡 Admin uchun",
+  "help_btn_admin_desc": "Botni boshqarish",
+
+  "help_player_title": "O'YINCHI UCHUN QO'LLANMA",
+  "help_player_body": "<b>1. PROFIL</b>\n👤 Profil → 🎯 PUBG ID kiriting\n\n<b>2. KOMANDA</b>\n👥 Komandam → ➕ Yaratish\nNom, teg, avatar, manager kiriting\nKod olasiz (do'stlarga yuboring)\n\n<b>3. TURNIR</b>\n🏆 Turnirlar → Turnirni tanlang\n📝 Ro'yxatdan o'tish → boshlang\n\n<b>4. PULLIK TURNIR</b>\n💳 To'lov → Wallet yoki karta\nKarta bo'lsa — chek yuboring\n\n<b>5. ROOM</b>\n🔑 Room ma'lumotlari → nusxa oling\nPUBG Mobile'da xonaga kiring\n\n<b>6. NATIJA</b>\n📊 Natijalar → g'oliblar\n\n<b>❓ SAVOLLAR</b>\n💬 Yordam → adminga yozing",
+
+  "help_host_title": "HOST UCHUN QO'LLANMA",
+   "help_host_body": "<b>1. PANEL TANLASH</b>\n🎙 Host panel — oddiy turnir\n📊 Stage panel — etapli turnir\n\n<b>2. ODDIY TURNIR — ROOM</b>\nTurnirni oching →\n🆔 Room ID yuborish\n🔒 Parol yuborish\n📨 Yoki ikkalasini birga:\n<code>ID: 123456 PASS: abc123</code>\n\n<b>3. ETAPLI TURNIR — ROOM</b>\nStage panel → Match tanlang\nHar matchga alohida Room yuboring\n\n<b>4. NATIJA — SKRINSHOT (TAVSIYA)</b>\n📊 Natijalar → 📸 Skrinshot yuborish\n\n📌 Talablar:\n• Skrinshot ANIQ va TOZA\n• Har bir teg KAMIDA 2 MARTA\n• Format: <code>#raqam  TAG  kill</code>\n\nBot avtomatik:\n✅ 2+ marta uchragan teglarni tanlaydi\n✅ Kill'larni yig'adi\n✅ O'rinlarni hisoblaydi\n\n<b>5. QOLGAN TEKNLAR</b>\nKam uchragan teglar hostga qoldiriladi:\n✏️ Qolganlarini qo'lda kiritish\nFormat: <code>TAG - KILL</code>\nMisol:\n<code>UP - 5\nN1 - 3\nS7 - 2</code>\n\n<b>6. JARIMA (PENALTY)</b>\nHar bir komanda uchun so'raladi\nRaqam kiriting (masalan: 5)\nYoki ⏭ O'tkazib yuboring\n\nNatija:\nPlace + Kill − Jarima = Jami\n\n<b>7. NATIJA — QO'LDA</b>\n📊 Natijalar → ✏️ Qo'lda kiritish\n\n<b>8. NATIJALARNI KO'RISH</b>\n📊 Natijalar → 📋 Kartalar\n\n<b>9. XABAR YUBORISH</b>\n💬 Ishtirokchilarga xabar → matn\n\n<b>💡 MASLAHAT</b>\nRoom ma'lumotlarini 10 daqiqa oldin yuboring\nSkrinshotni toza va aniq oling",
+  "help_organizer_title": "ORGANIZER UCHUN QO'LLANMA",
+  "help_organizer_body": "<b>1. PANEL</b>\n🛠 Admin panel → Organizer paneli\n\n<b>2. TURNIR YARATISH</b>\n➕ Yangi turnir\nNom → turi (bepul/pullik) → narx → karta\nRasm → sana → vaqt → rejim\nPRIZ → MAP → Etap → max komandalar → izoh → host\n✅ Tasdiqlash\n\n<b>3. ETAPLAR</b>\nTurnirni oching → 📊 Etaplar\n⚡️ Default yoki ✏️ Qo'lda\n1/4 → 1/2 → Final\n\n<b>4. HOST</b>\nMatch → 🎙 Host biriktirish\n\n<b>5. TO'LOV</b>\n⏳ Kutilayotgan cheklar → ✅ Tasdiqlash\n\n<b>6. E'LON</b>\nTurnirni oching → 📢 Kanalga e'lon\n\n<b>7. YAKUNLASH</b>\nTurnirni oching → ✅ Yakunlash",
+
+  "help_admin_title": "ADMIN UCHUN QO'LLANMA",
+  "help_admin_body": "<b>1. PANEL</b>\n🛠 Admin panel\n\n<b>2. ROL BERISH</b>\n🛡 Adminlar / 🎯 Organizerlar / 🎙 Hostlar\n➕ qo'shish → Telegram ID\n\n<b>3. BAN</b>\n🚫 Ban tizimi → ➕ / ➖\n\n<b>4. TURNIR</b>\n➕ Yangi turnir yoki tahrirlash\n📢 Kanalga e'lon\n\n<b>5. TO'LOV</b>\n💳 To'lovlar → ⏳/✅/❌\n\n<b>6. KANAL</b>\n📢 Kanal sozlamalari → ➕\n\n<b>7. KARTA</b>\n💳 Kartalar → ➕\n⭐ Default qilish\n\n<b>8. PROMO</b>\n🎫 Promo kodlar → ➕\nTur: Foiz / Summa / Bepul\n\n<b>9. WALLET</b>\n💰 Wallet admin\nDeposit/Withdraw tasdiqlash\n➕➖ Balans o'zgartirish\n\n<b>10. REKLAMA</b>\n📢 Reklama yuborish\n\n<b>11. STATISTIKA</b>\n📊 Statistika\n\n<b>12. SOZLAMA</b>\n⚙️ Sozlamalar (Super Admin)"
 }

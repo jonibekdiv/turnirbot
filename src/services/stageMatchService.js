@@ -1,5 +1,5 @@
 // ============================================================
-// STAGE MATCH SERVICE — Match CRUD + maps + reyting (3 tilda)
+// STAGE MATCH SERVICE — Match CRUD + jarima
 // ============================================================
 const store = require('../storage/jsonStore');
 const { generateId } = require('../utils/idGenerator');
@@ -27,7 +27,7 @@ function addDays(dateStr, days) {
 }
 
 // ============================================================
-// BALL HISOBLASH
+// BALL HISOBLASH (jarima bilan)
 // ============================================================
 function getPlacementPoints(place) {
   return PLACEMENT_POINTS[place] || 0;
@@ -38,12 +38,15 @@ function getKillPoints(kills) {
   return isNaN(k) || k < 0 ? 0 : k;
 }
 
-function calculateTotal(place, kills) {
-  return getPlacementPoints(place) + getKillPoints(kills);
+function calculateTotal(place, kills, penalty = 0) {
+  const placePts = getPlacementPoints(place);
+  const killPts = getKillPoints(kills);
+  const pen = parseInt(penalty, 10) || 0;
+  return Math.max(0, placePts + killPts - pen);
 }
 
 // ============================================================
-// MATCHLAR YARATISH (XARITALAR BILAN)
+// MATCHLAR YARATISH
 // ============================================================
 async function createMatchesForStage(stageId) {
   const stage = await stageService.getStage(stageId);
@@ -248,8 +251,6 @@ async function distributeTeamsRandomly(stageId) {
   if (!matches.length) throw new Error("Matchlar yo'q");
   if (!allTeams.length) throw new Error("Komandalar yo'q");
 
-  const matchesPerDay = stage.rules?.matchesPerDay || 4;
-
   const byDay = {};
   matches.forEach((m) => {
     if (!byDay[m.dayNumber]) byDay[m.dayNumber] = [];
@@ -291,7 +292,7 @@ async function distributeTeamsManual(stageId, distribution) {
 }
 
 // ============================================================
-// NATIJALAR
+// NATIJALAR (jarima bilan)
 // ============================================================
 async function setResults(matchId, results, submittedBy) {
   if (!Array.isArray(results) || !results.length) {
@@ -304,17 +305,24 @@ async function setResults(matchId, results, submittedBy) {
     throw new Error("O'rin raqamlari takrorlanmasin");
   }
 
-  const enriched = results.map((r) => ({
-    teamId: r.teamId,
-    teamName: r.teamName || '',
-    place: Number(r.place),
-    kills: Number(r.kills) || 0,
-    points: getPlacementPoints(Number(r.place)),
-    killPoints: getKillPoints(Number(r.kills)),
-    totalPoints: calculateTotal(Number(r.place), Number(r.kills)),
-    submittedBy: submittedBy || null,
-    submittedAt: new Date().toISOString(),
-  }));
+  const enriched = results.map((r) => {
+    const place = Number(r.place);
+    const kills = Number(r.kills) || 0;
+    const penalty = Number(r.penalty) || 0;
+
+    return {
+      teamId: r.teamId,
+      teamName: r.teamName || '',
+      place,
+      kills,
+      penalty,
+      points: getPlacementPoints(place),
+      killPoints: getKillPoints(kills),
+      totalPoints: calculateTotal(place, kills, penalty),
+      submittedBy: submittedBy || null,
+      submittedAt: new Date().toISOString(),
+    };
+  });
 
   const sorted = [...enriched].sort((a, b) => {
     if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
@@ -377,7 +385,14 @@ async function reopenResults(matchId) {
 // ============================================================
 function sortResults(results) {
   return [...results].sort((a, b) => {
-    if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+    const ptsA = a.totalPoints !== undefined
+      ? a.totalPoints
+      : calculateTotal(a.place, a.kills, a.penalty || 0);
+    const ptsB = b.totalPoints !== undefined
+      ? b.totalPoints
+      : calculateTotal(b.place, b.kills, b.penalty || 0);
+
+    if (ptsB !== ptsA) return ptsB - ptsA;
     if (b.kills !== a.kills) return b.kills - a.kills;
     if (a.place !== b.place) return a.place - b.place;
     return 0;
@@ -405,7 +420,7 @@ async function isDayAllApproved(stageId, dayNumber) {
 }
 
 // ============================================================
-// KUN BO'YICHA REYTING
+// KUN BO'YICHA REYTING (jarima bilan)
 // ============================================================
 async function getDayOverallStandings(stageId, dayNumber) {
   const matches = await getMatchesByDay(stageId, dayNumber);
@@ -430,6 +445,7 @@ async function getDayOverallStandings(stageId, dayNumber) {
           kills: 0,
           placementPoints: 0,
           totalPoints: 0,
+          totalPenalty: 0,
           places: [],
           bestPlace: 99,
           perMatch: [],
@@ -439,12 +455,15 @@ async function getDayOverallStandings(stageId, dayNumber) {
       const s = standings[r.teamId];
       const place = Number(r.place) || 99;
       const kills = Number(r.kills) || 0;
+      const penalty = Number(r.penalty) || 0;
       const placePts = getPlacementPoints(place);
+      const totalPts = calculateTotal(place, kills, penalty);
 
       s.matches++;
       s.kills += kills;
       s.placementPoints += placePts;
-      s.totalPoints += placePts + kills;
+      s.totalPenalty += penalty;
+      s.totalPoints += totalPts;
       s.places.push(place);
 
       s.perMatch.push({
@@ -454,7 +473,8 @@ async function getDayOverallStandings(stageId, dayNumber) {
         map: match.map,
         place,
         kills,
-        points: placePts + kills,
+        penalty,
+        points: totalPts,
       });
 
       if (place === 1) s.wins++;
@@ -489,7 +509,7 @@ async function getDayTopTeams(stageId, dayNumber, topN = 3) {
 }
 
 // ============================================================
-// BUTUN STAGE REYTING
+// BUTUN STAGE REYTING (jarima bilan)
 // ============================================================
 async function getStageOverallStandings(stageId) {
   const matches = await getStageMatches(stageId);
@@ -514,6 +534,7 @@ async function getStageOverallStandings(stageId) {
           kills: 0,
           placementPoints: 0,
           totalPoints: 0,
+          totalPenalty: 0,
           places: [],
           bestPlace: 99,
         };
@@ -522,12 +543,15 @@ async function getStageOverallStandings(stageId) {
       const s = standings[r.teamId];
       const place = Number(r.place) || 99;
       const kills = Number(r.kills) || 0;
+      const penalty = Number(r.penalty) || 0;
       const placePts = getPlacementPoints(place);
+      const totalPts = calculateTotal(place, kills, penalty);
 
       s.matches++;
       s.kills += kills;
       s.placementPoints += placePts;
-      s.totalPoints += placePts + kills;
+      s.totalPenalty += penalty;
+      s.totalPoints += totalPts;
       s.places.push(place);
 
       if (place === 1) s.wins++;
@@ -583,7 +607,7 @@ async function getStageQualifiedTeams(stageId) {
 }
 
 // ============================================================
-// FORMAT (3 tilda)
+// FORMAT
 // ============================================================
 function escapeHtml(text) {
   if (text === null || text === undefined) return '';
@@ -668,7 +692,9 @@ function formatMatchResults(match, teamsMap = {}, t) {
     lines.push(
       `${medal} <b>${escapeHtml(name)}</b>${tag ? ` [${escapeHtml(tag)}]` : ''}`
     );
-    lines.push(`   📍 #${r.place} | 💥 ${r.kills} | 💯 <b>${r.totalPoints}</b>`);
+    lines.push(
+      `   📍 #${r.place} | 💥 ${r.kills}${r.penalty ? ` | ⚖️ -${r.penalty}` : ''} | 💯 <b>${r.totalPoints}</b>`
+    );
   });
 
   return lines.join('\n');
@@ -701,7 +727,7 @@ function formatStageStandings(standings, stage, teamsMap = {}, t) {
       `${medal} <b>${escapeHtml(name)}</b>${tag ? ` [${escapeHtml(tag)}]` : ''}`
     );
     lines.push(
-      `   🎮 ${s.matches} | 💥 ${s.kills} | 🏆 ${s.wins} | 💯 <b>${s.totalPoints}</b>`
+      `   🎮 ${s.matches} | 💥 ${s.kills} | 🏆 ${s.wins}${s.totalPenalty ? ` | ⚖️ -${s.totalPenalty}` : ''} | 💯 <b>${s.totalPoints}</b>`
     );
   });
 
